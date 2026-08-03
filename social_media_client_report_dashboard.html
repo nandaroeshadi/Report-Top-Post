@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Client Report Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PapaParse for CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
+                        },
+                        gold: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen pb-16">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Top Navigation Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            
+            <!-- Project Title Selector (SS 1 Inspired) -->
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl font-bold">
+                    <i class="fa-solid fa-chart-line text-xl"></i>
+                </div>
+                <div>
+                    <span class="text-xs uppercase tracking-wider font-semibold text-slate-400">PROJECT REPORT</span>
+                    <div class="flex items-center gap-2">
+                        <select id="projectSelect" class="bg-transparent font-bold text-xl text-slate-800 focus:outline-none cursor-pointer hover:text-emerald-600 transition">
+                            <option value="Cerita Lila">Cerita Lila</option>
+                            <option value="Campaign Media 2026">Campaign Media 2026</option>
+                            <option value="Brand Performance Q3">Brand Performance Q3</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Toolbar (CSV Upload & Export) -->
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- User Cloud Session Indicator -->
+                <div class="hidden sm:flex items-center gap-2 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl text-xs">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-slate-500 font-medium">User:</span>
+                    <span id="userBadgeId" class="font-mono font-bold text-slate-700 truncate max-w-[120px]">Connecting...</span>
+                </div>
+
+                <button onclick="openModal('uploadModal')" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition shadow-sm hover:shadow">
+                    <i class="fa-solid fa-file-csv"></i>
+                    <span>Upload CSV Data</span>
+                </button>
+                <button onclick="openModal('addPostModal')" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-medium px-3.5 py-2 rounded-xl text-sm transition shadow-sm">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Tambah Post</span>
+                </button>
+                <button onclick="exportCSV()" class="inline-flex items-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium px-3.5 py-2 rounded-xl text-sm transition">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Export CSV</span>
+                </button>
+                <button onclick="resetToSampleData()" class="inline-flex items-center gap-2 bg-white border border-red-200 text-red-600 hover:bg-red-50 font-medium px-3.5 py-2 rounded-xl text-sm transition" title="Reset Data Cloud">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Reset Data</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+
+        <!-- Filter & Header Control Panel (SS 2 Inspired Layout) -->
+        <div class="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 rounded-2xl p-5 text-white shadow-lg">
+            <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-emerald-600/60 pb-4 mb-4 gap-3">
+                <div>
+                    <h1 class="text-2xl font-black tracking-wide flex items-center gap-2">
+                        SOCIAL MEDIA REPORT 
+                        <span class="text-xs font-semibold bg-emerald-500/40 text-emerald-100 border border-emerald-400/30 px-2.5 py-0.5 rounded-full">Client View</span>
+                    </h1>
+                    <p class="text-emerald-100/80 text-xs mt-1">Rekapitulasi performa konten & engagement akun sosial media</p>
+                </div>
+                <div class="flex items-center gap-2 bg-emerald-900/50 backdrop-blur border border-emerald-500/30 px-3.5 py-1.5 rounded-xl text-xs font-medium text-emerald-200">
+                    <i class="fa-regular fa-clock"></i>
+                    <span>Updated in: <strong id="updatedDateText" class="text-white">Senin, 03 Agustus 2026</strong></span>
+                </div>
+            </div>
+
+            <!-- Global Filters Bar -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <!-- Platform Filter -->
+                <div>
+                    <label class="block text-xs font-medium text-emerald-200 mb-1">Filter Platform:</label>
+                    <select id="filterPlatform" onchange="applyFilters()" class="w-full bg-emerald-900/60 border border-emerald-500/40 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300">
+                        <option value="ALL">Semua Platform</option>
+                        <option value="TikTok">TikTok</option>
+                        <option value="Instagram">Instagram</option>
+                        <option value="Threads">Threads</option>
+                    </select>
+                </div>
+
+                <!-- Account Filter -->
+                <div>
+                    <label class="block text-xs font-medium text-emerald-200 mb-1">Filter Akun:</label>
+                    <select id="filterAccount" onchange="applyFilters()" class="w-full bg-emerald-900/60 border border-emerald-500/40 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300">
+                        <option value="ALL">Semua Akun</option>
+                    </select>
+                </div>
+
+                <!-- Category Filter -->
+                <div>
+                    <label class="block text-xs font-medium text-emerald-200 mb-1">Filter Kategori:</label>
+                    <select id="filterCategory" onchange="applyFilters()" class="w-full bg-emerald-900/60 border border-emerald-500/40 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300">
+                        <option value="ALL">Semua Kategori</option>
+                    </select>
+                </div>
+
+                <!-- Date Range Filter -->
+                <div>
+                    <label class="block text-xs font-medium text-emerald-200 mb-1">Periode Date Range:</label>
+                    <div class="flex items-center gap-2">
+                        <input type="date" id="filterStartDate" onchange="applyFilters()" class="w-full bg-emerald-900/60 border border-emerald-500/40 text-white rounded-xl px-2.5 py-1.5 text-xs focus:outline-none">
+                        <span class="text-xs text-emerald-300">-</span>
+                        <input type="date" id="filterEndDate" onchange="applyFilters()" class="w-full bg-emerald-900/60 border border-emerald-500/40 text-white rounded-xl px-2.5 py-1.5 text-xs focus:outline-none">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOTAL PERFORMANCE CARDS (SS 1 & SS 2 Combined) -->
+        <div>
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                    TOTAL PERFORMANCE
+                </h2>
+                <span id="filteredPostCountBadge" class="text-xs font-medium bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg">Showing 0 Posts</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <!-- Metric 1: Views -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-1">
+                        <span>TOTAL VIEWS</span>
+                        <i class="fa-solid fa-eye text-emerald-500"></i>
+                    </div>
+                    <div id="statTotalViews" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">0</div>
+                    <p id="statAvgViews" class="text-[11px] text-slate-500 mt-1 font-medium">avg 0/post</p>
+                </div>
+
+                <!-- Metric 2: Likes -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-1">
+                        <span>TOTAL LIKES</span>
+                        <i class="fa-solid fa-heart text-rose-500"></i>
+                    </div>
+                    <div id="statTotalLikes" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">0</div>
+                    <p id="statAvgLikes" class="text-[11px] text-slate-500 mt-1 font-medium">avg 0/post</p>
+                </div>
+
+                <!-- Metric 3: Comments -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-1">
+                        <span>COMMENTS</span>
+                        <i class="fa-solid fa-comment text-sky-500"></i>
+                    </div>
+                    <div id="statTotalComments" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">0</div>
+                    <p id="statAvgComments" class="text-[11px] text-slate-500 mt-1 font-medium">avg 0/post</p>
+                </div>
+
+                <!-- Metric 4: Saves -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-1">
+                        <span>SAVES</span>
+                        <i class="fa-solid fa-bookmark text-amber-500"></i>
+                    </div>
+                    <div id="statTotalSaves" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">0</div>
+                    <p id="statAvgSaves" class="text-[11px] text-slate-500 mt-1 font-medium">avg 0/post</p>
+                </div>
+
+                <!-- Metric 5: Shares -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-1">
+                        <span>SHARES</span>
+                        <i class="fa-solid fa-share text-indigo-500"></i>
+                    </div>
+                    <div id="statTotalShares" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">0</div>
+                    <p id="statAvgShares" class="text-[11px] text-slate-500 mt-1 font-medium">avg 0/post</p>
+                </div>
+
+                <!-- Metric 6: Engagement Rate -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-1">
+                        <span>AVG ENGAGEMENT</span>
+                        <i class="fa-solid fa-chart-pie text-emerald-600"></i>
+                    </div>
+                    <div id="statAvgEngRate" class="text-xl sm:text-2xl font-black text-emerald-600 tracking-tight">0%</div>
+                    <p id="statTotalEngagements" class="text-[11px] text-slate-500 mt-1 font-medium">0 engagements</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOP CONTENT HIGHLIGHT & LEADERBOARD SECTION (SS 1 + SS 2 Concept) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Column: #1 Top Content Highlight (SS 2 Pastel Green & SS 1 Top 3 style) -->
+            <div class="lg:col-span-5 flex flex-col gap-4">
+                
+                <!-- #1 Top Content Card (SS 2 Concept) -->
+                <div class="bg-gradient-to-br from-emerald-100 via-emerald-50 to-white rounded-2xl border border-emerald-300/80 p-5 shadow-sm relative overflow-hidden flex-1 flex flex-col justify-between">
+                    <div class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-200/50 rounded-full blur-xl pointer-events-none"></div>
+                    
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="bg-emerald-700 text-white font-black text-xs px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-crown text-amber-300"></i> #1 TOP CONTENT
+                            </span>
+                            <span id="top1PlatformBadge" class="bg-black text-white text-[11px] font-bold px-2.5 py-0.5 rounded-md">TikTok</span>
+                        </div>
+
+                        <!-- Top 1 Post Details -->
+                        <div class="bg-white p-3.5 rounded-xl border border-emerald-200/70 shadow-xs mb-4">
+                            <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
+                                <span id="top1Account" class="font-bold text-slate-800">@twins.lila</span>
+                                <span id="top1Date">12 Jun 2026</span>
+                            </div>
+                            <p id="top1Caption" class="text-slate-700 text-xs font-medium line-clamp-2 mb-2 italic">"Terjebak di Rumah Sendiri Bareng Terror yang Gak Kasat Mata..."</p>
+                            <a id="top1Link" href="#" target="_blank" class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-800">
+                                <span>Buka Link Post</span> <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </div>
+
+                        <!-- Top 1 Metrics Breakdown Grid (SS 2 Exact Layout) -->
+                        <div class="grid grid-cols-3 gap-2 text-center">
+                            <div class="bg-white/80 backdrop-blur p-2.5 rounded-xl border border-emerald-200/60">
+                                <span class="block text-[10px] text-slate-500 font-bold uppercase">Views</span>
+                                <span id="top1Views" class="text-base font-black text-slate-900">2.900.000</span>
+                            </div>
+                            <div class="bg-white/80 backdrop-blur p-2.5 rounded-xl border border-emerald-200/60">
+                                <span class="block text-[10px] text-slate-500 font-bold uppercase">Likes</span>
+                                <span id="top1Likes" class="text-base font-black text-rose-600">132.800</span>
+                            </div>
+                            <div class="bg-white/80 backdrop-blur p-2.5 rounded-xl border border-emerald-200/60">
+                                <span class="block text-[10px] text-slate-500 font-bold uppercase">Comments</span>
+                                <span id="top1Comments" class="text-base font-black text-sky-600">813</span>
+                            </div>
+                            <div class="bg-white/80 backdrop-blur p-2.5 rounded-xl border border-emerald-200/60">
+                                <span class="block text-[10px] text-slate-500 font-bold uppercase">Saves</span>
+                                <span id="top1Saves" class="text-base font-black text-amber-600">13.800</span>
+                            </div>
+                            <div class="bg-white/80 backdrop-blur p-2.5 rounded-xl border border-emerald-200/60">
+                                <span class="block text-[10px] text-slate-500 font-bold uppercase">Shares</span>
+                                <span id="top1Shares" class="text-base font-black text-indigo-600">4.179</span>
+                            </div>
+                            <div class="bg-white/80 backdrop-blur p-2.5 rounded-xl border border-emerald-200/60">
+                                <span class="block text-[10px] text-slate-500 font-bold uppercase">Eng. Rate</span>
+                                <span id="top1EngRate" class="text-base font-black text-emerald-700">5.23%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-emerald-200/70 text-right">
+                        <span class="text-[11px] text-emerald-800 font-medium">🔥 Konten dengan impresi tertinggi dalam laporan</span>
+                    </div>
+                </div>
+
+                <!-- Top 2 & Top 3 Cards Container (SS 1 Inspired Cards) -->
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Top 2 -->
+                    <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm relative">
+                        <span class="absolute top-2 right-2 w-5 h-5 bg-amber-500 text-white rounded-full text-[10px] font-black flex items-center justify-center">2</span>
+                        <div class="text-xs font-bold text-slate-800 truncate pr-6" id="top2Account">@horrorlila</div>
+                        <div class="text-sm font-black text-slate-900 mt-1" id="top2Views">4.855.386 views</div>
+                        <p class="text-[11px] text-slate-500 truncate mt-1" id="top2Caption">Sempat dikira kejadian nyata...</p>
+                    </div>
+                    <!-- Top 3 -->
+                    <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm relative">
+                        <span class="absolute top-2 right-2 w-5 h-5 bg-amber-700 text-white rounded-full text-[10px] font-black flex items-center justify-center">3</span>
+                        <div class="text-xs font-bold text-slate-800 truncate pr-6" id="top3Account">@obrolan.bioskop</div>
+                        <div class="text-sm font-black text-slate-900 mt-1" id="top3Views">2.900.000 views</div>
+                        <p class="text-[11px] text-slate-500 truncate mt-1" id="top3Caption">Diluar nalar banget! Momen...</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: #10 TOP PERFORMANCE Leaderboard Table (SS 2 Yellow Gold Exact Layout) -->
+            <div class="lg:col-span-7 flex flex-col">
+                <div class="bg-amber-50 border border-amber-300 rounded-2xl overflow-hidden shadow-sm flex-1 flex flex-col">
+                    <div class="bg-amber-300/80 px-4 py-3 border-b border-amber-400/60 flex items-center justify-between">
+                        <h3 class="font-black text-slate-900 text-sm tracking-wide flex items-center gap-2">
+                            <i class="fa-solid fa-trophy text-amber-600"></i> #10 TOP PERFORMANCE CONTENT
+                        </h3>
+                        <span class="text-[11px] font-semibold text-slate-700">Rangking Berdasarkan Views</span>
+                    </div>
+
+                    <div class="overflow-x-auto custom-scrollbar flex-1">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-amber-100/70 border-b border-amber-200 font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                                <tr>
+                                    <th class="py-2.5 px-3 text-center w-12">Rank</th>
+                                    <th class="py-2.5 px-3">Account & Content</th>
+                                    <th class="py-2.5 px-3 text-right">Views</th>
+                                    <th class="py-2.5 px-3 text-right">Likes</th>
+                                    <th class="py-2.5 px-3 text-right">Comments</th>
+                                    <th class="py-2.5 px-3 text-center">Link</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top10TableBody" class="divide-y divide-amber-200/60 font-medium text-slate-700">
+                                <!-- Dynamic Top 10 rows populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- CHARTS SECTION (SS 1 & SS 2 Combined Visual Analytics) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Chart 1: Platform Share (Pie Chart SS 2) -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-bold text-slate-800 text-sm">Platform Share (Views)</h3>
+                    <span class="text-xs text-slate-400">Instagram vs TikTok</span>
+                </div>
+                <div class="h-56 relative flex items-center justify-center">
+                    <canvas id="platformPieChart"></canvas>
+                </div>
+                <p class="text-center text-[11px] text-slate-500 mt-2 font-medium" id="pieChartSubtitle">Data Grafik Proporsi Traffic</p>
+            </div>
+
+            <!-- Chart 2: Daily Views Trend (Bar/Line Combo SS 2) -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm lg:col-span-2">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-bold text-slate-800 text-sm">Data Penambahan Views Perhari / Tanggal</h3>
+                    <span class="text-xs text-slate-400">Daily Performance Trend</span>
+                </div>
+                <div class="h-56">
+                    <canvas id="dailyViewsChart"></canvas>
+                </div>
+                <p class="text-center text-[11px] text-slate-500 mt-2 font-medium">Tren akumulasi pencapaian views harian</p>
+            </div>
+
+            <!-- Chart 3: Top Accounts Horizontal Bar (SS 1 Exact Horizontal Bar Chart) -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm lg:col-span-3">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-bold text-slate-800 text-sm">Top Akun By Total Views</h3>
+                    <span class="text-xs text-slate-400">Peringkat akumulasi views per akun</span>
+                </div>
+                <div class="h-64">
+                    <canvas id="topAccountsBarChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- POSTS DATA TABLE SECTION (SS 1 Layout) -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            
+            <!-- Table Header Toolbar -->
+            <div class="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50">
+                <div class="flex items-center gap-3">
+                    <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                        Posts Data
+                        <span id="tableTotalCount" class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">(484)</span>
+                    </h3>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <!-- Search input -->
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="tableSearch" onkeyup="renderPostsTable()" placeholder="Cari caption, akun, kategori..." class="pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 w-48 sm:w-64">
+                    </div>
+
+                    <!-- Table Column Toggle info -->
+                    <button onclick="openModal('addPostModal')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus text-[10px]"></i>
+                        <span>Tambah Row</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Responsive Container -->
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-100/80 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
+                        <tr>
+                            <th class="py-3 px-3.5 text-center">Platform</th>
+                            <th class="py-3 px-3.5">Account</th>
+                            <th class="py-3 px-3.5">Kategori</th>
+                            <th class="py-3 px-3.5">Caption / Title</th>
+                            <th class="py-3 px-3.5 whitespace-nowrap">Tgl Upload</th>
+                            <th class="py-3 px-3.5 text-right cursor-pointer hover:bg-slate-200/60" onclick="toggleSort('views')">Views <i class="fa-solid fa-sort text-[10px] text-slate-400"></i></th>
+                            <th class="py-3 px-3.5 text-right">Likes</th>
+                            <th class="py-3 px-3.5 text-right">Cmt</th>
+                            <th class="py-3 px-3.5 text-right">Save</th>
+                            <th class="py-3 px-3.5 text-right">Shr</th>
+                            <th class="py-3 px-3.5 text-right font-black text-emerald-700">Eng %</th>
+                            <th class="py-3 px-3.5 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="postsTableBody" class="divide-y divide-slate-200 text-slate-700">
+                        <!-- Dynamic rows rendered via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table Pagination / Summary Footer -->
+            <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+                <span id="paginationInfo">Menampilkan 1-10 dari total data</span>
+                <div class="flex items-center gap-2">
+                    <button id="btnPrevPage" onclick="changePage(-1)" class="px-2.5 py-1 border border-slate-300 bg-white rounded-lg hover:bg-slate-100 disabled:opacity-40">Prev</button>
+                    <span id="currentPageText" class="font-semibold text-slate-700">1</span>
+                    <button id="btnNextPage" onclick="changePage(1)" class="px-2.5 py-1 border border-slate-300 bg-white rounded-lg hover:bg-slate-100 disabled:opacity-40">Next</button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- MODAL 1: UPLOAD CSV DATA -->
+    <div id="uploadModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative border border-slate-100">
+            <button onclick="closeModal('uploadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-xl">
+                    <i class="fa-solid fa-file-csv text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-900 text-lg">Upload Data CSV</h3>
+                    <p class="text-slate-500 text-xs">Impor data report sosial media dari file CSV</p>
+                </div>
+            </div>
+
+            <!-- Dropzone Area -->
+            <div id="dropzone" class="border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/40 rounded-xl p-6 text-center transition cursor-pointer mb-4">
+                <i class="fa-solid fa-cloud-arrow-up text-3xl text-emerald-600 mb-2"></i>
+                <p class="text-sm font-semibold text-slate-700">Klik untuk pilih file atau Drag & Drop file CSV di sini</p>
+                <p class="text-xs text-slate-400 mt-1">Format header: account, platform, category, caption, date, views, likes, comments, saves, shares, url</p>
+                <input type="file" id="csvFileInput" accept=".csv" class="hidden" onchange="handleFileSelect(event)">
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-5 flex items-center justify-between">
+                <div class="text-xs text-slate-600">
+                    <strong>Belum punya format CSV?</strong>
+                </div>
+                <button onclick="downloadSampleCSV()" class="text-xs bg-slate-800 hover:bg-slate-900 text-white font-semibold px-3 py-1.5 rounded-lg transition">
+                    <i class="fa-solid fa-download mr-1"></i> Download Sample CSV
+                </button>
+            </div>
+
+            <div class="flex items-center justify-end gap-2">
+                <button onclick="closeModal('uploadModal')" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-100">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: TAMBAH POST BARU MANUAL -->
+    <div id="addPostModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button onclick="closeModal('addPostModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <h3 class="font-bold text-slate-900 text-lg mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-circle-plus text-emerald-600"></i> Tambah Post Baru
+            </h3>
+
+            <form id="addPostForm" onsubmit="handleAddPostSubmit(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Platform</label>
+                    <select id="newPlatform" required class="w-full border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-emerald-500">
+                        <option value="TikTok">TikTok</option>
+                        <option value="Instagram">Instagram</option>
+                        <option value="Threads">Threads</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Account Handle</label>
+                        <input type="text" id="newAccount" placeholder="@username" required class="w-full border border-slate-300 rounded-xl p-2.5">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Kategori</label>
+                        <input type="text" id="newCategory" placeholder="Niche Media / UGC" required class="w-full border border-slate-300 rounded-xl p-2.5">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Caption / Short Brief</label>
+                    <textarea id="newCaption" rows="2" placeholder="Tulis caption singkat..." required class="w-full border border-slate-300 rounded-xl p-2.5"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Tanggal Upload</label>
+                        <input type="date" id="newDate" required class="w-full border border-slate-300 rounded-xl p-2.5">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Views</label>
+                        <input type="number" id="newViews" required min="0" placeholder="0" class="w-full border border-slate-300 rounded-xl p-2.5">
+                    </div>
+                </div>
+                <div class="grid grid-cols-4 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Likes</label>
+                        <input type="number" id="newLikes" value="0" min="0" class="w-full border border-slate-300 rounded-xl p-2">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Comments</label>
+                        <input type="number" id="newComments" value="0" min="0" class="w-full border border-slate-300 rounded-xl p-2">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Saves</label>
+                        <input type="number" id="newSaves" value="0" min="0" class="w-full border border-slate-300 rounded-xl p-2">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Shares</label>
+                        <input type="number" id="newShares" value="0" min="0" class="w-full border border-slate-300 rounded-xl p-2">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Link Post (URL)</label>
+                    <input type="url" id="newUrl" placeholder="https://tiktok.com/@..." class="w-full border border-slate-300 rounded-xl p-2.5">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('addPostModal')" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl font-semibold">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold">Simpan Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Imports & Real-time Cloud Sync Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInAnonymously, 
+            signInWithCustomToken, 
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            collection, 
+            setDoc, 
+            addDoc, 
+            deleteDoc, 
+            onSnapshot, 
+            getDocs 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global environment variables or fallbacks
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'social-media-report';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : { apiKey: "demo-api-key", authDomain: "demo.firebaseapp.com", projectId: "demo-project" };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let isSyncingWithCloud = false;
+
+        // Strict path for public shared data
+        const getPostsCollectionRef = () => collection(db, 'artifacts', appId, 'public', 'data', 'posts');
+
+        // Initialize Authentication
+        async function initAuth() {
+            try {
+                const customToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (customToken) {
+                    await signInWithCustomToken(auth, customToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.warn("Custom token auth failed, trying anonymous auth:", err);
+                try {
+                    await signInAnonymously(auth);
+                } catch (anonErr) {
+                    console.error("Anonymous auth failed:", anonErr);
+                }
+            }
+        }
+
+        // Listen for Auth State changes
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                const badgeEl = document.getElementById('userBadgeId');
+                if (badgeEl) badgeEl.innerText = user.uid;
+                
+                // Start listening to live cloud updates
+                setupRealtimePostsListener();
+            } else {
+                currentUser = null;
+                const badgeEl = document.getElementById('userBadgeId');
+                if (badgeEl) badgeEl.innerText = 'Disconnected';
+            }
+        });
+
+        // Setup Firestore Real-time Listener
+        function setupRealtimePostsListener() {
+            if (!auth.currentUser) return;
+
+            onSnapshot(getPostsCollectionRef(), (snapshot) => {
+                if (snapshot.empty && !isSyncingWithCloud) {
+                    // Seed initial data to cloud if DB is empty
+                    seedInitialDataToCloud();
+                    return;
+                }
+
+                const loadedPosts = [];
+                snapshot.forEach((docSnap) => {
+                    loadedPosts.push({ firestoreId: docSnap.id, ...docSnap.data() });
+                });
+
+                postsData = loadedPosts;
+                populateFilterDropdowns();
+                applyFilters();
+            }, (error) => {
+                console.error("Firestore live sync error:", error);
+                showToast('Gagal menyambungkan dengan cloud database', 'error');
+            });
+        }
+
+        // Seed initial sample data to Cloud
+        async function seedInitialDataToCloud() {
+            if (!auth.currentUser) return;
+            isSyncingWithCloud = true;
+            try {
+                for (const item of SAMPLE_POSTS) {
+                    await addDoc(getPostsCollectionRef(), item);
+                }
+            } catch (e) {
+                console.error("Error seeding initial cloud posts:", e);
+            } finally {
+                isSyncingWithCloud = false;
+            }
+        }
+
+        // Cloud Add / Upload Helper
+        window.cloudAddPosts = async function(postsArray) {
+            if (!auth.currentUser) {
+                showToast('Autentikasi belum siap.', 'error');
+                return;
+            }
+            try {
+                for (const post of postsArray) {
+                    await addDoc(getPostsCollectionRef(), post);
+                }
+                showToast(`Berhasil menyimpan ${postsArray.length} post ke cloud!`, 'success');
+            } catch (err) {
+                console.error("Cloud upload error:", err);
+                showToast('Gagal menyimpan data ke cloud.', 'error');
+            }
+        };
+
+        // Cloud Delete Helper
+        window.cloudDeletePost = async function(firestoreId) {
+            if (!auth.currentUser || !firestoreId) return;
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'posts', firestoreId));
+                showToast('Post berhasil dihapus dari cloud.', 'info');
+            } catch (err) {
+                console.error("Cloud delete error:", err);
+                showToast('Gagal menghapus post dari cloud.', 'error');
+            }
+        };
+
+        // Cloud Reset Helper
+        window.cloudResetAll = async function() {
+            if (!auth.currentUser) return;
+            try {
+                const snapshot = await getDocs(getPostsCollectionRef());
+                const deletePromises = snapshot.docs.map(d => deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'posts', d.id)));
+                await Promise.all(deletePromises);
+                await seedInitialDataToCloud();
+                showToast('Data dikembalikan ke sampel default di cloud.', 'info');
+            } catch (err) {
+                console.error("Cloud reset error:", err);
+                showToast('Gagal mereset data cloud.', 'error');
+            }
+        };
+
+        initAuth();
+    </script>
+
+    <script>
+        // Default Sample Data (Inspired by SS 1 & SS 2 exact numbers)
+        const SAMPLE_POSTS = [
+            { id: 1, account: '@horrorlila', platform: 'TikTok', category: 'Niche Media', caption: 'Sempat dikira kejadian nyata atas ODGJ yang lepas, Isu horor misteri rumah tua...', date: '2026-06-12', views: 4855386, likes: 210500, comments: 4120, saves: 31000, shares: 8900, url: 'https://tiktok.com' },
+            { id: 2, account: '@twins.lila', platform: 'TikTok', category: 'Niche Media', caption: 'Terjebak di Rumah Sendiri Bareng Terror yang Gak Kasat Mata...', date: '2026-06-12', views: 5700000, likes: 132800, comments: 813, saves: 13800, shares: 4179, url: 'https://tiktok.com' },
+            { id: 3, account: '@obrolan.bioskop', platform: 'TikTok', category: 'Niche Media', caption: 'Diluar nalar banget! Momen yang harusnya cuma sekadar nonton film malah bikin geger...', date: '2026-06-12', views: 2900000, likes: 98000, comments: 1450, saves: 11200, shares: 3200, url: 'https://tiktok.com' },
+            { id: 4, account: '@saranfilm_', platform: 'TikTok', category: 'Niche Media', caption: 'Gak ada yang lebih menyakitkan daripada plot twist akhir film ini...', date: '2026-06-11', views: 2150000, likes: 74000, comments: 980, saves: 8900, shares: 1400, url: 'https://tiktok.com' },
+            { id: 5, account: '@lila.story_', platform: 'Instagram', category: 'Niche Media', caption: 'Punya support system berbentuk kakak kembar 10/10...', date: '2026-06-08', views: 1250000, likes: 45000, comments: 620, saves: 5400, shares: 980, url: 'https://instagram.com' },
+            { id: 6, account: '@filmila_', platform: 'TikTok', category: 'Homeless Media', caption: 'Pernah kepikiran nggak sih, kenapa kadang plot villain lebih masuk akal...', date: '2026-06-12', views: 890000, likes: 32000, comments: 450, saves: 3100, shares: 620, url: 'https://tiktok.com' },
+            { id: 7, account: '@ceritasilila_', platform: 'Instagram', category: 'Homeless Media', caption: 'Jagat maya kembali dibikin nangis berjamaah gara-gara video singkat ini...', date: '2026-06-12', views: 760000, likes: 28000, comments: 390, saves: 2400, shares: 510, url: 'https://instagram.com' },
+            { id: 8, account: '@ngobrolfilm_', platform: 'TikTok', category: 'Homeless Media', caption: 'Bagaimana cara sineas mendekati sebuah horor kultural tanpa klise...', date: '2026-06-12', views: 540000, likes: 19500, comments: 280, saves: 1800, shares: 340, url: 'https://tiktok.com' },
+            { id: 9, account: '@ilafilm_', platform: 'TikTok', category: 'Homeless Media', caption: 'Geger se-Blok M! Video amatir yang ngerubah persepsi publik dalam semalam...', date: '2026-06-12', views: 420000, likes: 14200, comments: 190, saves: 1200, shares: 280, url: 'https://tiktok.com' },
+            { id: 10, account: '@cipcuplilm_', platform: 'TikTok', category: 'Homeless Media', caption: 'Bikin mewek banget! Nggak bisa nahan air mata liat aksi heroik adik ini...', date: '2026-06-12', views: 296000, likes: 9800, comments: 110, saves: 890, shares: 190, url: 'https://tiktok.com' },
+            { id: 11, account: '@watch.again1', platform: 'TikTok', category: 'Homeless Media', caption: 'Definisi sibling goals yang sesungguhnya...', date: '2026-06-12', views: 41800, likes: 1430, comments: 42, saves: 310, shares: 45, url: 'https://tiktok.com' },
+            { id: 12, account: '@sininontondulu_', platform: 'TikTok', category: 'Homeless Media', caption: 'Definisi uji nyali yang sesungguhnya... Berani coba?', date: '2026-06-12', views: 12100, likes: 520, comments: 18, saves: 95, shares: 12, url: 'https://tiktok.com' },
+            { id: 13, account: '@maunontonapa_', platform: 'TikTok', category: 'Homeless Media', caption: 'Bikin iri netizen! Ternyata ini alasan kemarin viral...', date: '2026-06-12', views: 10900, likes: 410, comments: 14, saves: 80, shares: 8, url: 'https://tiktok.com' },
+            { id: 14, account: '@cine_sambal_', platform: 'TikTok', category: 'Homeless Media', caption: 'Nyesek! Semua sibuk nanyain bayinya, tapi yang peduli...', date: '2026-06-11', views: 6673, likes: 215, comments: 9, saves: 44, shares: 5, url: 'https://tiktok.com' },
+            { id: 15, account: '@nonton.in_', platform: 'Instagram', category: 'UGC Media', caption: 'Dewasa sebelum waktunya! Anak sekecil ini harus...', date: '2026-06-12', views: 4330, likes: 160, comments: 5, saves: 20, shares: 2, url: 'https://instagram.com' }
+        ];
+
+        // State variables
+        let postsData = [...SAMPLE_POSTS];
+        let filteredData = [...SAMPLE_POSTS];
+        let currentPage = 1;
+        const itemsPerPage = 7;
+        let sortField = 'views';
+        let sortAsc = false;
+
+        // Chart instances
+        let pieChartInstance = null;
+        let dailyChartInstance = null;
+        let barChartInstance = null;
+
+        // On Load Init
+        window.onload = function() {
+            // Setup Drag & Drop CSV
+            const dropzone = document.getElementById('dropzone');
+            dropzone.addEventListener('click', () => document.getElementById('csvFileInput').click());
+            dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('bg-emerald-100'); });
+            dropzone.addEventListener('dragleave', () => dropzone.classList.remove('bg-emerald-100'));
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('bg-emerald-100');
+                if (e.dataTransfer.files.length) {
+                    handleCsvFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            // Set current date string
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: '2-digit' };
+            document.getElementById('updatedDateText').innerText = now.toLocaleDateString('id-ID', options);
+
+            populateFilterDropdowns();
+            applyFilters();
+        };
+
+        // Populate Filter Select Options dynamically
+        function populateFilterDropdowns() {
+            const accountSelect = document.getElementById('filterAccount');
+            const categorySelect = document.getElementById('filterCategory');
+
+            const accounts = ['ALL', ...new Set(postsData.map(p => p.account))];
+            const categories = ['ALL', ...new Set(postsData.map(p => p.category))];
+
+            accountSelect.innerHTML = accounts.map(a => `<option value="${a}">${a === 'ALL' ? 'Semua Akun' : a}</option>`).join('');
+            categorySelect.innerHTML = categories.map(c => `<option value="${c}">${c === 'ALL' ? 'Semua Kategori' : c}</option>`).join('');
+        }
+
+        // Apply Global Filters
+        function applyFilters() {
+            const platform = document.getElementById('filterPlatform').value;
+            const account = document.getElementById('filterAccount').value;
+            const category = document.getElementById('filterCategory').value;
+            const startDate = document.getElementById('filterStartDate').value;
+            const endDate = document.getElementById('filterEndDate').value;
+
+            filteredData = postsData.filter(item => {
+                if (platform !== 'ALL' && item.platform !== platform) return false;
+                if (account !== 'ALL' && item.account !== account) return false;
+                if (category !== 'ALL' && item.category !== category) return false;
+                if (startDate && new Date(item.date) < new Date(startDate)) return false;
+                if (endDate && new Date(item.date) > new Date(endDate)) return false;
+                return true;
+            });
+
+            currentPage = 1;
+            updateMetrics();
+            updateTopContentHighlight();
+            renderTop10Leaderboard();
+            renderCharts();
+            renderPostsTable();
+        }
+
+        // Calculate & Update Metrics
+        function updateMetrics() {
+            const totalPosts = filteredData.length;
+            const totalViews = filteredData.reduce((sum, item) => sum + (Number(item.views) || 0), 0);
+            const totalLikes = filteredData.reduce((sum, item) => sum + (Number(item.likes) || 0), 0);
+            const totalComments = filteredData.reduce((sum, item) => sum + (Number(item.comments) || 0), 0);
+            const totalSaves = filteredData.reduce((sum, item) => sum + (Number(item.saves) || 0), 0);
+            const totalShares = filteredData.reduce((sum, item) => sum + (Number(item.shares) || 0), 0);
+
+            const totalEngagements = totalLikes + totalComments + totalSaves + totalShares;
+            const avgEngRate = totalViews > 0 ? ((totalEngagements / totalViews) * 100).toFixed(2) : 0;
+
+            document.getElementById('statTotalViews').innerText = formatNum(totalViews);
+            document.getElementById('statAvgViews').innerText = `avg ${formatNum(totalPosts ? Math.round(totalViews / totalPosts) : 0)}/post`;
+
+            document.getElementById('statTotalLikes').innerText = formatNum(totalLikes);
+            document.getElementById('statAvgLikes').innerText = `avg ${formatNum(totalPosts ? Math.round(totalLikes / totalPosts) : 0)}/post`;
+
+            document.getElementById('statTotalComments').innerText = formatNum(totalComments);
+            document.getElementById('statAvgComments').innerText = `avg ${formatNum(totalPosts ? Math.round(totalComments / totalPosts) : 0)}/post`;
+
+            document.getElementById('statTotalSaves').innerText = formatNum(totalSaves);
+            document.getElementById('statAvgSaves').innerText = `avg ${formatNum(totalPosts ? Math.round(totalSaves / totalPosts) : 0)}/post`;
+
+            document.getElementById('statTotalShares').innerText = formatNum(totalShares);
+            document.getElementById('statAvgShares').innerText = `avg ${formatNum(totalPosts ? Math.round(totalShares / totalPosts) : 0)}/post`;
+
+            document.getElementById('statAvgEngRate').innerText = `${avgEngRate}%`;
+            document.getElementById('statTotalEngagements').innerText = `${formatNum(totalEngagements)} total engagements`;
+
+            document.getElementById('filteredPostCountBadge').innerText = `Showing ${totalPosts} Posts`;
+        }
+
+        // Update Spotlight Top 1 & Cards Top 2-3
+        function updateTopContentHighlight() {
+            if (filteredData.length === 0) return;
+
+            // Sort by views desc
+            const sorted = [...filteredData].sort((a, b) => (b.views || 0) - (a.views || 0));
+
+            // Top 1
+            const t1 = sorted[0];
+            if (t1) {
+                document.getElementById('top1Account').innerText = t1.account;
+                document.getElementById('top1Date').innerText = formatDateStr(t1.date);
+                document.getElementById('top1Caption').innerText = `"${t1.caption}"`;
+                document.getElementById('top1Views').innerText = formatNum(t1.views);
+                document.getElementById('top1Likes').innerText = formatNum(t1.likes);
+                document.getElementById('top1Comments').innerText = formatNum(t1.comments);
+                document.getElementById('top1Saves').innerText = formatNum(t1.saves);
+                document.getElementById('top1Shares').innerText = formatNum(t1.shares);
+                document.getElementById('top1PlatformBadge').innerText = t1.platform;
+                
+                const engT1 = ((Number(t1.likes) + Number(t1.comments) + Number(t1.saves) + Number(t1.shares)) / (t1.views || 1)) * 100;
+                document.getElementById('top1EngRate').innerText = `${engT1.toFixed(2)}%`;
+                
+                if (t1.url) document.getElementById('top1Link').href = t1.url;
+            }
+
+            // Top 2
+            const t2 = sorted[1];
+            if (t2) {
+                document.getElementById('top2Account').innerText = t2.account;
+                document.getElementById('top2Views').innerText = `${formatNum(t2.views)} views`;
+                document.getElementById('top2Caption').innerText = t2.caption;
+            } else {
+                document.getElementById('top2Account').innerText = '-';
+                document.getElementById('top2Views').innerText = '0 views';
+                document.getElementById('top2Caption').innerText = '-';
+            }
+
+            // Top 3
+            const t3 = sorted[2];
+            if (t3) {
+                document.getElementById('top3Account').innerText = t3.account;
+                document.getElementById('top3Views').innerText = `${formatNum(t3.views)} views`;
+                document.getElementById('top3Caption').innerText = t3.caption;
+            } else {
+                document.getElementById('top3Account').innerText = '-';
+                document.getElementById('top3Views').innerText = '0 views';
+                document.getElementById('top3Caption').innerText = '-';
+            }
+        }
+
+        // Render #10 Top Performance Table
+        function renderTop10Leaderboard() {
+            const tbody = document.getElementById('top10TableBody');
+            const sorted = [...filteredData].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 10);
+
+            if (sorted.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-slate-500">Tidak ada data untuk ditampilkan</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = sorted.map((item, index) => {
+                const rankBadgeClass = index === 0 ? 'bg-amber-500 text-white' : index === 1 ? 'bg-amber-400 text-slate-900' : index === 2 ? 'bg-amber-300 text-slate-900' : 'text-slate-700 font-bold';
+                return `
+                    <tr class="hover:bg-amber-100/50 transition">
+                        <td class="py-2.5 px-3 text-center">
+                            <span class="inline-block w-6 h-6 rounded-full ${rankBadgeClass} text-xs font-black leading-6 text-center">#${index + 1}</span>
+                        </td>
+                        <td class="py-2.5 px-3">
+                            <div class="font-bold text-slate-900">${item.account} <span class="text-[10px] font-semibold text-slate-500">(${item.platform})</span></div>
+                            <div class="text-[11px] text-slate-600 line-clamp-1">${item.caption}</div>
+                        </td>
+                        <td class="py-2.5 px-3 text-right font-black text-slate-900">${formatNum(item.views)}</td>
+                        <td class="py-2.5 px-3 text-right font-semibold text-rose-600">${formatNum(item.likes)}</td>
+                        <td class="py-2.5 px-3 text-right font-semibold text-sky-600">${formatNum(item.comments)}</td>
+                        <td class="py-2.5 px-3 text-center">
+                            <a href="${item.url || '#'}" target="_blank" class="text-emerald-700 hover:underline text-xs font-bold inline-flex items-center gap-1">
+                                Link Post <i class="fa-solid fa-up-right-from-square text-[9px]"></i>
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Render Charts using Chart.js
+        function renderCharts() {
+            // 1. Platform Share Doughnut/Pie
+            const platformCounts = {};
+            filteredData.forEach(item => {
+                platformCounts[item.platform] = (platformCounts[item.platform] || 0) + (Number(item.views) || 0);
+            });
+
+            const pieCtx = document.getElementById('platformPieChart').getContext('2d');
+            if (pieChartInstance) pieChartInstance.destroy();
+            pieChartInstance = new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(platformCounts),
+                    datasets: [{
+                        data: Object.values(platformCounts),
+                        backgroundColor: ['#000000', '#e1306c', '#0084ff', '#10b981'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+                }
+            });
+
+            // 2. Daily Views Bar Chart
+            const dailyViewsMap = {};
+            filteredData.forEach(item => {
+                const dateKey = item.date || 'Unknown';
+                dailyViewsMap[dateKey] = (dailyViewsMap[dateKey] || 0) + (Number(item.views) || 0);
+            });
+
+            const sortedDates = Object.keys(dailyViewsMap).sort();
+            const dailyValues = sortedDates.map(d => dailyViewsMap[d]);
+
+            const dailyCtx = document.getElementById('dailyViewsChart').getContext('2d');
+            if (dailyChartInstance) dailyChartInstance.destroy();
+            dailyChartInstance = new Chart(dailyCtx, {
+                type: 'bar',
+                data: {
+                    labels: sortedDates.map(formatDateStr),
+                    datasets: [{
+                        label: 'Total Views',
+                        data: dailyValues,
+                        backgroundColor: '#10b981',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { callback: value => formatNum(value) } }
+                    }
+                }
+            });
+
+            // 3. Top Accounts Horizontal Bar
+            const accountViewsMap = {};
+            filteredData.forEach(item => {
+                accountViewsMap[item.account] = (accountViewsMap[item.account] || 0) + (Number(item.views) || 0);
+            });
+
+            const sortedAccounts = Object.keys(accountViewsMap).sort((a,b) => accountViewsMap[b] - accountViewsMap[a]).slice(0, 10);
+            const accountValues = sortedAccounts.map(a => accountViewsMap[a]);
+
+            const barCtx = document.getElementById('topAccountsBarChart').getContext('2d');
+            if (barChartInstance) barChartInstance.destroy();
+            barChartInstance = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: sortedAccounts,
+                    datasets: [{
+                        label: 'Views',
+                        data: accountValues,
+                        backgroundColor: '#0f172a',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { callback: value => formatNum(value) } }
+                    }
+                }
+            });
+        }
+
+        // Render Main Posts Data Table
+        function renderPostsTable() {
+            const tbody = document.getElementById('postsTableBody');
+            const searchKeyword = document.getElementById('tableSearch').value.toLowerCase();
+
+            let dataToDisplay = filteredData.filter(item => {
+                return (item.caption || '').toLowerCase().includes(searchKeyword) ||
+                       (item.account || '').toLowerCase().includes(searchKeyword) ||
+                       (item.category || '').toLowerCase().includes(searchKeyword);
+            });
+
+            // Sort
+            dataToDisplay.sort((a, b) => {
+                let valA = a[sortField] || 0;
+                let valB = b[sortField] || 0;
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+                return sortAsc ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
+            });
+
+            document.getElementById('tableTotalCount').innerText = `(${dataToDisplay.length})`;
+
+            // Pagination calculation
+            const totalPages = Math.ceil(dataToDisplay.length / itemsPerPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const paginatedData = dataToDisplay.slice(startIndex, startIndex + itemsPerPage);
+
+            document.getElementById('paginationInfo').innerText = `Menampilkan ${dataToDisplay.length > 0 ? startIndex + 1 : 0}-${Math.min(startIndex + itemsPerPage, dataToDisplay.length)} dari ${dataToDisplay.length} posts`;
+            document.getElementById('currentPageText').innerText = currentPage;
+            document.getElementById('btnPrevPage').disabled = currentPage === 1;
+            document.getElementById('btnNextPage').disabled = currentPage === totalPages;
+
+            if (paginatedData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="12" class="text-center py-6 text-slate-400">Tidak ada post yang cocok dengan filter.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = paginatedData.map(item => {
+                const totalEng = (Number(item.likes)||0) + (Number(item.comments)||0) + (Number(item.saves)||0) + (Number(item.shares)||0);
+                const engPct = item.views > 0 ? ((totalEng / item.views) * 100).toFixed(2) : '0.00';
+                
+                const platformBadge = item.platform === 'TikTok' ? 'bg-black text-white' : item.platform === 'Instagram' ? 'bg-pink-600 text-white' : 'bg-slate-700 text-white';
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-3.5 text-center">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${platformBadge}">${item.platform}</span>
+                        </td>
+                        <td class="py-3 px-3.5 font-bold text-slate-800">${item.account}</td>
+                        <td class="py-3 px-3.5">
+                            <span class="bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full text-[10px]">${item.category || 'General'}</span>
+                        </td>
+                        <td class="py-3 px-3.5 max-w-xs">
+                            <p class="truncate font-medium text-slate-700">${item.caption}</p>
+                        </td>
+                        <td class="py-3 px-3.5 whitespace-nowrap text-slate-500">${formatDateStr(item.date)}</td>
+                        <td class="py-3 px-3.5 text-right font-black text-slate-900">${formatNum(item.views)}</td>
+                        <td class="py-3 px-3.5 text-right text-slate-600">${formatNum(item.likes)}</td>
+                        <td class="py-3 px-3.5 text-right text-slate-600">${formatNum(item.comments)}</td>
+                        <td class="py-3 px-3.5 text-right text-slate-600">${formatNum(item.saves)}</td>
+                        <td class="py-3 px-3.5 text-right text-slate-600">${formatNum(item.shares)}</td>
+                        <td class="py-3 px-3.5 text-right font-bold text-emerald-700">${engPct}%</td>
+                        <td class="py-3 px-3.5 text-center">
+                            <button onclick="deletePost('${item.firestoreId}', ${item.id})" class="text-slate-400 hover:text-red-600 p-1" title="Hapus Post">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // CSV Handle Upload Logic connected to Cloud
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) handleCsvFile(file);
+        }
+
+        function handleCsvFile(file) {
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    if (results.data && results.data.length > 0) {
+                        const parsedPosts = results.data.map((row, idx) => ({
+                            id: Date.now() + idx,
+                            account: row.account || row.Account || '@unknown',
+                            platform: row.platform || row.Platform || 'TikTok',
+                            category: row.category || row.Category || 'General',
+                            caption: row.caption || row.Caption || '-',
+                            date: row.date || row.Date || new Date().toISOString().split('T')[0],
+                            views: parseInt(row.views || row.Views || 0),
+                            likes: parseInt(row.likes || row.Likes || 0),
+                            comments: parseInt(row.comments || row.Comments || 0),
+                            saves: parseInt(row.saves || row.Saves || 0),
+                            shares: parseInt(row.shares || row.Shares || 0),
+                            url: row.url || row.Url || '#'
+                        }));
+
+                        closeModal('uploadModal');
+                        if (window.cloudAddPosts) {
+                            window.cloudAddPosts(parsedPosts);
+                        }
+                    } else {
+                        showToast('Format CSV tidak valid atau file kosong.', 'error');
+                    }
+                },
+                error: function(err) {
+                    showToast('Gagal membaca file CSV: ' + err.message, 'error');
+                }
+            });
+        }
+
+        // Export Filtered CSV
+        function exportCSV() {
+            if (filteredData.length === 0) {
+                showToast('Tidak ada data untuk diexport.', 'error');
+                return;
+            }
+
+            const csvString = Papa.unparse(filteredData.map(item => ({
+                account: item.account,
+                platform: item.platform,
+                category: item.category,
+                caption: item.caption,
+                date: item.date,
+                views: item.views,
+                likes: item.likes,
+                comments: item.comments,
+                saves: item.saves,
+                shares: item.shares,
+                url: item.url
+            })));
+
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Social_Media_Report_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('File CSV berhasil diunduh!', 'success');
+        }
+
+        // Download Sample CSV Format
+        function downloadSampleCSV() {
+            const sample = [
+                { account: '@twins.lila', platform: 'TikTok', category: 'Niche Media', caption: 'Contoh caption post viral 1', date: '2026-06-12', views: 5700000, likes: 132800, comments: 813, saves: 13800, shares: 4179, url: 'https://tiktok.com' },
+                { account: '@lila.story_', platform: 'Instagram', category: 'UGC Media', caption: 'Contoh caption post instagram', date: '2026-06-08', views: 1250000, likes: 45000, comments: 620, saves: 5400, shares: 980, url: 'https://instagram.com' }
+            ];
+            const csv = Papa.unparse(sample);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "sample_report_format.csv";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Handle Quick Form Add Submit
+        function handleAddPostSubmit(e) {
+            e.preventDefault();
+            const newPost = {
+                id: Date.now(),
+                platform: document.getElementById('newPlatform').value,
+                account: document.getElementById('newAccount').value,
+                category: document.getElementById('newCategory').value,
+                caption: document.getElementById('newCaption').value,
+                date: document.getElementById('newDate').value,
+                views: parseInt(document.getElementById('newViews').value || 0),
+                likes: parseInt(document.getElementById('newLikes').value || 0),
+                comments: parseInt(document.getElementById('newComments').value || 0),
+                saves: parseInt(document.getElementById('newSaves').value || 0),
+                shares: parseInt(document.getElementById('newShares').value || 0),
+                url: document.getElementById('newUrl').value || '#'
+            };
+
+            closeModal('addPostModal');
+            document.getElementById('addPostForm').reset();
+            if (window.cloudAddPosts) {
+                window.cloudAddPosts([newPost]);
+            }
+        }
+
+        // Delete Post from Cloud
+        function deletePost(firestoreId, localId) {
+            if (firestoreId && window.cloudDeletePost) {
+                window.cloudDeletePost(firestoreId);
+            } else {
+                postsData = postsData.filter(p => p.id !== localId);
+                applyFilters();
+                showToast('Post berhasil dihapus.', 'info');
+            }
+        }
+
+        // Reset to sample data on Cloud
+        function resetToSampleData() {
+            if (window.cloudResetAll) {
+                window.cloudResetAll();
+            } else {
+                postsData = [...SAMPLE_POSTS];
+                document.getElementById('filterPlatform').value = 'ALL';
+                document.getElementById('filterStartDate').value = '';
+                document.getElementById('filterEndDate').value = '';
+                populateFilterDropdowns();
+                applyFilters();
+                showToast('Data dikembalikan ke data sampel awal.', 'info');
+            }
+        }
+
+        // Utility Helpers
+        function formatNum(num) {
+            if (!num && num !== 0) return '0';
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        function formatDateStr(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        function toggleSort(field) {
+            if (sortField === field) {
+                sortAsc = !sortAsc;
+            } else {
+                sortField = field;
+                sortAsc = false;
+            }
+            renderPostsTable();
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            renderPostsTable();
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-emerald-800 text-white' : type === 'error' ? 'bg-rose-700 text-white' : 'bg-slate-800 text-white';
+            
+            toast.className = `${bgClass} text-xs font-semibold px-4 py-3 rounded-xl shadow-lg pointer-events-auto flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-info'}"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
