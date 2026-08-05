@@ -62,12 +62,12 @@
                 <div>
                     <span class="text-xs uppercase tracking-wider font-semibold text-slate-400">PROJECT REPORT</span>
                     <div class="flex items-center gap-1 relative">
-                        <select id="projectSelect" onchange="handleProjectChange()" class="appearance-none bg-transparent font-bold text-xl text-slate-800 focus:outline-none cursor-pointer hover:text-emerald-600 transition pr-5">
+                        <select id="projectSelect" onchange="handleProjectChange()" disabled class="appearance-none bg-transparent font-bold text-xl text-slate-800 focus:outline-none cursor-pointer hover:text-emerald-600 transition pr-5 disabled:cursor-default disabled:hover:text-slate-800 disabled:opacity-100">
                             <option value="Cerita Lila">Cerita Lila</option>
                             <option value="Campaign Media 2026">Campaign Media 2026</option>
                             <option value="Brand Performance Q3">Brand Performance Q3</option>
                         </select>
-                        <i class="fa-solid fa-chevron-down text-xs text-slate-400 pointer-events-none -ml-3"></i>
+                        <i id="projectSelectChevron" class="fa-solid fa-chevron-down text-xs text-slate-400 pointer-events-none -ml-3 hidden"></i>
                     </div>
                 </div>
 
@@ -567,7 +567,7 @@
             </div>
             <h3 class="text-base font-bold text-slate-800">Login Modus Admin</h3>
             <p class="text-xs text-slate-500">Masukkan PIN Admin untuk mengedit project & data laporan.</p>
-            <input type="password" id="adminPasscodeInput" placeholder="Masukkan PIN Admin (1234)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-center text-sm tracking-widest focus:outline-none focus:border-emerald-500">
+            <input type="password" id="adminPasscodeInput" placeholder="Masukkan PIN Admin" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-center text-sm tracking-widest focus:outline-none focus:border-emerald-500">
             <button onclick="submitAdminPasscode()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition">
                 Masuk Admin
             </button>
@@ -604,9 +604,9 @@
                     </div>
 
                     <div id="settingsLoginForm" class="pt-1">
-                        <p class="text-[11px] text-slate-500 mb-2">Masuk sebagai Admin (PIN: 1234) untuk membuka opsi edit, upload, dan manajemen project.</p>
+                        <p class="text-[11px] text-slate-500 mb-2">Masuk sebagai Admin untuk membuka opsi edit, upload, dan manajemen project.</p>
                         <div class="flex gap-2">
-                            <input type="password" id="settingsPinInput" placeholder="PIN Admin (1234)" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500">
+                            <input type="password" id="settingsPinInput" placeholder="PIN Admin" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500">
                             <button onclick="submitSettingsPin()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded-xl transition whitespace-nowrap">
                                 Login
                             </button>
@@ -717,7 +717,7 @@
         // Initialize App on DOM Load
         window.addEventListener('DOMContentLoaded', () => {
             loadProjectsFromStorage();
-            checkAdminURLParam();
+            checkURLParams();
             setCurrentProject(currentProjectName);
         });
 
@@ -766,21 +766,30 @@
         }
 
         // Admin Mode Toggle and Auth
-        function checkAdminURLParam() {
+        function checkURLParams() {
             const urlParams = new URLSearchParams(window.location.search);
+            
+            // Check project parameter if client opens specific project link
+            const projParam = urlParams.get('project');
+            if (projParam && projectsStore[projParam]) {
+                currentProjectName = projParam;
+            }
+
             if (urlParams.get('admin') === 'true') {
                 enableAdminMode();
+            } else {
+                disableAdminMode();
             }
         }
 
         function submitAdminPasscode() {
             const pin = document.getElementById('adminPasscodeInput').value.trim();
-            if (pin === '1234') {
+            if (pin === '0000') {
                 enableAdminMode();
                 closeModal('adminPasscodeModal');
                 document.getElementById('adminPasscodeInput').value = '';
             } else {
-                alert('PIN Admin salah! Gunakan PIN: 1234');
+                alert('PIN Admin salah!');
             }
         }
 
@@ -796,6 +805,12 @@
             document.getElementById('adminActionGroup').classList.remove('hidden');
             document.getElementById('adminProjectControlGroup').classList.remove('hidden');
             document.getElementById('adminProjectControlGroup').classList.add('flex');
+
+            // Unlock project dropdown for Admin
+            const projSelect = document.getElementById('projectSelect');
+            if (projSelect) projSelect.disabled = false;
+            const chevron = document.getElementById('projectSelectChevron');
+            if (chevron) chevron.classList.remove('hidden');
 
             // Show Admin-Only Sections (Daily Trend, Top Accounts Chart & Detailed Posts Table)
             const adminCharts = document.getElementById('adminOnlySecondaryCharts');
@@ -821,6 +836,12 @@
             document.getElementById('adminActionGroup').classList.add('hidden');
             document.getElementById('adminProjectControlGroup').classList.add('hidden');
             document.getElementById('adminProjectControlGroup').classList.remove('flex');
+
+            // Lock project dropdown for Client Mode
+            const projSelect = document.getElementById('projectSelect');
+            if (projSelect) projSelect.disabled = true;
+            const chevron = document.getElementById('projectSelectChevron');
+            if (chevron) chevron.classList.add('hidden');
 
             // Hide Admin-Only Sections for Client View
             const adminCharts = document.getElementById('adminOnlySecondaryCharts');
@@ -857,12 +878,12 @@
 
         function submitSettingsPin() {
             const pin = document.getElementById('settingsPinInput').value.trim();
-            if (pin === '1234') {
+            if (pin === '0000') {
                 enableAdminMode();
                 document.getElementById('settingsPinInput').value = '';
                 alert('Berhasil Login Modus Admin!');
             } else {
-                alert('PIN Admin salah! Gunakan PIN: 1234');
+                alert('PIN Admin salah!');
             }
         }
 
