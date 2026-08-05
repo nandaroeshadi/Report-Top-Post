@@ -9,14 +9,14 @@
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <!-- PapaParse for CSV parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <!-- SheetJS for Excel/Spreadsheet parsing (.xlsx, .xls) -->
+    <!-- SheetJS for Excel (.xlsx, .xls) parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
+
     <script>
         tailwind.config = {
             theme: {
@@ -25,12 +25,14 @@
                         sans: ['Plus Jakarta Sans', 'sans-serif'],
                     },
                     colors: {
-                        brand: {
-                            50: '#ecfdf5',
-                            100: '#d1fae5',
+                        emerald: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
                             500: '#10b981',
                             600: '#059669',
                             700: '#047857',
+                            800: '#065f46',
                             900: '#064e3b',
                         }
                     }
@@ -39,115 +41,131 @@
         }
     </script>
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen pb-16">
-
-    <!-- Toast Notification Container -->
-    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
 
     <!-- Top Navigation Header -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
             
             <!-- Project Title Selector -->
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-3">
                 <div class="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl font-bold">
                     <i class="fa-solid fa-chart-line text-xl"></i>
                 </div>
                 <div>
                     <span class="text-xs uppercase tracking-wider font-semibold text-slate-400">PROJECT REPORT</span>
-                    <div class="flex items-center gap-2">
-                        <select id="projectSelect" onchange="handleProjectChange()" class="bg-transparent font-bold text-xl text-slate-800 focus:outline-none cursor-pointer hover:text-emerald-600 transition">
+                    <div class="flex items-center gap-1 relative">
+                        <select id="projectSelect" onchange="handleProjectChange()" class="appearance-none bg-transparent font-bold text-xl text-slate-800 focus:outline-none cursor-pointer hover:text-emerald-600 transition pr-5">
                             <option value="Cerita Lila">Cerita Lila</option>
                             <option value="Campaign Media 2026">Campaign Media 2026</option>
                             <option value="Brand Performance Q3">Brand Performance Q3</option>
                         </select>
-                        <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
+                        <i class="fa-solid fa-chevron-down text-xs text-slate-400 pointer-events-none -ml-3"></i>
                     </div>
                 </div>
-            </div>
 
-            <!-- Admin Project Management Control Buttons (Admin Only) -->
-            <div id="adminProjectControlGroup" class="hidden flex-wrap items-center gap-1.5 md:border-l md:border-slate-200 md:pl-3">
-                <button onclick="openModal('addProjectModal')" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition">
-                    <i class="fa-solid fa-plus text-[10px]"></i> Project Baru
-                </button>
-                <button onclick="openEditProjectModal()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition">
-                    <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit
-                </button>
-                <button onclick="confirmDeleteCurrentProject()" class="bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition">
-                    <i class="fa-solid fa-trash text-[10px]"></i> Hapus
-                </button>
+                <!-- Admin Project Management Control Buttons (Admin Only - Beside dropdown) -->
+                <div id="adminProjectControlGroup" class="hidden items-center gap-1.5 border-l border-slate-200 pl-3 my-1">
+                    <button onclick="openModal('addProjectModal')" class="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs" title="Tambah Project Baru">
+                        <i class="fa-solid fa-plus text-[10px]"></i> + Project Baru
+                    </button>
+                    <button onclick="openEditProjectModal()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs" title="Ubah Nama Project Saat Ini">
+                        <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit
+                    </button>
+                    <button onclick="confirmDeleteCurrentProject()" class="bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs" title="Hapus Project Saat Ini">
+                        <i class="fa-solid fa-trash text-[10px]"></i> Hapus
+                    </button>
+                </div>
             </div>
 
             <!-- Action Toolbar (Dynamic based on Admin vs Client Mode) -->
             <div class="flex flex-wrap items-center gap-2">
-                <!-- Status Mode Badge -->
-                <div id="accessModeBadge" class="flex items-center gap-2 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl text-xs">
-                    <span class="w-2 h-2 rounded-full bg-slate-400"></span>
-                    <span class="text-slate-600 font-bold">Mode View Client</span>
-                </div>
+                <!-- Status Mode Badge (Hidden) -->
+                <div id="accessModeBadge" class="hidden"></div>
 
-                <!-- Admin Action Buttons (Hidden for clients) -->
-                <div id="adminActionGroup" class="hidden flex-wrap items-center gap-2">
-                    <button onclick="openModal('uploadModal')" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3.5 py-2 rounded-xl text-sm transition shadow-sm">
-                        <i class="fa-solid fa-file-excel"></i>
-                        <span>Upload Excel / CSV</span>
-                    </button>
-                    <button onclick="openModal('addPostModal')" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-medium px-3.5 py-2 rounded-xl text-sm transition shadow-sm">
-                        <i class="fa-solid fa-plus"></i>
-                        <span>Tambah Post</span>
-                    </button>
-                    <button onclick="confirmResetCurrentProjectData()" class="inline-flex items-center gap-2 bg-white border border-red-200 text-red-600 hover:bg-red-50 font-medium px-3 py-2 rounded-xl text-sm transition" title="Reset Data Project Ini">
-                        <i class="fa-solid fa-rotate-left"></i>
-                        <span>Reset Data</span>
-                    </button>
-                </div>
-
-                <!-- Shared Client Actions -->
-                <button onclick="exportCSV()" class="inline-flex items-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium px-3.5 py-2 rounded-xl text-sm transition">
-                    <i class="fa-solid fa-download"></i>
-                    <span>Export CSV</span>
+                <!-- Settings Button (Gear Icon) -->
+                <button onclick="openModal('settingsModal')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 transition shadow-xs border border-slate-200">
+                    <i class="fa-solid fa-gear text-slate-500"></i>
+                    <span>Pengaturan</span>
                 </button>
 
-                <!-- Admin Login Toggle Button -->
-                <button id="adminLoginBtn" onclick="toggleAdminAuth()" class="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-2 rounded-xl text-sm transition border border-slate-200">
-                    <i class="fa-solid fa-lock text-xs"></i>
-                    <span id="adminLoginBtnText">Login Admin</span>
-                </button>
+                <!-- Admin Action Buttons (Discreet Popover Menu) -->
+                <div id="adminActionGroup" class="hidden relative">
+                    <button onclick="toggleAdminMenu()" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-medium px-3.5 py-2 rounded-xl text-xs transition shadow-sm">
+                        <i class="fa-solid fa-sliders"></i>
+                        <span>Admin Tools</span>
+                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                    </button>
+
+                    <!-- Hidden Admin Popover Menu -->
+                    <div id="adminDropdownMenu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 z-40 p-2 space-y-1">
+                        <button onclick="openModal('uploadModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition flex items-center gap-2">
+                            <i class="fa-solid fa-file-excel text-emerald-600"></i> Upload Excel / CSV
+                        </button>
+                        <button onclick="openModal('addPostModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2">
+                            <i class="fa-solid fa-plus text-slate-600"></i> Tambah Post
+                        </button>
+                        <button onclick="exportExcel(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2">
+                            <i class="fa-solid fa-file-excel text-emerald-600"></i> Export Excel (.xlsx)
+                        </button>
+                        <button onclick="exportCSV(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2">
+                            <i class="fa-solid fa-file-csv text-slate-600"></i> Export CSV
+                        </button>
+                        <div class="border-t border-slate-100 my-1"></div>
+                        <button onclick="confirmResetCurrentProjectData(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition flex items-center gap-2">
+                            <i class="fa-solid fa-rotate-left"></i> Reset Data Project
+                        </button>
+                        <button onclick="disableAdminMode(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition flex items-center gap-2">
+                            <i class="fa-solid fa-right-from-bracket"></i> Keluar Admin
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
 
+    <!-- Main Dashboard Body -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
 
-        <!-- Filter & Header Control Panel -->
-        <div class="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 rounded-2xl p-5 text-white shadow-lg">
-            <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-emerald-600/60 pb-4 mb-4 gap-3">
+        <!-- Banner Header (Green Theme inspired by Screenshot 2) -->
+        <div class="bg-emerald-800 text-white rounded-3xl p-6 sm:p-8 shadow-lg relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl font-black pointer-events-none">REPORT</div>
+            <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-2xl font-black tracking-wide flex items-center gap-2">
-                        SOCIAL MEDIA REPORT 
-                        <span id="clientHeaderBadge" class="text-xs font-semibold bg-emerald-500/40 text-emerald-100 border border-emerald-400/30 px-2.5 py-0.5 rounded-full">Client View</span>
-                    </h1>
-                    <p class="text-emerald-100/80 text-xs mt-1">Rekapitulasi performa konten & engagement akun sosial media</p>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-700/80 rounded-full text-xs font-semibold text-emerald-100 mb-2">
+                        <i class="fa-solid fa-circle-check text-emerald-300"></i>
+                        <span>Social Media Performance Hub</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">SOCIAL MEDIA REPORT</h1>
+                    <p class="text-emerald-100 text-sm mt-1">Rekapitulasi performa konten & engagement akun sosial media secara real-time</p>
                 </div>
-                <div class="flex items-center gap-2 bg-emerald-900/50 backdrop-blur border border-emerald-500/30 px-3.5 py-1.5 rounded-xl text-xs font-medium text-emerald-200">
-                    <i class="fa-regular fa-clock"></i>
-                    <span>Updated in: <strong id="updatedDateText" class="text-white">Senin, 03 Agustus 2026</strong></span>
+                <div class="bg-emerald-900/60 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-emerald-700/50 text-xs flex items-center gap-2 self-start md:self-auto">
+                    <i class="fa-regular fa-clock text-emerald-300"></i>
+                    <span>Updated in: <strong id="lastUpdatedDate" class="text-white font-bold">Today</strong></span>
                 </div>
             </div>
+        </div>
 
-            <!-- Global Filters Bar -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <!-- Platform Filter -->
+        <!-- Global Filter Bar (Concept from Screenshot 2) -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-filter text-emerald-600"></i> Filter Data Laporan
+                </h3>
+                <button onclick="resetFilters()" class="text-xs text-emerald-600 font-semibold hover:underline">Reset Filter</button>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                    <label class="block text-xs font-medium text-emerald-200 mb-1">Filter Platform:</label>
-                    <select id="filterPlatform" onchange="applyFilters()" class="w-full bg-emerald-900/60 border border-emerald-500/40 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Platform</label>
+                    <select id="filterPlatform" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
                         <option value="ALL">Semua Platform</option>
                         <option value="TikTok">TikTok</option>
                         <option value="Instagram">Instagram</option>
@@ -155,788 +173,790 @@
                     </select>
                 </div>
 
-                <!-- Account Filter -->
                 <div>
-                    <label class="block text-xs font-medium text-emerald-200 mb-1">Filter Akun:</label>
-                    <select id="filterAccount" onchange="applyFilters()" class="w-full bg-emerald-900/60 border border-emerald-500/40 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Account Handle</label>
+                    <select id="filterAccount" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
                         <option value="ALL">Semua Akun</option>
                     </select>
                 </div>
 
-                <!-- Category Filter -->
                 <div>
-                    <label class="block text-xs font-medium text-emerald-200 mb-1">Filter Kategori:</label>
-                    <select id="filterCategory" onchange="applyFilters()" class="w-full bg-emerald-900/60 border border-emerald-500/40 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Kategori Content</label>
+                    <select id="filterCategory" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
                         <option value="ALL">Semua Kategori</option>
                     </select>
                 </div>
 
-                <!-- Date Range Filter -->
                 <div>
-                    <label class="block text-xs font-medium text-emerald-200 mb-1">Periode Date Range:</label>
-                    <div class="flex items-center gap-2">
-                        <input type="date" id="filterStartDate" onchange="applyFilters()" class="w-full bg-emerald-900/60 border border-emerald-500/40 text-white rounded-xl px-2.5 py-1.5 text-xs focus:outline-none">
-                        <span class="text-xs text-emerald-300">-</span>
-                        <input type="date" id="filterEndDate" onchange="applyFilters()" class="w-full bg-emerald-900/60 border border-emerald-500/40 text-white rounded-xl px-2.5 py-1.5 text-xs focus:outline-none">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Range Tanggal (Upload)</label>
+                    <div class="flex items-center gap-1.5">
+                        <input type="date" id="filterStartDate" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-[11px] font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
+                        <span class="text-xs text-slate-400">-</span>
+                        <input type="date" id="filterEndDate" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-[11px] font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TOTAL PERFORMANCE CARDS -->
-        <div>
-            <div class="flex items-center justify-between mb-3">
-                <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
-                    TOTAL PERFORMANCE
-                </h2>
-                <span id="filteredPostCountBadge" class="text-xs font-medium bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg">Showing 0 Posts</span>
-            </div>
-
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition">
-                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-1">
-                        <span>TOTAL VIEWS</span>
-                        <i class="fa-solid fa-eye text-emerald-500"></i>
-                    </div>
-                    <div id="statTotalViews" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">0</div>
-                    <p id="statAvgViews" class="text-[11px] text-slate-500 mt-1 font-medium">avg 0/post</p>
-                </div>
-
-                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition">
-                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-1">
-                        <span>TOTAL LIKES</span>
-                        <i class="fa-solid fa-heart text-rose-500"></i>
-                    </div>
-                    <div id="statTotalLikes" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">0</div>
-                    <p id="statAvgLikes" class="text-[11px] text-slate-500 mt-1 font-medium">avg 0/post</p>
-                </div>
-
-                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition">
-                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-1">
-                        <span>COMMENTS</span>
-                        <i class="fa-solid fa-comment text-sky-500"></i>
-                    </div>
-                    <div id="statTotalComments" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">0</div>
-                    <p id="statAvgComments" class="text-[11px] text-slate-500 mt-1 font-medium">avg 0/post</p>
-                </div>
-
-                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition">
-                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-1">
-                        <span>SAVES</span>
-                        <i class="fa-solid fa-bookmark text-amber-500"></i>
-                    </div>
-                    <div id="statTotalSaves" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">0</div>
-                    <p id="statAvgSaves" class="text-[11px] text-slate-500 mt-1 font-medium">avg 0/post</p>
-                </div>
-
-                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition">
-                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-1">
-                        <span>SHARES</span>
-                        <i class="fa-solid fa-share text-indigo-500"></i>
-                    </div>
-                    <div id="statTotalShares" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">0</div>
-                    <p id="statAvgShares" class="text-[11px] text-slate-500 mt-1 font-medium">avg 0/post</p>
-                </div>
-
-                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition">
-                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-1">
-                        <span>AVG ENGAGEMENT</span>
-                        <i class="fa-solid fa-chart-pie text-emerald-600"></i>
-                    </div>
-                    <div id="statAvgEngRate" class="text-xl sm:text-2xl font-black text-emerald-600 tracking-tight">0%</div>
-                    <p id="statTotalEngagements" class="text-[11px] text-slate-500 mt-1 font-medium">0 engagements</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- TOP CONTENT HIGHLIGHT & LEADERBOARD SECTION -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Summary Performance Metrics Section (Screenshot 2: Green Section) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            <!-- Left Column: #1 Top Content Highlight -->
-            <div class="lg:col-span-5 flex flex-col gap-4">
-                <div class="bg-gradient-to-br from-emerald-100 via-emerald-50 to-white rounded-2xl border border-emerald-300/80 p-5 shadow-sm relative overflow-hidden flex-1 flex flex-col justify-between">
-                    <div class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-200/50 rounded-full blur-xl pointer-events-none"></div>
-                    
-                    <div>
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="bg-emerald-700 text-white font-black text-xs px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
-                                <i class="fa-solid fa-crown text-amber-300"></i> #1 TOP CONTENT
-                            </span>
-                            <span id="top1PlatformBadge" class="bg-black text-white text-[11px] font-bold px-2.5 py-0.5 rounded-md">TikTok</span>
-                        </div>
+            <!-- TOTAL PERFORMANCE BOX -->
+            <div class="md:col-span-2 bg-emerald-50 border border-emerald-200 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-extrabold uppercase tracking-widest text-emerald-800 bg-emerald-200/60 px-3 py-1 rounded-full">
+                            TOTAL PERFORMANCE
+                        </span>
+                        <span class="text-xs text-emerald-700 font-medium" id="postCountBadge">0 Posts Loaded</span>
+                    </div>
 
-                        <div class="bg-white p-3.5 rounded-xl border border-emerald-200/70 shadow-xs mb-4">
-                            <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
-                                <span id="top1Account" class="font-bold text-slate-800">@twins.lila</span>
-                                <span id="top1Date">12 Jun 2026</span>
-                            </div>
-                            <p id="top1Caption" class="text-slate-700 text-xs font-medium line-clamp-2 mb-2 italic">"Terjebak di Rumah Sendiri Bareng Terror yang Gak Kasat Mata..."</p>
-                            <a id="top1Link" href="#" target="_blank" class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-800">
-                                <span>Buka Link Post</span> <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                            </a>
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div>
+                            <span class="text-xs text-emerald-700 font-semibold block">Views</span>
+                            <span id="metricTotalViews" class="text-2xl sm:text-3xl font-extrabold text-emerald-950">0</span>
                         </div>
-
-                        <div class="grid grid-cols-3 gap-2 text-center">
-                            <div class="bg-white/80 backdrop-blur p-2.5 rounded-xl border border-emerald-200/60">
-                                <span class="block text-[10px] text-slate-500 font-bold uppercase">Views</span>
-                                <span id="top1Views" class="text-base font-black text-slate-900">2.900.000</span>
-                            </div>
-                            <div class="bg-white/80 backdrop-blur p-2.5 rounded-xl border border-emerald-200/60">
-                                <span class="block text-[10px] text-slate-500 font-bold uppercase">Likes</span>
-                                <span id="top1Likes" class="text-base font-black text-rose-600">132.800</span>
-                            </div>
-                            <div class="bg-white/80 backdrop-blur p-2.5 rounded-xl border border-emerald-200/60">
-                                <span class="block text-[10px] text-slate-500 font-bold uppercase">Comments</span>
-                                <span id="top1Comments" class="text-base font-black text-sky-600">813</span>
-                            </div>
-                            <div class="bg-white/80 backdrop-blur p-2.5 rounded-xl border border-emerald-200/60">
-                                <span class="block text-[10px] text-slate-500 font-bold uppercase">Saves</span>
-                                <span id="top1Saves" class="text-base font-black text-amber-600">13.800</span>
-                            </div>
-                            <div class="bg-white/80 backdrop-blur p-2.5 rounded-xl border border-emerald-200/60">
-                                <span class="block text-[10px] text-slate-500 font-bold uppercase">Shares</span>
-                                <span id="top1Shares" class="text-base font-black text-indigo-600">4.179</span>
-                            </div>
-                            <div class="bg-white/80 backdrop-blur p-2.5 rounded-xl border border-emerald-200/60">
-                                <span class="block text-[10px] text-slate-500 font-bold uppercase">Eng. Rate</span>
-                                <span id="top1EngRate" class="text-base font-black text-emerald-700">5.23%</span>
-                            </div>
+                        <div>
+                            <span class="text-xs text-emerald-700 font-semibold block">Likes</span>
+                            <span id="metricTotalLikes" class="text-2xl sm:text-3xl font-extrabold text-emerald-950">0</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-emerald-700 font-semibold block">Comments</span>
+                            <span id="metricTotalComments" class="text-2xl sm:text-3xl font-extrabold text-emerald-950">0</span>
                         </div>
                     </div>
 
-                    <div class="mt-4 pt-3 border-t border-emerald-200/70 text-right">
-                        <span class="text-[11px] text-emerald-800 font-medium">🔥 Konten dengan impresi tertinggi dalam laporan</span>
-                    </div>
-                </div>
-
-                <!-- Top 2 & Top 3 Cards -->
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm relative">
-                        <span class="absolute top-2 right-2 w-5 h-5 bg-amber-500 text-white rounded-full text-[10px] font-black flex items-center justify-center">2</span>
-                        <div class="text-xs font-bold text-slate-800 truncate pr-6" id="top2Account">@horrorlila</div>
-                        <div class="text-sm font-black text-slate-900 mt-1" id="top2Views">4.855.386 views</div>
-                        <p class="text-[11px] text-slate-500 truncate mt-1" id="top2Caption">Sempat dikira kejadian nyata...</p>
-                    </div>
-                    <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm relative">
-                        <span class="absolute top-2 right-2 w-5 h-5 bg-amber-700 text-white rounded-full text-[10px] font-black flex items-center justify-center">3</span>
-                        <div class="text-xs font-bold text-slate-800 truncate pr-6" id="top3Account">@obrolan.bioskop</div>
-                        <div class="text-sm font-black text-slate-900 mt-1" id="top3Views">2.900.000 views</div>
-                        <p class="text-[11px] text-slate-500 truncate mt-1" id="top3Caption">Diluar nalar banget! Momen...</p>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <span class="text-xs text-emerald-700 font-semibold block">Saves</span>
+                            <span id="metricTotalSaves" class="text-xl sm:text-2xl font-bold text-emerald-900">0</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-emerald-700 font-semibold block">Shares</span>
+                            <span id="metricTotalShares" class="text-xl sm:text-2xl font-bold text-emerald-900">0</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-emerald-700 font-semibold block">Avg. Engagement</span>
+                            <span id="metricAvgEngagement" class="text-xl sm:text-2xl font-bold text-emerald-900">0%</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: #10 TOP PERFORMANCE Leaderboard Table -->
-            <div class="lg:col-span-7 flex flex-col">
-                <div class="bg-amber-50 border border-amber-300 rounded-2xl overflow-hidden shadow-sm flex-1 flex flex-col">
-                    <div class="bg-amber-300/80 px-4 py-3 border-b border-amber-400/60 flex items-center justify-between">
-                        <h3 class="font-black text-slate-900 text-sm tracking-wide flex items-center gap-2">
-                            <i class="fa-solid fa-trophy text-amber-600"></i> #10 TOP PERFORMANCE CONTENT
-                        </h3>
-                        <span class="text-[11px] font-semibold text-slate-700">Rangking Berdasarkan Views</span>
+            <!-- SPOTLIGHT #1 TOP CONTENT -->
+            <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white rounded-3xl p-6 shadow-md flex flex-col justify-between relative overflow-hidden">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="bg-amber-400 text-slate-900 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-xs">
+                            <i class="fa-solid fa-trophy"></i> #1 TOP CONTENT
+                        </span>
+                        <span id="top1Platform" class="text-xs font-bold bg-white/20 px-2.5 py-0.5 rounded-full">-</span>
                     </div>
 
-                    <div class="overflow-x-auto custom-scrollbar flex-1">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-amber-100/70 border-b border-amber-200 font-bold text-slate-800 uppercase tracking-wider text-[11px]">
-                                <tr>
-                                    <th class="py-2.5 px-3 text-center w-12">Rank</th>
-                                    <th class="py-2.5 px-3">Account & Content</th>
+                    <div class="mt-4 space-y-2">
+                        <div id="top1Account" class="text-sm font-bold text-emerald-200">@account</div>
+                        <p id="top1Caption" class="text-xs text-emerald-50 line-clamp-2 italic">"Loading top post content..."</p>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 mt-6 pt-4 border-t border-emerald-500/50 text-center">
+                        <div>
+                            <span class="text-[10px] uppercase font-semibold text-emerald-200 block">Views</span>
+                            <span id="top1Views" class="text-sm font-extrabold text-white">0</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase font-semibold text-emerald-200 block">Likes</span>
+                            <span id="top1Likes" class="text-sm font-extrabold text-white">0</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase font-semibold text-emerald-200 block">Comments</span>
+                            <span id="top1Comments" class="text-sm font-extrabold text-white">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <a id="top1Link" href="#" target="_blank" class="mt-4 w-full bg-white text-emerald-800 hover:bg-emerald-100 font-bold py-2 px-4 rounded-xl text-xs text-center transition block">
+                    Buka Link Konten <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-1"></i>
+                </a>
+            </div>
+
+        </div>
+
+        <!-- Visual Charts & Leaderboard Row (SS 1 + SS 2 Combined) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- LEADERBOARD #10 TOP PERFORMANCE (Screenshot 2: Yellow Table) -->
+            <div class="lg:col-span-2 bg-amber-50/80 border border-amber-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-extrabold uppercase tracking-wider text-amber-900 flex items-center gap-2">
+                            <i class="fa-solid fa-ranking-star text-amber-600"></i> #10 Top Performance Konten
+                        </h3>
+                        <span class="text-xs text-amber-700 font-medium">Sorted by Views</span>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-amber-200 bg-white">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-amber-100/70 text-amber-900 text-xs font-bold border-b border-amber-200">
+                                    <th class="py-2.5 px-3 text-center">Rank</th>
+                                    <th class="py-2.5 px-3">Account / Caption</th>
                                     <th class="py-2.5 px-3 text-right">Views</th>
                                     <th class="py-2.5 px-3 text-right">Likes</th>
-                                    <th class="py-2.5 px-3 text-right">Comments</th>
+                                    <th class="py-2.5 px-3 text-right">Comment</th>
                                     <th class="py-2.5 px-3 text-center">Link</th>
                                 </tr>
                             </thead>
-                            <tbody id="top10TableBody" class="divide-y divide-amber-200/60 font-medium text-slate-700">
-                                <!-- Dynamic Top 10 rows populated via JS -->
+                            <tbody id="top10TableBody" class="divide-y divide-amber-100 text-xs">
+                                <!-- Top 10 Dynamic Rows -->
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
+            <!-- PLATFORM DISTRIBUTION PIE CHART (Screenshot 2 Right Top) -->
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-emerald-600"></i> Platform Views Share
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-4">Proporsi tayangan berdasarkan platform</p>
+                    <div class="relative h-48 w-full flex items-center justify-center">
+                        <canvas id="platformPieChart"></canvas>
+                    </div>
+                </div>
+                <div id="pieLegend" class="mt-4 pt-3 border-t border-slate-100 flex justify-around text-xs font-semibold text-slate-600">
+                    <!-- Legend dynamic -->
+                </div>
+            </div>
+
         </div>
 
-        <!-- CHARTS SECTION -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="font-bold text-slate-800 text-sm">Platform Share (Views)</h3>
-                    <span class="text-xs text-slate-400">Instagram vs TikTok</span>
+        <!-- Secondary Charts Row: Daily Views Trend & Top Accounts (Screenshot 1 & 2) - Admin Only -->
+        <div id="adminOnlySecondaryCharts" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- DAILY VIEWS TREND (SS 2) -->
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs">
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-column text-emerald-600"></i> Tren Penambahan Views Per Hari
+                </h3>
+                <p class="text-xs text-slate-400 mb-4">Performa tayangan harian secara menyeluruh</p>
+                <div class="h-60 w-full">
+                    <canvas id="dailyTrendChart"></canvas>
                 </div>
-                <div class="h-56 relative flex items-center justify-center">
-                    <canvas id="platformPieChart"></canvas>
-                </div>
-                <p class="text-center text-[11px] text-slate-500 mt-2 font-medium" id="pieChartSubtitle">Data Grafik Proporsi Traffic</p>
             </div>
 
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm lg:col-span-2">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="font-bold text-slate-800 text-sm">Data Penambahan Views Perhari / Tanggal</h3>
-                    <span class="text-xs text-slate-400">Daily Performance Trend</span>
-                </div>
-                <div class="h-56">
-                    <canvas id="dailyViewsChart"></canvas>
-                </div>
-                <p class="text-center text-[11px] text-slate-500 mt-2 font-medium">Tren akumulasi pencapaian views harian</p>
-            </div>
-
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm lg:col-span-3">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="font-bold text-slate-800 text-sm">Top Akun By Total Views</h3>
-                    <span class="text-xs text-slate-400">Peringkat akumulasi views per akun</span>
-                </div>
-                <div class="h-64">
+            <!-- TOP ACCOUNTS BY VIEWS BAR CHART (SS 1) -->
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs">
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-users text-emerald-600"></i> Top Akun Menurut Total Views
+                </h3>
+                <p class="text-xs text-slate-400 mb-4">Akun yang memiliki kontribusi views terbesar</p>
+                <div class="h-60 w-full">
                     <canvas id="topAccountsBarChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- POSTS DATA TABLE SECTION -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50">
-                <div class="flex items-center gap-3">
-                    <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-                        Posts Data
-                        <span id="tableTotalCount" class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">(0)</span>
+        <!-- Detailed Posts Data Table Section (Screenshot 1) - Admin Only -->
+        <div id="adminOnlyTableSection" class="hidden bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <span>Rincian Posts Data</span>
+                        <span id="tableCountBadge" class="bg-slate-100 text-slate-600 text-xs font-semibold px-2.5 py-0.5 rounded-full">0</span>
                     </h3>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2.5">
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Search Input -->
                     <div class="relative">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                        <input type="text" id="tableSearch" onkeyup="renderPostsTable()" placeholder="Cari caption, akun, kategori..." class="pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 w-48 sm:w-64">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+                        <input type="text" id="tableSearch" onkeyup="renderTable()" placeholder="Cari account atau caption..." class="bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500 w-48 sm:w-64">
                     </div>
-
-                    <button id="tableAddRowBtn" onclick="openModal('addPostModal')" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition items-center gap-1.5">
-                        <i class="fa-solid fa-plus text-[10px]"></i>
-                        <span>Tambah Row</span>
-                    </button>
                 </div>
             </div>
 
-            <!-- Table Responsive Container -->
+            <!-- Table -->
             <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-100/80 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
-                        <tr>
-                            <th class="py-3 px-3.5 text-center">Platform</th>
-                            <th class="py-3 px-3.5">Account</th>
-                            <th class="py-3 px-3.5">Kategori</th>
-                            <th class="py-3 px-3.5">Caption / Title</th>
-                            <th class="py-3 px-3.5 whitespace-nowrap">Tgl Upload</th>
-                            <th class="py-3 px-3.5 text-right cursor-pointer hover:bg-slate-200/60" onclick="toggleSort('views')">Views <i class="fa-solid fa-sort text-[10px] text-slate-400"></i></th>
-                            <th class="py-3 px-3.5 text-right">Likes</th>
-                            <th class="py-3 px-3.5 text-right">Cmt</th>
-                            <th class="py-3 px-3.5 text-right">Save</th>
-                            <th class="py-3 px-3.5 text-right">Shr</th>
-                            <th class="py-3 px-3.5 text-right font-black text-emerald-700">Eng %</th>
-                            <th id="thActionHeader" class="py-3 px-3.5 text-center hidden">Action</th>
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase tracking-wider">
+                            <th class="py-3 px-4">Account</th>
+                            <th class="py-3 px-4">Platform</th>
+                            <th class="py-3 px-4">Kategori</th>
+                            <th class="py-3 px-4 max-w-xs">Caption</th>
+                            <th class="py-3 px-4">Tgl Upload</th>
+                            <th class="py-3 px-4 text-right cursor-pointer hover:text-emerald-600" onclick="sortTable('views')">Views <i class="fa-solid fa-sort text-[10px]"></i></th>
+                            <th class="py-3 px-4 text-right">Likes</th>
+                            <th class="py-3 px-4 text-right">Cmt</th>
+                            <th class="py-3 px-4 text-right">Save</th>
+                            <th class="py-3 px-4 text-right">Shr</th>
+                            <th class="py-3 px-4 text-right">Eng %</th>
+                            <th class="py-3 px-4 text-center">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="postsTableBody" class="divide-y divide-slate-200 text-slate-700">
-                        <!-- Dynamic rows rendered via JS -->
+                    <tbody id="postsTableBody" class="divide-y divide-slate-100 text-slate-700">
+                        <!-- Table Rows Rendered via JS -->
                     </tbody>
                 </table>
             </div>
 
-            <!-- Table Pagination / Summary Footer -->
-            <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
-                <span id="paginationInfo">Menampilkan 1-10 dari total data</span>
-                <div class="flex items-center gap-2">
-                    <button id="btnPrevPage" onclick="changePage(-1)" class="px-2.5 py-1 border border-slate-300 bg-white rounded-lg hover:bg-slate-100 disabled:opacity-40">Prev</button>
-                    <span id="currentPageText" class="font-semibold text-slate-700">1</span>
-                    <button id="btnNextPage" onclick="changePage(1)" class="px-2.5 py-1 border border-slate-300 bg-white rounded-lg hover:bg-slate-100 disabled:opacity-40">Next</button>
+            <!-- Table Pagination & Summary -->
+            <div class="p-4 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2">
+                <div id="tablePaginationInfo">Showing 1 to 10 entries</div>
+                <div class="flex items-center gap-1" id="paginationButtons">
+                    <!-- Pagination dynamic -->
                 </div>
             </div>
         </div>
 
     </main>
 
-    <!-- MODAL ADMIN PASSCODE -->
-    <div id="adminPasscodeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative border border-slate-100 text-center">
-            <button onclick="closeModal('adminPasscodeModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+    <!-- MODAL 1: Upload Excel/CSV Modal -->
+    <div id="uploadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative space-y-5">
+            <button onclick="closeModal('uploadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            
+            <div>
+                <h3 class="text-lg font-bold text-slate-800">Upload File Excel / CSV</h3>
+                <p class="text-xs text-slate-500 mt-1">Impor data rekapitulasi post dari Spreadsheet/Excel/CSV</p>
+            </div>
+
+            <div class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl p-6 text-center bg-slate-50 transition cursor-pointer" onclick="document.getElementById('csvFileInput').click()">
+                <i class="fa-solid fa-file-excel text-4xl text-emerald-600 mb-2"></i>
+                <p class="text-xs font-semibold text-slate-700">Klik untuk pilih file Excel/CSV</p>
+                <p class="text-[10px] text-slate-400 mt-1">Mendukung format .xlsx, .xls, .csv</p>
+                <input type="file" id="csvFileInput" accept=".csv, .xlsx, .xls" class="hidden" onchange="handleFileUpload(event)">
+            </div>
+
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 flex items-center justify-between">
+                <span>Belum punya formatnya? Download template:</span>
+                <button onclick="downloadTemplateCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded-lg text-[10px]">
+                    Template CSV
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Add Single Post Modal -->
+    <div id="addPostModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
+            <button onclick="closeModal('addPostModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
 
-            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
-                <i class="fa-solid fa-shield-halved"></i>
-            </div>
-            <h3 class="font-bold text-slate-900 text-lg mb-1">Login Modus Admin</h3>
-            <p class="text-slate-500 text-xs mb-4">Masukkan Kata Sandi Admin untuk mengubah atau mengunggah data report</p>
+            <h3 class="text-lg font-bold text-slate-800">Tambah Post Baru</h3>
 
-            <form onsubmit="handleAdminAuthSubmit(event)" class="space-y-3">
-                <input type="password" id="adminPasscodeInput" placeholder="Masukkan Kata Sandi (Default: 1234)" required class="w-full border border-slate-300 rounded-xl p-2.5 text-center font-mono text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                <p id="passcodeErrorText" class="text-xs text-rose-600 hidden font-semibold">Kata sandi salah. Coba lagi.</p>
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-xs transition shadow-sm">
-                    Masuk Mode Admin
-                </button>
+            <form onsubmit="handleAddPostSubmit(event)" class="space-y-3 text-xs">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="font-semibold text-slate-600 block mb-1">Account Handle</label>
+                        <input type="text" id="newAccount" required placeholder="@username" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="font-semibold text-slate-600 block mb-1">Platform</label>
+                        <select id="newPlatform" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                            <option value="TikTok">TikTok</option>
+                            <option value="Instagram">Instagram</option>
+                            <option value="Threads">Threads</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="font-semibold text-slate-600 block mb-1">Kategori</label>
+                        <input type="text" id="newCategory" required placeholder="misal: Niche Media" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="font-semibold text-slate-600 block mb-1">Tanggal Upload</label>
+                        <input type="date" id="newDate" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="font-semibold text-slate-600 block mb-1">Caption / Title</label>
+                    <input type="text" id="newCaption" required placeholder="Isi caption ringkas..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="font-semibold text-slate-600 block mb-1">Views</label>
+                        <input type="number" id="newViews" required value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2">
+                    </div>
+                    <div>
+                        <label class="font-semibold text-slate-600 block mb-1">Likes</label>
+                        <input type="number" id="newLikes" required value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2">
+                    </div>
+                    <div>
+                        <label class="font-semibold text-slate-600 block mb-1">Comments</label>
+                        <input type="number" id="newComments" required value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="font-semibold text-slate-600 block mb-1">Saves</label>
+                        <input type="number" id="newSaves" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="font-semibold text-slate-600 block mb-1">Shares</label>
+                        <input type="number" id="newShares" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="font-semibold text-slate-600 block mb-1">Link Post (URL)</label>
+                    <input type="url" id="newUrl" placeholder="https://..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('addPostModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-600">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold">Simpan Post</button>
+                </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL UPLOAD CSV DATA -->
-    <div id="uploadModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative border border-slate-100">
-            <button onclick="closeModal('uploadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-
-            <div class="flex items-center gap-3 mb-4">
-                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-xl">
-                    <i class="fa-solid fa-file-csv text-2xl"></i>
-                </div>
-                <div>
-                    <h3 class="font-bold text-slate-900 text-lg">Upload Data CSV</h3>
-                    <p class="text-slate-500 text-xs">Impor data report sosial media dari file CSV</p>
-                </div>
-            </div>
-
-            <div id="dropzone" class="border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/40 rounded-xl p-6 text-center transition cursor-pointer mb-4">
-                <i class="fa-solid fa-cloud-arrow-up text-3xl text-emerald-600 mb-2"></i>
-                <p class="text-sm font-semibold text-slate-700">Klik untuk pilih file atau Drag & Drop file CSV di sini</p>
-                <p class="text-xs text-slate-400 mt-1">Header: account, platform, category, caption, date, views, likes, comments, saves, shares, url</p>
-                <input type="file" id="csvFileInput" accept=".csv" class="hidden" onchange="handleFileSelect(event)">
-            </div>
-
-            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-5 flex items-center justify-between">
-                <div class="text-xs text-slate-600">
-                    <strong>Belum punya format CSV?</strong>
-                </div>
-                <button onclick="downloadSampleCSV()" class="text-xs bg-slate-800 hover:bg-slate-900 text-white font-semibold px-3 py-1.5 rounded-lg transition">
-    <!-- MODAL UPLOAD EXCEL & CSV DATA -->
-    <div id="uploadModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative border border-slate-100">
-            <button onclick="closeModal('uploadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-
-            <div class="flex items-center gap-3 mb-4">
-                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-xl">
-                    <i class="fa-solid fa-file-excel text-2xl"></i>
-                </div>
-                <div>
-                    <h3 class="font-bold text-slate-900 text-lg">Upload Data Excel / CSV</h3>
-                    <p class="text-slate-500 text-xs">Impor data report dari file Spreadsheets (.xlsx, .xls) atau CSV</p>
-                </div>
-            </div>
-
-            <div id="dropzone" class="border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/40 rounded-xl p-6 text-center transition cursor-pointer mb-4">
-                <i class="fa-solid fa-cloud-arrow-up text-3xl text-emerald-600 mb-2"></i>
-                <p class="text-sm font-semibold text-slate-700">Klik untuk pilih file atau Drag & Drop file Excel/CSV di sini</p>
-                <p class="text-xs text-slate-400 mt-1">Mendukung format: <strong>.xlsx, .xls, .csv</strong></p>
-                <p class="text-[11px] text-slate-400 mt-1">Header kolom: account, platform, category, caption, date, views, likes, comments, saves, shares, url</p>
-                <input type="file" id="csvFileInput" accept=".csv, .xlsx, .xls" class="hidden" onchange="handleFileSelect(event)">
-            </div>
-
-            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-5 flex items-center justify-between">
-                <div class="text-xs text-slate-600">
-                    <strong>Belum punya format file?</strong>
-                </div>
-                <button onclick="downloadSampleCSV()" class="text-xs bg-slate-800 hover:bg-slate-900 text-white font-semibold px-3 py-1.5 rounded-lg transition">
-                    <i class="fa-solid fa-download mr-1"></i> Download Sample CSV
-                </button>
-            </div>
-
-            <div class="flex items-center justify-end gap-2">
-                <button onclick="closeModal('uploadModal')" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-100">Batal</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL TAMBAH PROJECT BARU -->
-    <div id="addProjectModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+    <!-- MODAL 3: Add Project Modal -->
+    <div id="addProjectModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative space-y-4">
             <button onclick="closeModal('addProjectModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
-            <h3 class="font-bold text-slate-900 text-lg mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-folder-plus text-emerald-600"></i> Tambah Project Baru
-            </h3>
-            <form onsubmit="handleAddProjectSubmit(event)" class="space-y-3 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Nama Project / Client Baru</label>
-                    <input type="text" id="newProjectName" placeholder="Contoh: Brand Campaign Q4" required class="w-full border border-slate-300 rounded-xl p-2.5 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('addProjectModal')" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl font-semibold">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold">Simpan Project</button>
-                </div>
-            </form>
+            <h3 class="text-base font-bold text-slate-800">Tambah Project Baru</h3>
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Project</label>
+                <input type="text" id="newProjectNameInput" placeholder="Contoh: Campaign Q4 2026" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal('addProjectModal')" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl">Batal</button>
+                <button onclick="handleAddNewProject()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl">Buat Project</button>
+            </div>
         </div>
     </div>
 
-    <!-- MODAL EDIT PROJECT -->
-    <div id="editProjectModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+    <!-- MODAL 4: Edit Project Modal -->
+    <div id="editProjectModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative space-y-4">
             <button onclick="closeModal('editProjectModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
-            <h3 class="font-bold text-slate-900 text-lg mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-pen-to-square text-emerald-600"></i> Edit Nama Project
-            </h3>
-            <form onsubmit="handleEditProjectSubmit(event)" class="space-y-3 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Nama Project Saat Ini</label>
-                    <input type="text" id="editProjectNameInput" required class="w-full border border-slate-300 rounded-xl p-2.5 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('editProjectModal')" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl font-semibold">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold">Update Nama</button>
-                </div>
-            </form>
+            <h3 class="text-base font-bold text-slate-800">Ubah Nama Project</h3>
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Project Baru</label>
+                <input type="text" id="editProjectNameInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal('editProjectModal')" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl">Batal</button>
+                <button onclick="handleRenameProject()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl">Simpan Changes</button>
+            </div>
         </div>
     </div>
 
-    <!-- Firebase SDK Imports & Real-time Cloud Sync Logic -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, 
-            signInAnonymously, 
-            signInWithCustomToken, 
-            onAuthStateChanged 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
-            getFirestore, 
-            doc, 
-            collection, 
-            addDoc, 
-            deleteDoc, 
-            onSnapshot, 
-            getDocs 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <!-- MODAL 5: Secret Admin Passcode Modal -->
+    <div id="adminPasscodeModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-xs w-full p-6 shadow-2xl relative space-y-4 text-center">
+            <button onclick="closeModal('adminPasscodeModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-800">Login Modus Admin</h3>
+            <p class="text-xs text-slate-500">Masukkan PIN Admin untuk mengedit project & data laporan.</p>
+            <input type="password" id="adminPasscodeInput" placeholder="Masukkan PIN Admin (1234)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-center text-sm tracking-widest focus:outline-none focus:border-emerald-500">
+            <button onclick="submitAdminPasscode()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition">
+                Masuk Admin
+            </button>
+        </div>
+    </div>
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'social-media-report';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : { apiKey: "demo-api-key", authDomain: "demo.firebaseapp.com", projectId: "demo-project" };
+    <!-- MODAL 6: Settings / Pengaturan Dashboard Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative space-y-5">
+            <button onclick="closeModal('settingsModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-2xl">
+                    <i class="fa-solid fa-gear text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Pengaturan Dashboard</h3>
+                    <p class="text-xs text-slate-500">Kelola akses admin, impor data, dan ekspor laporan</p>
+                </div>
+            </div>
 
-        let isSyncingWithCloud = false;
+            <!-- Settings Content Sections -->
+            <div class="space-y-4 text-xs">
+                
+                <!-- Section 1: Admin Authentication -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-700 flex items-center gap-2">
+                            <i class="fa-solid fa-user-shield text-emerald-600"></i> Status Akses Admin
+                        </span>
+                        <span id="settingsAdminStatus" class="px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-slate-200 text-slate-700">Client Mode</span>
+                    </div>
 
-        const getPostsCollectionRef = () => collection(db, 'artifacts', appId, 'public', 'data', 'posts');
+                    <div id="settingsLoginForm" class="pt-1">
+                        <p class="text-[11px] text-slate-500 mb-2">Masuk sebagai Admin (PIN: 1234) untuk membuka opsi edit, upload, dan manajemen project.</p>
+                        <div class="flex gap-2">
+                            <input type="password" id="settingsPinInput" placeholder="PIN Admin (1234)" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500">
+                            <button onclick="submitSettingsPin()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded-xl transition whitespace-nowrap">
+                                Login
+                            </button>
+                        </div>
+                    </div>
 
-        async function initAuth() {
-            try {
-                const customToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                if (customToken) {
-                    await signInWithCustomToken(auth, customToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (err) {
-                try { await signInAnonymously(auth); } catch (e) {}
-            }
-        }
+                    <div id="settingsLogoutForm" class="hidden pt-1 flex items-center justify-between">
+                        <span class="text-[11px] text-emerald-700 font-semibold">✓ Anda sedang berada dalam Modus Admin</span>
+                        <button onclick="disableAdminMode(); updateSettingsUI();" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold px-3 py-1.5 rounded-xl transition">
+                            Logout Admin
+                        </button>
+                    </div>
+                </div>
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setupRealtimePostsListener();
-            }
-        });
+                <!-- Section 1.5: Project Management (Admin Only) -->
+                <div id="settingsProjectSection" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                    <span class="font-bold text-slate-700 block flex items-center gap-2">
+                        <i class="fa-solid fa-folder-plus text-emerald-600"></i> Kelola Project Laporan
+                    </span>
+                    <p class="text-[11px] text-slate-500">Tambah project baru, ubah nama project aktif, atau hapus project yang tidak digunakan lagi.</p>
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        <button onclick="closeModal('settingsModal'); openModal('addProjectModal');" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus text-[10px]"></i> Project Baru
+                        </button>
+                        <button onclick="closeModal('settingsModal'); openEditProjectModal();" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen-to-square text-[10px]"></i> Ubah Nama
+                        </button>
+                        <button onclick="closeModal('settingsModal'); confirmDeleteCurrentProject();" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-trash text-[10px]"></i> Hapus Project
+                        </button>
+                    </div>
+                </div>
 
-        function setupRealtimePostsListener() {
-            if (!auth.currentUser) return;
+                <!-- Section 2: Data Import (Excel / CSV) -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                    <span class="font-bold text-slate-700 block flex items-center gap-2">
+                        <i class="fa-solid fa-file-import text-emerald-600"></i> Impor Data File
+                    </span>
+                    <p class="text-[11px] text-slate-500">Upload file Excel (.xlsx, .xls) atau CSV rekapitulasi post untuk dikombinasikan ke project aktif.</p>
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        <button onclick="closeModal('settingsModal'); openModal('uploadModal');" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-upload"></i> Upload Excel / CSV
+                        </button>
+                        <button onclick="downloadTemplateCSV()" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-download text-emerald-600"></i> Download Template
+                        </button>
+                    </div>
+                </div>
 
-            onSnapshot(getPostsCollectionRef(), (snapshot) => {
-                if (snapshot.empty && !isSyncingWithCloud) {
-                    seedInitialDataToCloud();
-                    return;
-                }
+                <!-- Section 3: Data Export -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                    <span class="font-bold text-slate-700 block flex items-center gap-2">
+                        <i class="fa-solid fa-file-export text-emerald-600"></i> Ekspor Laporan Client
+                    </span>
+                    <p class="text-[11px] text-slate-500">Unduh data laporan project saat ini ke dalam format spreadsheet Excel atau CSV.</p>
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        <button onclick="exportExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-excel"></i> Export Excel (.xlsx)
+                        </button>
+                        <button onclick="exportCSV()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-csv"></i> Export CSV
+                        </button>
+                    </div>
+                </div>
 
-                const loadedPosts = [];
-                snapshot.forEach((docSnap) => {
-                    loadedPosts.push({ firestoreId: docSnap.id, ...docSnap.data() });
-                });
+            </div>
+        </div>
+    </div>
 
-                postsData = loadedPosts;
-                populateFilterDropdowns();
-                applyFilters();
-            }, (error) => {
-                console.error("Firestore live sync error:", error);
-            });
-        }
-
-        async function seedInitialDataToCloud() {
-            if (!auth.currentUser) return;
-            isSyncingWithCloud = true;
-            try {
-                for (const item of SAMPLE_POSTS) {
-                    await addDoc(getPostsCollectionRef(), item);
-                }
-            } catch (e) {
-                console.error("Error seeding initial cloud posts:", e);
-            } finally {
-                isSyncingWithCloud = false;
-            }
-        }
-
-        window.cloudAddPosts = async function(postsArray) {
-            if (!auth.currentUser) return;
-            try {
-                for (const post of postsArray) {
-                    await addDoc(getPostsCollectionRef(), post);
-                }
-                showToast(`Berhasil menyimpan ${postsArray.length} post!`, 'success');
-            } catch (err) {
-                showToast('Gagal menyimpan data ke cloud.', 'error');
-            }
-        };
-
-        window.cloudDeletePost = async function(firestoreId) {
-            if (!auth.currentUser || !firestoreId) return;
-            try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'posts', firestoreId));
-                showToast('Post berhasil dihapus.', 'info');
-            } catch (err) {
-                showToast('Gagal menghapus post.', 'error');
-            }
-        };
-
-        window.cloudResetAll = async function() {
-            if (!auth.currentUser) return;
-            try {
-                const snapshot = await getDocs(getPostsCollectionRef());
-                const deletePromises = snapshot.docs.map(d => deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'posts', d.id)));
-                await Promise.all(deletePromises);
-                await seedInitialDataToCloud();
-                showToast('Data dikembalikan ke sampel default.', 'info');
-            } catch (err) {
-                showToast('Gagal mereset data.', 'error');
-            }
-        };
-
-        initAuth();
-    </script>
-
+    <!-- JAVASCRIPT LOGIC -->
     <script>
+        // Global Datasets Declarations
         const SAMPLE_POSTS = [
-            { id: 1, project: 'Cerita Lila', account: '@horrorlila', platform: 'TikTok', category: 'Niche Media', caption: 'Sempat dikira kejadian nyata atas ODGJ yang lepas, Isu horor misteri rumah tua...', date: '2026-06-12', views: 4855386, likes: 210500, comments: 4120, saves: 31000, shares: 8900, url: 'https://tiktok.com' },
-            { id: 2, project: 'Cerita Lila', account: '@twins.lila', platform: 'TikTok', category: 'Niche Media', caption: 'Terjebak di Rumah Sendiri Bareng Terror yang Gak Kasat Mata...', date: '2026-06-12', views: 5700000, likes: 132800, comments: 813, saves: 13800, shares: 4179, url: 'https://tiktok.com' },
-            { id: 3, project: 'Cerita Lila', account: '@obrolan.bioskop', platform: 'TikTok', category: 'Niche Media', caption: 'Diluar nalar banget! Momen yang harusnya cuma sekadar nonton film malah bikin geger...', date: '2026-06-12', views: 2900000, likes: 98000, comments: 1450, saves: 11200, shares: 3200, url: 'https://tiktok.com' },
-            { id: 4, project: 'Campaign Media 2026', account: '@saranfilm_', platform: 'TikTok', category: 'Niche Media', caption: 'Gak ada yang lebih menyakitkan daripada plot twist akhir film ini...', date: '2026-06-11', views: 2150000, likes: 74000, comments: 980, saves: 8900, shares: 1400, url: 'https://tiktok.com' },
-            { id: 5, project: 'Brand Performance Q3', account: '@lila.story_', platform: 'Instagram', category: 'Niche Media', caption: 'Punya support system berbentuk kakak kembar 10/10...', date: '2026-06-08', views: 1250000, likes: 45000, comments: 620, saves: 5400, shares: 980, url: 'https://instagram.com' }
+            { id: 1, account: '@twins.lila', platform: 'TikTok', category: 'Niche Media', caption: 'Terjebak di Rumah Sendiri! Barang Terror yang Gak Kasat Mata...', tgl_upload: '2026-06-12', views: 5700000, likes: 230000, cmt: 4500, save: 18200, share: 8900, url: 'https://tiktok.com' },
+            { id: 2, account: '@horrorlila', platform: 'TikTok', category: 'Niche Media', caption: 'Sempat dikira kejadian nyata atau ODGJ yang lepas, lokasi ini...', tgl_upload: '2026-06-11', views: 4855386, likes: 198000, cmt: 3200, save: 14100, share: 6200, url: 'https://tiktok.com' },
+            { id: 3, account: '@obrolan.bioskop', platform: 'TikTok', category: 'Niche Media', caption: 'Diluar nalar banget! Momen yang harusnya cuma sekadar nonton...', tgl_upload: '2026-06-10', views: 2900000, likes: 132800, cmt: 813, save: 13800, share: 4179, url: 'https://tiktok.com' },
+            { id: 4, account: '@seremfilm_', platform: 'TikTok', category: 'Homeless Media', caption: 'Bagaimana cara sineas mendekati sebuah kisah nyata tanpa...', tgl_upload: '2026-06-12', views: 2150000, likes: 89000, cmt: 1200, save: 9100, share: 3100, url: 'https://tiktok.com' },
+            { id: 5, account: '@lila.story', platform: 'Instagram', category: 'Niche Media', caption: 'Punya support system berbentuk kakak 1st tier emang rejeki...', tgl_upload: '2026-06-08', views: 1240000, likes: 54000, cmt: 980, save: 6100, share: 2200, url: 'https://instagram.com' },
+            { id: 6, account: '@filmlila', platform: 'Instagram', category: 'UGC Media', caption: 'Jagat maya kembali dibikin nangis berjamaah dengan rilisan...', tgl_upload: '2026-06-12', views: 820000, likes: 31000, cmt: 420, save: 3200, share: 1100, url: 'https://instagram.com' },
+            { id: 7, account: '@ceritasilila', platform: 'TikTok', category: 'Homeless Media', caption: 'Pernah kepikiran nggak sih, kenapa kadang plot twist terbaik...', tgl_upload: '2026-06-12', views: 780000, likes: 29000, cmt: 310, save: 2800, share: 950, url: 'https://tiktok.com' },
+            { id: 8, account: '@ngobrolfilm_', platform: 'TikTok', category: 'Homeless Media', caption: 'Geger se-Blok M! Video amatir yang ngeremok nurani netizen...', tgl_upload: '2026-06-12', views: 650000, likes: 21000, cmt: 290, save: 2100, share: 800, url: 'https://tiktok.com' },
+            { id: 9, account: '@lilafilm_', platform: 'Threads', category: 'Niche Media', caption: 'Definisi sibling goals yang sesungguhnya! Reaksi penonton...', tgl_upload: '2026-06-12', views: 420000, likes: 18000, cmt: 190, save: 1500, share: 400, url: 'https://threads.net' },
+            { id: 10, account: '@cipcuplim', platform: 'TikTok', category: 'Homeless Media', caption: 'Bikin mewek banget! Nggak bisa nahan air mata pas scene...', tgl_upload: '2026-06-12', views: 292000, likes: 11000, cmt: 140, save: 900, share: 310, url: 'https://tiktok.com' }
         ];
 
-        let projectsList = ['Cerita Lila', 'Campaign Media 2026', 'Brand Performance Q3'];
-        let currentSelectedProject = 'Cerita Lila';
-
-        let postsData = [...SAMPLE_POSTS];
-        let filteredData = [];
-        let currentPage = 1;
-        const itemsPerPage = 7;
-        let sortField = 'views';
-        let sortAsc = false;
-        let isAdminMode = false;
-        const ADMIN_PASSCODE = "1234"; // Password Admin Default
-
-        let pieChartInstance = null;
-        let dailyChartInstance = null;
-        let barChartInstance = null;
-
-        window.onload = function() {
-            loadProjectsFromStorage();
-
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('admin') === 'true' || sessionStorage.getItem('admin_logged_in') === 'true') {
-                enableAdminMode();
-            } else {
-                disableAdminMode();
-            }
-
-            const dropzone = document.getElementById('dropzone');
-            dropzone.addEventListener('click', () => document.getElementById('csvFileInput').click());
-            dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('bg-emerald-100'); });
-            dropzone.addEventListener('dragleave', () => dropzone.classList.remove('bg-emerald-100'));
-            dropzone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropzone.classList.remove('bg-emerald-100');
-                if (e.dataTransfer.files.length) handleUploadedFile(e.dataTransfer.files[0]);
-            });
-
-            const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: '2-digit' };
-            document.getElementById('updatedDateText').innerText = now.toLocaleDateString('id-ID', options);
-
-            populateFilterDropdowns();
-            applyFilters();
+        let projectsStore = {
+            "Cerita Lila": [...SAMPLE_POSTS],
+            "Campaign Media 2026": [
+                { id: 101, account: '@campaign_official', platform: 'TikTok', category: 'Official', caption: 'Grand Launching Campaign Media 2026!', tgl_upload: '2026-07-01', views: 1500000, likes: 95000, cmt: 1200, save: 4500, share: 2100, url: 'https://tiktok.com' }
+            ],
+            "Brand Performance Q3": [
+                { id: 201, account: '@brand_q3', platform: 'Instagram', category: 'Brand Review', caption: 'Q3 Recap Performance & Highlights', tgl_upload: '2026-08-01', views: 890000, likes: 42000, cmt: 610, save: 3100, share: 1400, url: 'https://instagram.com' }
+            ]
         };
 
-        function renderProjectSelectOptions() {
-            const selectEl = document.getElementById('projectSelect');
-            selectEl.innerHTML = projectsList.map(p => `<option value="${p}" ${p === currentSelectedProject ? 'selected' : ''}>${p}</option>`).join('');
-        }
+        let currentProjectName = "Cerita Lila";
+        let postsData = [];
+        let filteredPosts = [];
+        let isAdmin = false;
+        let currentPage = 1;
+        const pageSize = 10;
 
+        // Chart Instance Holds
+        let pieChartInstance = null;
+        let dailyChartInstance = null;
+        let topAccountChartInstance = null;
+
+        // Initialize App on DOM Load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadProjectsFromStorage();
+            checkAdminURLParam();
+            setCurrentProject(currentProjectName);
+        });
+
+        // Local Storage Helpers
         function loadProjectsFromStorage() {
-            const saved = localStorage.getItem('app_projects_list');
+            const saved = localStorage.getItem('sm_report_projects_v2');
             if (saved) {
-                try { projectsList = JSON.parse(saved); } catch(e){}
+                try {
+                    projectsStore = JSON.parse(saved);
+                } catch(e) { console.error("Error loading saved projects", e); }
             }
-            if (!projectsList.includes(currentSelectedProject)) {
-                currentSelectedProject = projectsList[0] || 'Default Project';
-            }
-            renderProjectSelectOptions();
+            renderProjectDropdown();
         }
 
         function saveProjectsToStorage() {
-            localStorage.setItem('app_projects_list', JSON.stringify(projectsList));
+            localStorage.setItem('sm_report_projects_v2', JSON.stringify(projectsStore));
+        }
+
+        function renderProjectDropdown() {
+            const select = document.getElementById('projectSelect');
+            select.innerHTML = '';
+            Object.keys(projectsStore).forEach(projName => {
+                const opt = document.createElement('option');
+                opt.value = projName;
+                opt.textContent = projName;
+                if(projName === currentProjectName) opt.selected = true;
+                select.appendChild(opt);
+            });
         }
 
         function handleProjectChange() {
-            currentSelectedProject = document.getElementById('projectSelect').value;
-            populateFilterDropdowns();
-            applyFilters();
-            showToast(`Switched to project: ${currentSelectedProject}`, 'info');
+            const select = document.getElementById('projectSelect');
+            setCurrentProject(select.value);
         }
 
-        function handleAddProjectSubmit(e) {
-            e.preventDefault();
-            const name = document.getElementById('newProjectName').value.trim();
-            if (!name) return;
-            if (!projectsList.includes(name)) {
-                projectsList.push(name);
-                saveProjectsToStorage();
+        function setCurrentProject(name) {
+            if(!projectsStore[name]) {
+                projectsStore[name] = [];
             }
-            currentSelectedProject = name;
-            renderProjectSelectOptions();
-            closeModal('addProjectModal');
-            document.getElementById('newProjectName').value = '';
+            currentProjectName = name;
+            postsData = projectsStore[name];
+            
+            // Populate options for Filters
             populateFilterDropdowns();
             applyFilters();
-            showToast(`Project "${name}" berhasil dibuat!`, 'success');
+        }
+
+        // Admin Mode Toggle and Auth
+        function checkAdminURLParam() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('admin') === 'true') {
+                enableAdminMode();
+            }
+        }
+
+        function submitAdminPasscode() {
+            const pin = document.getElementById('adminPasscodeInput').value.trim();
+            if (pin === '1234') {
+                enableAdminMode();
+                closeModal('adminPasscodeModal');
+                document.getElementById('adminPasscodeInput').value = '';
+            } else {
+                alert('PIN Admin salah! Gunakan PIN: 1234');
+            }
+        }
+
+        function enableAdminMode() {
+            isAdmin = true;
+            document.getElementById('accessModeBadge').innerHTML = `
+                <span class="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-xl border border-emerald-300 shadow-xs">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Modus Admin Aktif
+                </span>
+            `;
+            const loginBtn = document.getElementById('adminLoginBtn');
+            if (loginBtn) loginBtn.classList.add('hidden');
+            document.getElementById('adminActionGroup').classList.remove('hidden');
+            document.getElementById('adminProjectControlGroup').classList.remove('hidden');
+            document.getElementById('adminProjectControlGroup').classList.add('flex');
+
+            // Show Admin-Only Sections (Daily Trend, Top Accounts Chart & Detailed Posts Table)
+            const adminCharts = document.getElementById('adminOnlySecondaryCharts');
+            const adminTable = document.getElementById('adminOnlyTableSection');
+            if (adminCharts) adminCharts.classList.remove('hidden');
+            if (adminTable) adminTable.classList.remove('hidden');
+
+            updateSettingsUI();
+            renderTable();
+
+            // Refresh chart canvas rendering after unhiding
+            setTimeout(() => {
+                renderDailyTrendChart();
+                renderTopAccountsChart();
+            }, 50);
+        }
+
+        function disableAdminMode() {
+            isAdmin = false;
+            document.getElementById('accessModeBadge').innerHTML = '';
+            const loginBtn = document.getElementById('adminLoginBtn');
+            if (loginBtn) loginBtn.classList.remove('hidden');
+            document.getElementById('adminActionGroup').classList.add('hidden');
+            document.getElementById('adminProjectControlGroup').classList.add('hidden');
+            document.getElementById('adminProjectControlGroup').classList.remove('flex');
+
+            // Hide Admin-Only Sections for Client View
+            const adminCharts = document.getElementById('adminOnlySecondaryCharts');
+            const adminTable = document.getElementById('adminOnlyTableSection');
+            if (adminCharts) adminCharts.classList.add('hidden');
+            if (adminTable) adminTable.classList.add('hidden');
+
+            updateSettingsUI();
+            renderTable();
+        }
+
+        function updateSettingsUI() {
+            const badge = document.getElementById('settingsAdminStatus');
+            const loginForm = document.getElementById('settingsLoginForm');
+            const logoutForm = document.getElementById('settingsLogoutForm');
+            const projectSection = document.getElementById('settingsProjectSection');
+
+            if (!badge) return;
+
+            if (isAdmin) {
+                badge.innerText = 'Admin Active';
+                badge.className = 'px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300';
+                loginForm.classList.add('hidden');
+                logoutForm.classList.remove('hidden');
+                if (projectSection) projectSection.classList.remove('hidden');
+            } else {
+                badge.innerText = 'Client Mode';
+                badge.className = 'px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-slate-200 text-slate-700';
+                loginForm.classList.remove('hidden');
+                logoutForm.classList.add('hidden');
+                if (projectSection) projectSection.classList.add('hidden');
+            }
+        }
+
+        function submitSettingsPin() {
+            const pin = document.getElementById('settingsPinInput').value.trim();
+            if (pin === '1234') {
+                enableAdminMode();
+                document.getElementById('settingsPinInput').value = '';
+                alert('Berhasil Login Modus Admin!');
+            } else {
+                alert('PIN Admin salah! Gunakan PIN: 1234');
+            }
+        }
+
+        function toggleAdminMenu() {
+            const menu = document.getElementById('adminDropdownMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Project CRUD Operations
+        function handleAddNewProject() {
+            const input = document.getElementById('newProjectNameInput');
+            const newName = input.value.trim();
+            if(!newName) return alert("Masukkan nama project!");
+            if(projectsStore[newName]) return alert("Nama project tersebut sudah ada!");
+
+            projectsStore[newName] = [];
+            saveProjectsToStorage();
+            renderProjectDropdown();
+            setCurrentProject(newName);
+            input.value = '';
+            closeModal('addProjectModal');
         }
 
         function openEditProjectModal() {
-            document.getElementById('editProjectNameInput').value = currentSelectedProject;
+            document.getElementById('editProjectNameInput').value = currentProjectName;
             openModal('editProjectModal');
         }
 
-        function handleEditProjectSubmit(e) {
-            e.preventDefault();
-            const newName = document.getElementById('editProjectNameInput').value.trim();
-            if (!newName || newName === currentSelectedProject) {
-                closeModal('editProjectModal');
-                return;
-            }
+        function handleRenameProject() {
+            const input = document.getElementById('editProjectNameInput');
+            const newName = input.value.trim();
+            if(!newName || newName === currentProjectName) return closeModal('editProjectModal');
 
-            const idx = projectsList.indexOf(currentSelectedProject);
-            if (idx !== -1) projectsList[idx] = newName;
+            projectsStore[newName] = projectsStore[currentProjectName];
+            delete projectsStore[currentProjectName];
+            currentProjectName = newName;
 
-            postsData.forEach(p => {
-                if (p.project === currentSelectedProject || !p.project) p.project = newName;
-            });
-
-            currentSelectedProject = newName;
             saveProjectsToStorage();
-            renderProjectSelectOptions();
+            renderProjectDropdown();
+            setCurrentProject(newName);
             closeModal('editProjectModal');
-            populateFilterDropdowns();
-            applyFilters();
-            showToast(`Nama project diperbarui menjadi "${newName}"!`, 'success');
         }
 
         function confirmDeleteCurrentProject() {
-            if (projectsList.length <= 1) {
-                showToast('Tidak bisa menghapus project terakhir!', 'error');
-                return;
-            }
-            if (confirm(`Apakah Anda yakin ingin menghapus project "${currentSelectedProject}" beserta seluruh datanya?`)) {
-                postsData = postsData.filter(p => p.project !== currentSelectedProject);
-                projectsList = projectsList.filter(p => p !== currentSelectedProject);
-                currentSelectedProject = projectsList[0];
+            const keys = Object.keys(projectsStore);
+            if(keys.length <= 1) return alert("Minimal harus ada 1 project aktif!");
+            if(confirm(`Apakah Anda yakin ingin menghapus project "${currentProjectName}"? Data project ini akan hilang.`)) {
+                delete projectsStore[currentProjectName];
+                const nextProject = Object.keys(projectsStore)[0];
                 saveProjectsToStorage();
-                renderProjectSelectOptions();
-                populateFilterDropdowns();
-                applyFilters();
-                showToast('Project berhasil dihapus.', 'info');
+                renderProjectDropdown();
+                setCurrentProject(nextProject);
             }
         }
 
         function confirmResetCurrentProjectData() {
-            if (confirm(`Apakah Anda yakin ingin menghapus SELURUH data post untuk project "${currentSelectedProject}"?`)) {
-                postsData = postsData.filter(p => p.project && p.project !== currentSelectedProject);
-                populateFilterDropdowns();
-                applyFilters();
-                showToast(`Data project "${currentSelectedProject}" berhasil di-reset.`, 'info');
+            if(confirm(`Yakin ingin mereset seluruh data post untuk project "${currentProjectName}"?`)) {
+                projectsStore[currentProjectName] = [];
+                saveProjectsToStorage();
+                setCurrentProject(currentProjectName);
             }
         }
 
-        // ADMIN ACCESS CONTROL LOGIC
-        function toggleAdminAuth() {
-            if (isAdminMode) {
-                disableAdminMode();
-                showToast('Keluar dari Modus Admin.', 'info');
-            } else {
-                openModal('adminPasscodeModal');
-            }
-        }
-
-        function handleAdminAuthSubmit(e) {
-            e.preventDefault();
-            const inputVal = document.getElementById('adminPasscodeInput').value;
-            if (inputVal === ADMIN_PASSCODE) {
-                enableAdminMode();
-                closeModal('adminPasscodeModal');
-                document.getElementById('adminPasscodeInput').value = '';
-                document.getElementById('passcodeErrorText').classList.add('hidden');
-                showToast('Berhasil Login sebagai Admin!', 'success');
-            } else {
-                document.getElementById('passcodeErrorText').classList.remove('hidden');
-            }
-        }
-
-        function enableAdminMode() {
-            isAdminMode = true;
-            sessionStorage.setItem('admin_logged_in', 'true');
-            document.getElementById('adminActionGroup').classList.remove('hidden');
-            document.getElementById('adminActionGroup').classList.add('flex');
-            document.getElementById('adminProjectControlGroup').classList.remove('hidden');
-            document.getElementById('adminProjectControlGroup').classList.add('flex');
-            document.getElementById('tableAddRowBtn').classList.remove('hidden');
-            document.getElementById('tableAddRowBtn').classList.add('flex');
-            document.getElementById('thActionHeader').classList.remove('hidden');
-            
-            document.getElementById('accessModeBadge').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-emerald-700 font-bold">Modus Admin Active</span>`;
-            document.getElementById('clientHeaderBadge').innerText = 'Admin View';
-            document.getElementById('adminLoginBtnText').innerText = 'Logout Admin';
-            renderPostsTable();
-        }
-
-        function disableAdminMode() {
-            isAdminMode = false;
-            sessionStorage.removeItem('admin_logged_in');
-            document.getElementById('adminActionGroup').classList.add('hidden');
-            document.getElementById('adminActionGroup').classList.remove('flex');
-            document.getElementById('adminProjectControlGroup').classList.add('hidden');
-            document.getElementById('adminProjectControlGroup').classList.remove('flex');
-            document.getElementById('tableAddRowBtn').classList.add('hidden');
-            document.getElementById('tableAddRowBtn').classList.remove('flex');
-            document.getElementById('thActionHeader').classList.add('hidden');
-
-            document.getElementById('accessModeBadge').innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400"></span><span class="text-slate-600 font-bold">Mode View Client (Read-Only)</span>`;
-            document.getElementById('clientHeaderBadge').innerText = 'Client View';
-            document.getElementById('adminLoginBtnText').innerText = 'Login Admin';
-            renderPostsTable();
-        }
-
+        // Dynamic Filter Populators
         function populateFilterDropdowns() {
-            const accountSelect = document.getElementById('filterAccount');
-            const categorySelect = document.getElementById('filterCategory');
+            const accounts = new Set();
+            const categories = new Set();
 
-            const currentProjectPosts = postsData.filter(p => !p.project || p.project === currentSelectedProject);
+            postsData.forEach(p => {
+                if(p.account) accounts.add(p.account);
+                if(p.category) categories.add(p.category);
+            });
 
-            const accounts = ['ALL', ...new Set(currentProjectPosts.map(p => p.account))];
-            const categories = ['ALL', ...new Set(currentProjectPosts.map(p => p.category))];
+            const accSelect = document.getElementById('filterAccount');
+            accSelect.innerHTML = '<option value="ALL">Semua Akun</option>';
+            accounts.forEach(acc => {
+                accSelect.innerHTML += `<option value="${acc}">${acc}</option>`;
+            });
 
-            accountSelect.innerHTML = accounts.map(a => `<option value="${a}">${a === 'ALL' ? 'Semua Akun' : a}</option>`).join('');
-            categorySelect.innerHTML = categories.map(c => `<option value="${c}">${c === 'ALL' ? 'Semua Kategori' : c}</option>`).join('');
+            const catSelect = document.getElementById('filterCategory');
+            catSelect.innerHTML = '<option value="ALL">Semua Kategori</option>';
+            categories.forEach(cat => {
+                catSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('filterPlatform').value = 'ALL';
+            document.getElementById('filterAccount').value = 'ALL';
+            document.getElementById('filterCategory').value = 'ALL';
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+            document.getElementById('tableSearch').value = '';
+            applyFilters();
         }
 
         function applyFilters() {
@@ -946,309 +966,125 @@
             const startDate = document.getElementById('filterStartDate').value;
             const endDate = document.getElementById('filterEndDate').value;
 
-            filteredData = postsData.filter(item => {
-                if (item.project && item.project !== currentSelectedProject) return false;
-                if (platform !== 'ALL' && item.platform !== platform) return false;
-                if (account !== 'ALL' && item.account !== account) return false;
-                if (category !== 'ALL' && item.category !== category) return false;
-                if (startDate && new Date(item.date) < new Date(startDate)) return false;
-                if (endDate && new Date(item.date) > new Date(endDate)) return false;
+            filteredPosts = postsData.filter(p => {
+                if (platform !== 'ALL' && p.platform !== platform) return false;
+                if (account !== 'ALL' && p.account !== account) return false;
+                if (category !== 'ALL' && p.category !== category) return false;
+                if (startDate && p.tgl_upload < startDate) return false;
+                if (endDate && p.tgl_upload > endDate) return false;
                 return true;
             });
 
-            currentPage = 1;
-            updateMetrics();
-            updateTopContentHighlight();
-            renderTop10Leaderboard();
-            renderCharts();
-            renderPostsTable();
+            updateMetricsAndCharts();
+            renderTable();
         }
 
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) handleUploadedFile(file);
-        }
+        // Render Summary Metrics & Visual Charts
+        function updateMetricsAndCharts() {
+            let totalViews = 0, totalLikes = 0, totalComments = 0, totalSaves = 0, totalShares = 0;
 
-        function handleUploadedFile(file) {
-            const filename = file.name.toLowerCase();
-            if (filename.endsWith('.xlsx') || filename.endsWith('.xls')) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.SheetNames[0];
-                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
-                    processRawImportData(jsonData);
-                };
-                reader.readAsArrayBuffer(file);
-            } else {
-                Papa.parse(file, {
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        if (results.data) processRawImportData(results.data);
-                    }
-                });
-            }
-        }
-
-        function processRawImportData(rows) {
-            if (!rows || rows.length === 0) {
-                showToast('File kosong atau format tidak sesuai.', 'error');
-                return;
-            }
-            const parsedPosts = rows.map((row, idx) => ({
-                id: Date.now() + idx,
-                project: currentSelectedProject,
-                account: row.account || row.Account || '@unknown',
-                platform: row.platform || row.Platform || 'TikTok',
-                category: row.category || row.Category || 'General',
-                caption: row.caption || row.Caption || '-',
-                date: row.date || row.Date || new Date().toISOString().split('T')[0],
-                views: parseInt(row.views || row.Views || 0),
-                likes: parseInt(row.likes || row.Likes || 0),
-                comments: parseInt(row.comments || row.Comments || 0),
-                saves: parseInt(row.saves || row.Saves || 0),
-                shares: parseInt(row.shares || row.Shares || 0),
-                url: row.url || row.Url || '#'
-            }));
-
-            closeModal('uploadModal');
-            if (window.cloudAddPosts) {
-                window.cloudAddPosts(parsedPosts);
-            } else {
-                postsData.push(...parsedPosts);
-                populateFilterDropdowns();
-                applyFilters();
-                showToast(`Berhasil mengimpor ${parsedPosts.length} data ke project "${currentSelectedProject}"!`, 'success');
-            }
-        }
-
-        function handleAddPostSubmit(e) {
-            e.preventDefault();
-            const newPost = {
-                id: Date.now(),
-                project: currentSelectedProject,
-                platform: document.getElementById('newPlatform').value,
-                account: document.getElementById('newAccount').value,
-                category: document.getElementById('newCategory').value,
-                caption: document.getElementById('newCaption').value,
-                date: document.getElementById('newDate').value,
-                views: parseInt(document.getElementById('newViews').value || 0),
-                likes: parseInt(document.getElementById('newLikes').value || 0),
-                comments: parseInt(document.getElementById('newComments').value || 0),
-                saves: parseInt(document.getElementById('newSaves').value || 0),
-                shares: parseInt(document.getElementById('newShares').value || 0),
-                url: document.getElementById('newUrl').value || '#'
-            };
-
-            closeModal('addPostModal');
-            document.getElementById('addPostForm').reset();
-            if (window.cloudAddPosts) {
-                window.cloudAddPosts([newPost]);
-            } else {
-                postsData.push(newPost);
-                populateFilterDropdowns();
-                applyFilters();
-                showToast('Post baru berhasil ditambahkan!', 'success');
-            }
-        }
-
-        function handleAdminAuthSubmit(e) {
-            e.preventDefault();
-            const inputVal = document.getElementById('adminPasscodeInput').value;
-            if (inputVal === ADMIN_PASSCODE) {
-                enableAdminMode();
-                closeModal('adminPasscodeModal');
-                document.getElementById('adminPasscodeInput').value = '';
-                document.getElementById('passcodeErrorText').classList.add('hidden');
-                showToast('Berhasil Login sebagai Admin!', 'success');
-            } else {
-                document.getElementById('passcodeErrorText').classList.remove('hidden');
-            }
-        }
-
-        function enableAdminMode() {
-            isAdminMode = true;
-            sessionStorage.setItem('admin_logged_in', 'true');
-            document.getElementById('adminActionGroup').classList.remove('hidden');
-            document.getElementById('adminActionGroup').classList.add('flex');
-            document.getElementById('tableAddRowBtn').classList.remove('hidden');
-            document.getElementById('tableAddRowBtn').classList.add('flex');
-            document.getElementById('thActionHeader').classList.remove('hidden');
-            
-            document.getElementById('accessModeBadge').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-emerald-700 font-bold">Modus Admin Active</span>`;
-            document.getElementById('clientHeaderBadge').innerText = 'Admin View';
-            document.getElementById('adminLoginBtnText').innerText = 'Logout Admin';
-            renderPostsTable();
-        }
-
-        function disableAdminMode() {
-            isAdminMode = false;
-            sessionStorage.removeItem('admin_logged_in');
-            document.getElementById('adminActionGroup').classList.add('hidden');
-            document.getElementById('adminActionGroup').classList.remove('flex');
-            document.getElementById('tableAddRowBtn').classList.add('hidden');
-            document.getElementById('tableAddRowBtn').classList.remove('flex');
-            document.getElementById('thActionHeader').classList.add('hidden');
-
-            document.getElementById('accessModeBadge').innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400"></span><span class="text-slate-600 font-bold">Mode View Client (Read-Only)</span>`;
-            document.getElementById('clientHeaderBadge').innerText = 'Client View';
-            document.getElementById('adminLoginBtnText').innerText = 'Login Admin';
-            renderPostsTable();
-        }
-
-        function populateFilterDropdowns() {
-            const accountSelect = document.getElementById('filterAccount');
-            const categorySelect = document.getElementById('filterCategory');
-
-            const accounts = ['ALL', ...new Set(postsData.map(p => p.account))];
-            const categories = ['ALL', ...new Set(postsData.map(p => p.category))];
-
-            accountSelect.innerHTML = accounts.map(a => `<option value="${a}">${a === 'ALL' ? 'Semua Akun' : a}</option>`).join('');
-            categorySelect.innerHTML = categories.map(c => `<option value="${c}">${c === 'ALL' ? 'Semua Kategori' : c}</option>`).join('');
-        }
-
-        function applyFilters() {
-            const platform = document.getElementById('filterPlatform').value;
-            const account = document.getElementById('filterAccount').value;
-            const category = document.getElementById('filterCategory').value;
-            const startDate = document.getElementById('filterStartDate').value;
-            const endDate = document.getElementById('filterEndDate').value;
-
-            filteredData = postsData.filter(item => {
-                if (platform !== 'ALL' && item.platform !== platform) return false;
-                if (account !== 'ALL' && item.account !== account) return false;
-                if (category !== 'ALL' && item.category !== category) return false;
-                if (startDate && new Date(item.date) < new Date(startDate)) return false;
-                if (endDate && new Date(item.date) > new Date(endDate)) return false;
-                return true;
+            filteredPosts.forEach(p => {
+                totalViews += Number(p.views || 0);
+                totalLikes += Number(p.likes || 0);
+                totalComments += Number(p.cmt || p.comments || 0);
+                totalSaves += Number(p.save || p.saves || 0);
+                totalShares += Number(p.share || p.shares || 0);
             });
 
-            currentPage = 1;
-            updateMetrics();
-            updateTopContentHighlight();
-            renderTop10Leaderboard();
-            renderCharts();
-            renderPostsTable();
-        }
+            // Average Engagement Calculation
+            const totalEngagement = totalLikes + totalComments + totalSaves + totalShares;
+            const avgEngRate = totalViews > 0 ? ((totalEngagement / totalViews) * 100).toFixed(2) : 0;
 
-        function updateMetrics() {
-            const totalPosts = filteredData.length;
-            const totalViews = filteredData.reduce((sum, item) => sum + (Number(item.views) || 0), 0);
-            const totalLikes = filteredData.reduce((sum, item) => sum + (Number(item.likes) || 0), 0);
-            const totalComments = filteredData.reduce((sum, item) => sum + (Number(item.comments) || 0), 0);
-            const totalSaves = filteredData.reduce((sum, item) => sum + (Number(item.saves) || 0), 0);
-            const totalShares = filteredData.reduce((sum, item) => sum + (Number(item.shares) || 0), 0);
+            // DOM Updates
+            document.getElementById('metricTotalViews').innerText = totalViews.toLocaleString('id-ID');
+            document.getElementById('metricTotalLikes').innerText = totalLikes.toLocaleString('id-ID');
+            document.getElementById('metricTotalComments').innerText = totalComments.toLocaleString('id-ID');
+            document.getElementById('metricTotalSaves').innerText = totalSaves.toLocaleString('id-ID');
+            document.getElementById('metricTotalShares').innerText = totalShares.toLocaleString('id-ID');
+            document.getElementById('metricAvgEngagement').innerText = avgEngRate + '%';
+            document.getElementById('postCountBadge').innerText = filteredPosts.length + ' Posts Loaded';
 
-            const totalEngagements = totalLikes + totalComments + totalSaves + totalShares;
-            const avgEngRate = totalViews > 0 ? ((totalEngagements / totalViews) * 100).toFixed(2) : 0;
-
-            document.getElementById('statTotalViews').innerText = formatNum(totalViews);
-            document.getElementById('statAvgViews').innerText = `avg ${formatNum(totalPosts ? Math.round(totalViews / totalPosts) : 0)}/post`;
-
-            document.getElementById('statTotalLikes').innerText = formatNum(totalLikes);
-            document.getElementById('statAvgLikes').innerText = `avg ${formatNum(totalPosts ? Math.round(totalLikes / totalPosts) : 0)}/post`;
-
-            document.getElementById('statTotalComments').innerText = formatNum(totalComments);
-            document.getElementById('statAvgComments').innerText = `avg ${formatNum(totalPosts ? Math.round(totalComments / totalPosts) : 0)}/post`;
-
-            document.getElementById('statTotalSaves').innerText = formatNum(totalSaves);
-            document.getElementById('statAvgSaves').innerText = `avg ${formatNum(totalPosts ? Math.round(totalSaves / totalPosts) : 0)}/post`;
-
-            document.getElementById('statTotalShares').innerText = formatNum(totalShares);
-            document.getElementById('statAvgShares').innerText = `avg ${formatNum(totalPosts ? Math.round(totalShares / totalPosts) : 0)}/post`;
-
-            document.getElementById('statAvgEngRate').innerText = `${avgEngRate}%`;
-            document.getElementById('statTotalEngagements').innerText = `${formatNum(totalEngagements)} total engagements`;
-
-            document.getElementById('filteredPostCountBadge').innerText = `Showing ${totalPosts} Posts`;
-        }
-
-        function updateTopContentHighlight() {
-            if (filteredData.length === 0) return;
-            const sorted = [...filteredData].sort((a, b) => (b.views || 0) - (a.views || 0));
-
-            const t1 = sorted[0];
-            if (t1) {
-                document.getElementById('top1Account').innerText = t1.account;
-                document.getElementById('top1Date').innerText = formatDateStr(t1.date);
-                document.getElementById('top1Caption').innerText = `"${t1.caption}"`;
-                document.getElementById('top1Views').innerText = formatNum(t1.views);
-                document.getElementById('top1Likes').innerText = formatNum(t1.likes);
-                document.getElementById('top1Comments').innerText = formatNum(t1.comments);
-                document.getElementById('top1Saves').innerText = formatNum(t1.saves);
-                document.getElementById('top1Shares').innerText = formatNum(t1.shares);
-                document.getElementById('top1PlatformBadge').innerText = t1.platform;
-                
-                const engT1 = ((Number(t1.likes) + Number(t1.comments) + Number(t1.saves) + Number(t1.shares)) / (t1.views || 1)) * 100;
-                document.getElementById('top1EngRate').innerText = `${engT1.toFixed(2)}%`;
-                if (t1.url) document.getElementById('top1Link').href = t1.url;
+            // #1 Top Content Spotlight
+            const sortedByViews = [...filteredPosts].sort((a, b) => Number(b.views || 0) - Number(a.views || 0));
+            if (sortedByViews.length > 0) {
+                const top1 = sortedByViews[0];
+                document.getElementById('top1Account').innerText = top1.account || '-';
+                document.getElementById('top1Caption').innerText = top1.caption ? `"${top1.caption}"` : '-';
+                document.getElementById('top1Platform').innerText = top1.platform || 'General';
+                document.getElementById('top1Views').innerText = Number(top1.views || 0).toLocaleString('id-ID');
+                document.getElementById('top1Likes').innerText = Number(top1.likes || 0).toLocaleString('id-ID');
+                document.getElementById('top1Comments').innerText = Number(top1.cmt || top1.comments || 0).toLocaleString('id-ID');
+                document.getElementById('top1Link').href = top1.url || '#';
+            } else {
+                document.getElementById('top1Account').innerText = '@-';
+                document.getElementById('top1Caption').innerText = 'Tidak ada data post';
+                document.getElementById('top1Platform').innerText = '-';
+                document.getElementById('top1Views').innerText = '0';
+                document.getElementById('top1Likes').innerText = '0';
+                document.getElementById('top1Comments').innerText = '0';
+                document.getElementById('top1Link').href = '#';
             }
 
-            const t2 = sorted[1];
-            if (t2) {
-                document.getElementById('top2Account').innerText = t2.account;
-                document.getElementById('top2Views').innerText = `${formatNum(t2.views)} views`;
-                document.getElementById('top2Caption').innerText = t2.caption;
-            }
+            // Render #10 Top Performance Table
+            renderTop10Table(sortedByViews.slice(0, 10));
 
-            const t3 = sorted[2];
-            if (t3) {
-                document.getElementById('top3Account').innerText = t3.account;
-                document.getElementById('top3Views').innerText = `${formatNum(t3.views)} views`;
-                document.getElementById('top3Caption').innerText = t3.caption;
-            }
+            // Render Charts
+            renderPieChart();
+            renderDailyTrendChart();
+            renderTopAccountsChart();
         }
 
-        function renderTop10Leaderboard() {
+        function renderTop10Table(top10List) {
             const tbody = document.getElementById('top10TableBody');
-            const sorted = [...filteredData].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 10);
+            tbody.innerHTML = '';
 
-            if (sorted.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-slate-500">Tidak ada data untuk ditampilkan</td></tr>`;
+            if (top10List.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-amber-700">Tidak ada data untuk ditayangkan.</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = sorted.map((item, index) => {
-                const rankBadgeClass = index === 0 ? 'bg-amber-500 text-white' : index === 1 ? 'bg-amber-400 text-slate-900' : index === 2 ? 'bg-amber-300 text-slate-900' : 'text-slate-700 font-bold';
-                return `
-                    <tr class="hover:bg-amber-100/50 transition">
-                        <td class="py-2.5 px-3 text-center">
-                            <span class="inline-block w-6 h-6 rounded-full ${rankBadgeClass} text-xs font-black leading-6 text-center">#${index + 1}</span>
-                        </td>
-                        <td class="py-2.5 px-3">
-                            <div class="font-bold text-slate-900">${item.account} <span class="text-[10px] font-semibold text-slate-500">(${item.platform})</span></div>
-                            <div class="text-[11px] text-slate-600 line-clamp-1">${item.caption}</div>
-                        </td>
-                        <td class="py-2.5 px-3 text-right font-black text-slate-900">${formatNum(item.views)}</td>
-                        <td class="py-2.5 px-3 text-right font-semibold text-rose-600">${formatNum(item.likes)}</td>
-                        <td class="py-2.5 px-3 text-right font-semibold text-sky-600">${formatNum(item.comments)}</td>
-                        <td class="py-2.5 px-3 text-center">
-                            <a href="${item.url || '#'}" target="_blank" class="text-emerald-700 hover:underline text-xs font-bold inline-flex items-center gap-1">
-                                Link Post <i class="fa-solid fa-up-right-from-square text-[9px]"></i>
-                            </a>
-                        </td>
-                    </tr>
+            top10List.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.className = index % 2 === 0 ? 'bg-amber-50/40 hover:bg-amber-100/50' : 'bg-white hover:bg-amber-100/50';
+                row.innerHTML = `
+                    <td class="py-2.5 px-3 text-center font-extrabold text-amber-900">#${index + 1}</td>
+                    <td class="py-2.5 px-3">
+                        <div class="font-bold text-amber-950">${item.account || '@user'}</div>
+                        <div class="text-[10px] text-amber-800/80 truncate max-w-xs">${item.caption || '-'}</div>
+                    </td>
+                    <td class="py-2.5 px-3 text-right font-extrabold text-amber-950">${Number(item.views || 0).toLocaleString('id-ID')}</td>
+                    <td class="py-2.5 px-3 text-right font-medium text-amber-900">${Number(item.likes || 0).toLocaleString('id-ID')}</td>
+                    <td class="py-2.5 px-3 text-right font-medium text-amber-900">${Number(item.cmt || item.comments || 0).toLocaleString('id-ID')}</td>
+                    <td class="py-2.5 px-3 text-center">
+                        <a href="${item.url || '#'}" target="_blank" class="text-amber-700 hover:text-amber-900 font-bold underline text-[10px]">Link Post</a>
+                    </td>
                 `;
-            }).join('');
+                tbody.appendChild(row);
+            });
         }
 
-        function renderCharts() {
-            const platformCounts = {};
-            filteredData.forEach(item => {
-                platformCounts[item.platform] = (platformCounts[item.platform] || 0) + (Number(item.views) || 0);
+        // Canvas Chart Rendering Functions
+        function renderPieChart() {
+            const ctx = document.getElementById('platformPieChart').getContext('2d');
+            
+            const platformViews = {};
+            filteredPosts.forEach(p => {
+                const plat = p.platform || 'Other';
+                platformViews[plat] = (platformViews[plat] || 0) + Number(p.views || 0);
             });
 
-            const pieCtx = document.getElementById('platformPieChart').getContext('2d');
+            const labels = Object.keys(platformViews);
+            const dataValues = Object.values(platformViews);
+
             if (pieChartInstance) pieChartInstance.destroy();
-            pieChartInstance = new Chart(pieCtx, {
-                type: 'doughnut',
+
+            pieChartInstance = new Chart(ctx, {
+                type: 'pie',
                 data: {
-                    labels: Object.keys(platformCounts),
+                    labels: labels,
                     datasets: [{
-                        data: Object.values(platformCounts),
-                        backgroundColor: ['#000000', '#e1306c', '#0084ff', '#10b981'],
+                        data: dataValues,
+                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'],
                         borderWidth: 2,
                         borderColor: '#ffffff'
                     }]
@@ -1256,58 +1092,86 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+                    plugins: { legend: { display: false } }
                 }
             });
 
-            const dailyViewsMap = {};
-            filteredData.forEach(item => {
-                const dateKey = item.date || 'Unknown';
-                dailyViewsMap[dateKey] = (dailyViewsMap[dateKey] || 0) + (Number(item.views) || 0);
+            // Render custom HTML legend
+            const legendDiv = document.getElementById('pieLegend');
+            const colors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'];
+            const totalSum = dataValues.reduce((a, b) => a + b, 0);
+
+            legendDiv.innerHTML = labels.map((lbl, idx) => {
+                const pct = totalSum > 0 ? ((dataValues[idx] / totalSum) * 100).toFixed(1) : 0;
+                return `
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full inline-block" style="background-color: ${colors[idx % colors.length]}"></span>
+                        <span>${lbl}: <strong>${pct}%</strong></span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderDailyTrendChart() {
+            const ctx = document.getElementById('dailyTrendChart').getContext('2d');
+
+            const dailyMap = {};
+            filteredPosts.forEach(p => {
+                if (p.tgl_upload) {
+                    dailyMap[p.tgl_upload] = (dailyMap[p.tgl_upload] || 0) + Number(p.views || 0);
+                }
             });
 
-            const sortedDates = Object.keys(dailyViewsMap).sort();
-            const dailyValues = sortedDates.map(d => dailyViewsMap[d]);
+            const sortedDates = Object.keys(dailyMap).sort();
+            const values = sortedDates.map(d => dailyMap[d]);
 
-            const dailyCtx = document.getElementById('dailyViewsChart').getContext('2d');
             if (dailyChartInstance) dailyChartInstance.destroy();
-            dailyChartInstance = new Chart(dailyCtx, {
+
+            dailyChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: sortedDates.map(formatDateStr),
+                    labels: sortedDates.map(d => d.slice(5)), // MM-DD
                     datasets: [{
-                        label: 'Total Views',
-                        data: dailyValues,
+                        label: 'Daily Views',
+                        data: values,
                         backgroundColor: '#10b981',
-                        borderRadius: 8
+                        borderRadius: 6
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: { y: { ticks: { callback: value => formatNum(value) } } }
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
                 }
             });
+        }
 
-            const accountViewsMap = {};
-            filteredData.forEach(item => {
-                accountViewsMap[item.account] = (accountViewsMap[item.account] || 0) + (Number(item.views) || 0);
+        function renderTopAccountsChart() {
+            const ctx = document.getElementById('topAccountsBarChart').getContext('2d');
+
+            const accViews = {};
+            filteredPosts.forEach(p => {
+                const acc = p.account || '@unknown';
+                accViews[acc] = (accViews[acc] || 0) + Number(p.views || 0);
             });
 
-            const sortedAccounts = Object.keys(accountViewsMap).sort((a,b) => accountViewsMap[b] - accountViewsMap[a]).slice(0, 10);
-            const accountValues = sortedAccounts.map(a => accountViewsMap[a]);
+            const sortedAccounts = Object.keys(accViews).sort((a, b) => accViews[b] - accViews[a]).slice(0, 6);
+            const values = sortedAccounts.map(a => accViews[a]);
 
-            const barCtx = document.getElementById('topAccountsBarChart').getContext('2d');
-            if (barChartInstance) barChartInstance.destroy();
-            barChartInstance = new Chart(barCtx, {
+            if (topAccountChartInstance) topAccountChartInstance.destroy();
+
+            topAccountChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: sortedAccounts,
                     datasets: [{
-                        label: 'Views',
-                        data: accountValues,
-                        backgroundColor: '#0f172a',
+                        label: 'Total Views',
+                        data: values,
+                        backgroundColor: '#064e3b',
                         borderRadius: 6
                     }]
                 },
@@ -1316,224 +1180,245 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: { x: { ticks: { callback: value => formatNum(value) } } }
-                }
-            });
-        }
-
-        function renderPostsTable() {
-            const tbody = document.getElementById('postsTableBody');
-            const searchKeyword = document.getElementById('tableSearch').value.toLowerCase();
-
-            let dataToDisplay = filteredData.filter(item => {
-                return (item.caption || '').toLowerCase().includes(searchKeyword) ||
-                       (item.account || '').toLowerCase().includes(searchKeyword) ||
-                       (item.category || '').toLowerCase().includes(searchKeyword);
-            });
-
-            dataToDisplay.sort((a, b) => {
-                let valA = a[sortField] || 0;
-                let valB = b[sortField] || 0;
-                if (typeof valA === 'string') valA = valA.toLowerCase();
-                if (typeof valB === 'string') valB = valB.toLowerCase();
-                return sortAsc ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
-            });
-
-            document.getElementById('tableTotalCount').innerText = `(${dataToDisplay.length})`;
-
-            const totalPages = Math.ceil(dataToDisplay.length / itemsPerPage) || 1;
-            if (currentPage > totalPages) currentPage = totalPages;
-
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const paginatedData = dataToDisplay.slice(startIndex, startIndex + itemsPerPage);
-
-            document.getElementById('paginationInfo').innerText = `Menampilkan ${dataToDisplay.length > 0 ? startIndex + 1 : 0}-${Math.min(startIndex + itemsPerPage, dataToDisplay.length)} dari ${dataToDisplay.length} posts`;
-            document.getElementById('currentPageText').innerText = currentPage;
-            document.getElementById('btnPrevPage').disabled = currentPage === 1;
-            document.getElementById('btnNextPage').disabled = currentPage === totalPages;
-
-            if (paginatedData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="12" class="text-center py-6 text-slate-400">Tidak ada post yang cocok dengan filter.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = paginatedData.map(item => {
-                const totalEng = (Number(item.likes)||0) + (Number(item.comments)||0) + (Number(item.saves)||0) + (Number(item.shares)||0);
-                const engPct = item.views > 0 ? ((totalEng / item.views) * 100).toFixed(2) : '0.00';
-                const platformBadge = item.platform === 'TikTok' ? 'bg-black text-white' : item.platform === 'Instagram' ? 'bg-pink-600 text-white' : 'bg-slate-700 text-white';
-
-                return `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="py-3 px-3.5 text-center">
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${platformBadge}">${item.platform}</span>
-                        </td>
-                        <td class="py-3 px-3.5 font-bold text-slate-800">${item.account}</td>
-                        <td class="py-3 px-3.5">
-                            <span class="bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full text-[10px]">${item.category || 'General'}</span>
-                        </td>
-                        <td class="py-3 px-3.5 max-w-xs">
-                            <p class="truncate font-medium text-slate-700">${item.caption}</p>
-                        </td>
-                        <td class="py-3 px-3.5 whitespace-nowrap text-slate-500">${formatDateStr(item.date)}</td>
-                        <td class="py-3 px-3.5 text-right font-black text-slate-900">${formatNum(item.views)}</td>
-                        <td class="py-3 px-3.5 text-right text-slate-600">${formatNum(item.likes)}</td>
-                        <td class="py-3 px-3.5 text-right text-slate-600">${formatNum(item.comments)}</td>
-                        <td class="py-3 px-3.5 text-right text-slate-600">${formatNum(item.saves)}</td>
-                        <td class="py-3 px-3.5 text-right text-slate-600">${formatNum(item.shares)}</td>
-                        <td class="py-3 px-3.5 text-right font-bold text-emerald-700">${engPct}%</td>
-                        ${isAdminMode ? `
-                        <td class="py-3 px-3.5 text-center">
-                            <button onclick="deletePost('${item.firestoreId}', ${item.id})" class="text-slate-400 hover:text-red-600 p-1" title="Hapus Post">
-                                <i class="fa-solid fa-trash text-xs"></i>
-                            </button>
-                        </td>` : ''}
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) handleCsvFile(file);
-        }
-
-        function handleCsvFile(file) {
-            Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    if (results.data && results.data.length > 0) {
-                        const parsedPosts = results.data.map((row, idx) => ({
-                            id: Date.now() + idx,
-                            account: row.account || row.Account || '@unknown',
-                            platform: row.platform || row.Platform || 'TikTok',
-                            category: row.category || row.Category || 'General',
-                            caption: row.caption || row.Caption || '-',
-                            date: row.date || row.Date || new Date().toISOString().split('T')[0],
-                            views: parseInt(row.views || row.Views || 0),
-                            likes: parseInt(row.likes || row.Likes || 0),
-                            comments: parseInt(row.comments || row.Comments || 0),
-                            saves: parseInt(row.saves || row.Saves || 0),
-                            shares: parseInt(row.shares || row.Shares || 0),
-                            url: row.url || row.Url || '#'
-                        }));
-
-                        closeModal('uploadModal');
-                        if (window.cloudAddPosts) window.cloudAddPosts(parsedPosts);
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        y: { grid: { display: false } }
                     }
                 }
             });
         }
 
-        function exportCSV() {
-            if (filteredData.length === 0) return;
-            const csvString = Papa.unparse(filteredData.map(item => ({
-                account: item.account,
-                platform: item.platform,
-                category: item.category,
-                caption: item.caption,
-                date: item.date,
-                views: item.views,
-                likes: item.likes,
-                comments: item.comments,
-                saves: item.saves,
-                shares: item.shares,
-                url: item.url
-            })));
+        // Main Table Render Logic
+        function renderTable() {
+            const tbody = document.getElementById('postsTableBody');
+            const searchVal = document.getElementById('tableSearch').value.toLowerCase();
 
-            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `Report_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            let displayPosts = filteredPosts.filter(p => {
+                const acc = (p.account || '').toLowerCase();
+                const cap = (p.caption || '').toLowerCase();
+                return acc.includes(searchVal) || cap.includes(searchVal);
+            });
+
+            document.getElementById('tableCountBadge').innerText = displayPosts.length;
+            document.getElementById('tablePaginationInfo').innerText = `Showing ${displayPosts.length} entries`;
+
+            tbody.innerHTML = '';
+
+            if (displayPosts.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="12" class="py-8 text-center text-slate-400">Tidak ada data post yang cocok.</td></tr>`;
+                return;
+            }
+
+            displayPosts.forEach(post => {
+                const views = Number(post.views || 0);
+                const likes = Number(post.likes || 0);
+                const cmt = Number(post.cmt || post.comments || 0);
+                const save = Number(post.save || post.saves || 0);
+                const share = Number(post.share || post.shares || 0);
+                
+                const engRate = views > 0 ? (((likes + cmt + save + share) / views) * 100).toFixed(2) : 0;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-bold text-slate-800">${post.account || '-'}</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-slate-100 text-slate-700">${post.platform || 'TikTok'}</span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800">${post.category || 'General'}</span>
+                    </td>
+                    <td class="py-3 px-4 max-w-xs truncate" title="${post.caption || ''}">${post.caption || '-'}</td>
+                    <td class="py-3 px-4 text-slate-500">${post.tgl_upload || '-'}</td>
+                    <td class="py-3 px-4 text-right font-extrabold text-slate-900">${views.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right font-semibold">${likes.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right">${cmt.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right">${save.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right">${share.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right font-bold text-emerald-600">${engRate}%</td>
+                    <td class="py-3 px-4 text-center">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <a href="${post.url || '#'}" target="_blank" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg" title="Buka Link">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                            </a>
+                            ${isAdmin ? `
+                                <button onclick="deletePost(${post.id})" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg" title="Hapus Post">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
-        function downloadSampleCSV() {
-            const sample = [
-                { account: '@twins.lila', platform: 'TikTok', category: 'Niche Media', caption: 'Contoh caption post viral 1', date: '2026-06-12', views: 5700000, likes: 132800, comments: 813, saves: 13800, shares: 4179, url: 'https://tiktok.com' }
-            ];
-            const csv = Papa.unparse(sample);
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "sample_report_format.csv";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        function sortTable(key) {
+            if (key === 'views') {
+                filteredPosts.sort((a, b) => Number(b.views || 0) - Number(a.views || 0));
+                renderTable();
+            }
+        }
+
+        function deletePost(id) {
+            if (confirm("Apakah Anda yakin ingin menghapus post ini?")) {
+                postsData = postsData.filter(p => p.id !== id);
+                projectsStore[currentProjectName] = postsData;
+                saveProjectsToStorage();
+                setCurrentProject(currentProjectName);
+            }
+        }
+
+        // File Upload Handlers (Excel / CSV)
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const filename = file.name.toLowerCase();
+
+            if (filename.endsWith('.csv')) {
+                Papa.parse(file, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        processParsedRows(results.data);
+                    }
+                });
+            } else if (filename.endsWith('.xlsx') || filename.endsWith('.xls')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.SheetNames[0];
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
+                    processParsedRows(jsonData);
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                alert("Format file tidak didukung! Upload file .csv, .xlsx, atau .xls");
+            }
+        }
+
+        function processParsedRows(rows) {
+            const parsedPosts = rows.map((row, index) => ({
+                id: Date.now() + index,
+                account: row.Account || row.account || '@user',
+                platform: row.Platform || row.platform || 'TikTok',
+                category: row.Category || row.category || row.Kategori || 'General',
+                caption: row.Caption || row.caption || '',
+                tgl_upload: row['Tgl Upload'] || row.tgl_upload || row.Date || new Date().toISOString().split('T')[0],
+                views: Number(row.Views || row.views || 0),
+                likes: Number(row.Likes || row.likes || 0),
+                cmt: Number(row.Comments || row.cmt || row.comments || 0),
+                save: Number(row.Saves || row.save || row.saves || 0),
+                share: Number(row.Shares || row.share || row.shares || 0),
+                url: row.URL || row.url || row.Link || '#'
+            }));
+
+            postsData = [...postsData, ...parsedPosts];
+            projectsStore[currentProjectName] = postsData;
+            saveProjectsToStorage();
+            setCurrentProject(currentProjectName);
+            closeModal('uploadModal');
+            alert(`Berhasil mengimpor ${parsedPosts.length} data post!`);
         }
 
         function handleAddPostSubmit(e) {
             e.preventDefault();
             const newPost = {
                 id: Date.now(),
+                account: document.getElementById('newAccount').value.trim(),
                 platform: document.getElementById('newPlatform').value,
-                account: document.getElementById('newAccount').value,
-                category: document.getElementById('newCategory').value,
-                caption: document.getElementById('newCaption').value,
-                date: document.getElementById('newDate').value,
-                views: parseInt(document.getElementById('newViews').value || 0),
-                likes: parseInt(document.getElementById('newLikes').value || 0),
-                comments: parseInt(document.getElementById('newComments').value || 0),
-                saves: parseInt(document.getElementById('newSaves').value || 0),
-                shares: parseInt(document.getElementById('newShares').value || 0),
-                url: document.getElementById('newUrl').value || '#'
+                category: document.getElementById('newCategory').value.trim(),
+                caption: document.getElementById('newCaption').value.trim(),
+                tgl_upload: document.getElementById('newDate').value,
+                views: Number(document.getElementById('newViews').value),
+                likes: Number(document.getElementById('newLikes').value),
+                cmt: Number(document.getElementById('newComments').value),
+                save: Number(document.getElementById('newSaves').value),
+                share: Number(document.getElementById('newShares').value),
+                url: document.getElementById('newUrl').value.trim() || '#'
             };
 
+            postsData.unshift(newPost);
+            projectsStore[currentProjectName] = postsData;
+            saveProjectsToStorage();
+            setCurrentProject(currentProjectName);
             closeModal('addPostModal');
-            document.getElementById('addPostForm').reset();
-            if (window.cloudAddPosts) window.cloudAddPosts([newPost]);
         }
 
-        function deletePost(firestoreId, localId) {
-            if (firestoreId && window.cloudDeletePost) {
-                window.cloudDeletePost(firestoreId);
-            }
+        function downloadTemplateCSV() {
+            const csvContent = "data:text/csv;charset=utf-8," + 
+                "Account,Platform,Category,Caption,Tgl Upload,Views,Likes,Comments,Saves,Shares,URL\n" +
+                "@twins.lila,TikTok,Niche Media,Contoh caption post viral,2026-06-12,1500000,50000,1200,3400,1200,https://tiktok.com";
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "template_report_social_media.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
-        function resetToSampleData() {
-            if (window.cloudResetAll) window.cloudResetAll();
+        function exportExcel() {
+            if (filteredPosts.length === 0) return alert("Tidak ada data untuk diekspor!");
+            
+            const exportData = filteredPosts.map(p => ({
+                "Account": p.account || '',
+                "Platform": p.platform || '',
+                "Category": p.category || '',
+                "Caption": p.caption || '',
+                "Tgl Upload": p.tgl_upload || '',
+                "Views": Number(p.views || 0),
+                "Likes": Number(p.likes || 0),
+                "Comments": Number(p.cmt || p.comments || 0),
+                "Saves": Number(p.save || p.saves || 0),
+                "Shares": Number(p.share || p.shares || 0),
+                "URL": p.url || ''
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Report " + currentProjectName);
+            
+            XLSX.writeFile(workbook, `report_${currentProjectName.toLowerCase().replace(/\s+/g, '_')}.xlsx`);
         }
 
-        function formatNum(num) {
-            if (!num && num !== 0) return '0';
-            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        function exportCSV() {
+            if (filteredPosts.length === 0) return alert("Tidak ada data untuk diekspor!");
+            
+            const headers = ["Account", "Platform", "Category", "Caption", "Tgl Upload", "Views", "Likes", "Comments", "Saves", "Shares", "URL"];
+            const rows = filteredPosts.map(p => [
+                `"${p.account || ''}"`,
+                `"${p.platform || ''}"`,
+                `"${p.category || ''}"`,
+                `"${(p.caption || '').replace(/"/g, '""')}"`,
+                `"${p.tgl_upload || ''}"`,
+                p.views || 0,
+                p.likes || 0,
+                p.cmt || p.comments || 0,
+                p.save || p.saves || 0,
+                p.share || p.shares || 0,
+                `"${p.url || ''}"`
+            ]);
+
+            const csvString = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `report_${currentProjectName.toLowerCase().replace(/\s+/g, '_')}.csv`;
+            link.click();
         }
 
-        function formatDateStr(dateStr) {
-            if (!dateStr) return '-';
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return dateStr;
-            return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        // Modal Utility Helpers
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            if (id === 'settingsModal') updateSettingsUI();
         }
 
-        function toggleSort(field) {
-            if (sortField === field) sortAsc = !sortAsc;
-            else { sortField = field; sortAsc = false; }
-            renderPostsTable();
-        }
-
-        function changePage(delta) {
-            currentPage += delta;
-            renderPostsTable();
-        }
-
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            const bgClass = type === 'success' ? 'bg-emerald-800 text-white' : type === 'error' ? 'bg-rose-700 text-white' : 'bg-slate-800 text-white';
-            toast.className = `${bgClass} text-xs font-semibold px-4 py-3 rounded-xl shadow-lg pointer-events-auto flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0`;
-            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-info'}"></i> <span>${message}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
-            setTimeout(() => {
-                toast.classList.add('opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
         }
     </script>
 </body>
