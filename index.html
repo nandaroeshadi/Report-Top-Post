@@ -12,6 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- PapaParse for CSV parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- SheetJS for Excel/Spreadsheet parsing (.xlsx, .xls) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
@@ -60,7 +62,7 @@
                 <div>
                     <span class="text-xs uppercase tracking-wider font-semibold text-slate-400">PROJECT REPORT</span>
                     <div class="flex items-center gap-2">
-                        <select id="projectSelect" class="bg-transparent font-bold text-xl text-slate-800 focus:outline-none cursor-pointer hover:text-emerald-600 transition">
+                        <select id="projectSelect" onchange="handleProjectChange()" class="bg-transparent font-bold text-xl text-slate-800 focus:outline-none cursor-pointer hover:text-emerald-600 transition">
                             <option value="Cerita Lila">Cerita Lila</option>
                             <option value="Campaign Media 2026">Campaign Media 2026</option>
                             <option value="Brand Performance Q3">Brand Performance Q3</option>
@@ -68,6 +70,19 @@
                         <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
                     </div>
                 </div>
+            </div>
+
+            <!-- Admin Project Management Control Buttons (Admin Only) -->
+            <div id="adminProjectControlGroup" class="hidden flex-wrap items-center gap-1.5 md:border-l md:border-slate-200 md:pl-3">
+                <button onclick="openModal('addProjectModal')" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition">
+                    <i class="fa-solid fa-plus text-[10px]"></i> Project Baru
+                </button>
+                <button onclick="openEditProjectModal()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition">
+                    <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit
+                </button>
+                <button onclick="confirmDeleteCurrentProject()" class="bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition">
+                    <i class="fa-solid fa-trash text-[10px]"></i> Hapus
+                </button>
             </div>
 
             <!-- Action Toolbar (Dynamic based on Admin vs Client Mode) -->
@@ -81,16 +96,16 @@
                 <!-- Admin Action Buttons (Hidden for clients) -->
                 <div id="adminActionGroup" class="hidden flex-wrap items-center gap-2">
                     <button onclick="openModal('uploadModal')" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3.5 py-2 rounded-xl text-sm transition shadow-sm">
-                        <i class="fa-solid fa-file-csv"></i>
-                        <span>Upload CSV Data</span>
+                        <i class="fa-solid fa-file-excel"></i>
+                        <span>Upload Excel / CSV</span>
                     </button>
                     <button onclick="openModal('addPostModal')" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-medium px-3.5 py-2 rounded-xl text-sm transition shadow-sm">
                         <i class="fa-solid fa-plus"></i>
                         <span>Tambah Post</span>
                     </button>
-                    <button onclick="resetToSampleData()" class="inline-flex items-center gap-2 bg-white border border-red-200 text-red-600 hover:bg-red-50 font-medium px-3 py-2 rounded-xl text-sm transition" title="Reset Data Cloud">
+                    <button onclick="confirmResetCurrentProjectData()" class="inline-flex items-center gap-2 bg-white border border-red-200 text-red-600 hover:bg-red-50 font-medium px-3 py-2 rounded-xl text-sm transition" title="Reset Data Project Ini">
                         <i class="fa-solid fa-rotate-left"></i>
-                        <span>Reset</span>
+                        <span>Reset Data</span>
                     </button>
                 </div>
 
@@ -492,6 +507,36 @@
                     <strong>Belum punya format CSV?</strong>
                 </div>
                 <button onclick="downloadSampleCSV()" class="text-xs bg-slate-800 hover:bg-slate-900 text-white font-semibold px-3 py-1.5 rounded-lg transition">
+    <!-- MODAL UPLOAD EXCEL & CSV DATA -->
+    <div id="uploadModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative border border-slate-100">
+            <button onclick="closeModal('uploadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-xl">
+                    <i class="fa-solid fa-file-excel text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-900 text-lg">Upload Data Excel / CSV</h3>
+                    <p class="text-slate-500 text-xs">Impor data report dari file Spreadsheets (.xlsx, .xls) atau CSV</p>
+                </div>
+            </div>
+
+            <div id="dropzone" class="border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/40 rounded-xl p-6 text-center transition cursor-pointer mb-4">
+                <i class="fa-solid fa-cloud-arrow-up text-3xl text-emerald-600 mb-2"></i>
+                <p class="text-sm font-semibold text-slate-700">Klik untuk pilih file atau Drag & Drop file Excel/CSV di sini</p>
+                <p class="text-xs text-slate-400 mt-1">Mendukung format: <strong>.xlsx, .xls, .csv</strong></p>
+                <p class="text-[11px] text-slate-400 mt-1">Header kolom: account, platform, category, caption, date, views, likes, comments, saves, shares, url</p>
+                <input type="file" id="csvFileInput" accept=".csv, .xlsx, .xls" class="hidden" onchange="handleFileSelect(event)">
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-5 flex items-center justify-between">
+                <div class="text-xs text-slate-600">
+                    <strong>Belum punya format file?</strong>
+                </div>
+                <button onclick="downloadSampleCSV()" class="text-xs bg-slate-800 hover:bg-slate-900 text-white font-semibold px-3 py-1.5 rounded-lg transition">
                     <i class="fa-solid fa-download mr-1"></i> Download Sample CSV
                 </button>
             </div>
@@ -502,75 +547,45 @@
         </div>
     </div>
 
-    <!-- MODAL TAMBAH POST BARU MANUAL -->
-    <div id="addPostModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-            <button onclick="closeModal('addPostModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+    <!-- MODAL TAMBAH PROJECT BARU -->
+    <div id="addProjectModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+            <button onclick="closeModal('addProjectModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
-
-            <h3 class="font-bold text-slate-900 text-lg mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-circle-plus text-emerald-600"></i> Tambah Post Baru
+            <h3 class="font-bold text-slate-900 text-lg mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-folder-plus text-emerald-600"></i> Tambah Project Baru
             </h3>
-
-            <form id="addPostForm" onsubmit="handleAddPostSubmit(event)" class="space-y-3 text-xs">
+            <form onsubmit="handleAddProjectSubmit(event)" class="space-y-3 text-xs">
                 <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Platform</label>
-                    <select id="newPlatform" required class="w-full border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-emerald-500">
-                        <option value="TikTok">TikTok</option>
-                        <option value="Instagram">Instagram</option>
-                        <option value="Threads">Threads</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Account Handle</label>
-                        <input type="text" id="newAccount" placeholder="@username" required class="w-full border border-slate-300 rounded-xl p-2.5">
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Kategori</label>
-                        <input type="text" id="newCategory" placeholder="Niche Media / UGC" required class="w-full border border-slate-300 rounded-xl p-2.5">
-                    </div>
-                </div>
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Caption / Short Brief</label>
-                    <textarea id="newCaption" rows="2" placeholder="Tulis caption singkat..." required class="w-full border border-slate-300 rounded-xl p-2.5"></textarea>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Tanggal Upload</label>
-                        <input type="date" id="newDate" required class="w-full border border-slate-300 rounded-xl p-2.5">
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Views</label>
-                        <input type="number" id="newViews" required min="0" placeholder="0" class="w-full border border-slate-300 rounded-xl p-2.5">
-                    </div>
-                </div>
-                <div class="grid grid-cols-4 gap-2">
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Likes</label>
-                        <input type="number" id="newLikes" value="0" min="0" class="w-full border border-slate-300 rounded-xl p-2">
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Comments</label>
-                        <input type="number" id="newComments" value="0" min="0" class="w-full border border-slate-300 rounded-xl p-2">
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Saves</label>
-                        <input type="number" id="newSaves" value="0" min="0" class="w-full border border-slate-300 rounded-xl p-2">
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Shares</label>
-                        <input type="number" id="newShares" value="0" min="0" class="w-full border border-slate-300 rounded-xl p-2">
-                    </div>
-                </div>
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Link Post (URL)</label>
-                    <input type="url" id="newUrl" placeholder="https://tiktok.com/@..." class="w-full border border-slate-300 rounded-xl p-2.5">
+                    <label class="block font-semibold text-slate-700 mb-1">Nama Project / Client Baru</label>
+                    <input type="text" id="newProjectName" placeholder="Contoh: Brand Campaign Q4" required class="w-full border border-slate-300 rounded-xl p-2.5 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 </div>
                 <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('addPostModal')" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl font-semibold">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold">Simpan Post</button>
+                    <button type="button" onclick="closeModal('addProjectModal')" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl font-semibold">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold">Simpan Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT PROJECT -->
+    <div id="editProjectModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+            <button onclick="closeModal('editProjectModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 class="font-bold text-slate-900 text-lg mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-emerald-600"></i> Edit Nama Project
+            </h3>
+            <form onsubmit="handleEditProjectSubmit(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nama Project Saat Ini</label>
+                    <input type="text" id="editProjectNameInput" required class="w-full border border-slate-300 rounded-xl p-2.5 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('editProjectModal')" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl font-semibold">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold">Update Nama</button>
                 </div>
             </form>
         </div>
@@ -703,15 +718,18 @@
 
     <script>
         const SAMPLE_POSTS = [
-            { id: 1, account: '@horrorlila', platform: 'TikTok', category: 'Niche Media', caption: 'Sempat dikira kejadian nyata atas ODGJ yang lepas, Isu horor misteri rumah tua...', date: '2026-06-12', views: 4855386, likes: 210500, comments: 4120, saves: 31000, shares: 8900, url: 'https://tiktok.com' },
-            { id: 2, account: '@twins.lila', platform: 'TikTok', category: 'Niche Media', caption: 'Terjebak di Rumah Sendiri Bareng Terror yang Gak Kasat Mata...', date: '2026-06-12', views: 5700000, likes: 132800, comments: 813, saves: 13800, shares: 4179, url: 'https://tiktok.com' },
-            { id: 3, account: '@obrolan.bioskop', platform: 'TikTok', category: 'Niche Media', caption: 'Diluar nalar banget! Momen yang harusnya cuma sekadar nonton film malah bikin geger...', date: '2026-06-12', views: 2900000, likes: 98000, comments: 1450, saves: 11200, shares: 3200, url: 'https://tiktok.com' },
-            { id: 4, account: '@saranfilm_', platform: 'TikTok', category: 'Niche Media', caption: 'Gak ada yang lebih menyakitkan daripada plot twist akhir film ini...', date: '2026-06-11', views: 2150000, likes: 74000, comments: 980, saves: 8900, shares: 1400, url: 'https://tiktok.com' },
-            { id: 5, account: '@lila.story_', platform: 'Instagram', category: 'Niche Media', caption: 'Punya support system berbentuk kakak kembar 10/10...', date: '2026-06-08', views: 1250000, likes: 45000, comments: 620, saves: 5400, shares: 980, url: 'https://instagram.com' }
+            { id: 1, project: 'Cerita Lila', account: '@horrorlila', platform: 'TikTok', category: 'Niche Media', caption: 'Sempat dikira kejadian nyata atas ODGJ yang lepas, Isu horor misteri rumah tua...', date: '2026-06-12', views: 4855386, likes: 210500, comments: 4120, saves: 31000, shares: 8900, url: 'https://tiktok.com' },
+            { id: 2, project: 'Cerita Lila', account: '@twins.lila', platform: 'TikTok', category: 'Niche Media', caption: 'Terjebak di Rumah Sendiri Bareng Terror yang Gak Kasat Mata...', date: '2026-06-12', views: 5700000, likes: 132800, comments: 813, saves: 13800, shares: 4179, url: 'https://tiktok.com' },
+            { id: 3, project: 'Cerita Lila', account: '@obrolan.bioskop', platform: 'TikTok', category: 'Niche Media', caption: 'Diluar nalar banget! Momen yang harusnya cuma sekadar nonton film malah bikin geger...', date: '2026-06-12', views: 2900000, likes: 98000, comments: 1450, saves: 11200, shares: 3200, url: 'https://tiktok.com' },
+            { id: 4, project: 'Campaign Media 2026', account: '@saranfilm_', platform: 'TikTok', category: 'Niche Media', caption: 'Gak ada yang lebih menyakitkan daripada plot twist akhir film ini...', date: '2026-06-11', views: 2150000, likes: 74000, comments: 980, saves: 8900, shares: 1400, url: 'https://tiktok.com' },
+            { id: 5, project: 'Brand Performance Q3', account: '@lila.story_', platform: 'Instagram', category: 'Niche Media', caption: 'Punya support system berbentuk kakak kembar 10/10...', date: '2026-06-08', views: 1250000, likes: 45000, comments: 620, saves: 5400, shares: 980, url: 'https://instagram.com' }
         ];
 
+        let projectsList = ['Cerita Lila', 'Campaign Media 2026', 'Brand Performance Q3'];
+        let currentSelectedProject = 'Cerita Lila';
+
         let postsData = [...SAMPLE_POSTS];
-        let filteredData = [...SAMPLE_POSTS];
+        let filteredData = [];
         let currentPage = 1;
         const itemsPerPage = 7;
         let sortField = 'views';
@@ -724,7 +742,8 @@
         let barChartInstance = null;
 
         window.onload = function() {
-            // Check URL Params for admin mode e.g. ?admin=true
+            loadProjectsFromStorage();
+
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('admin') === 'true' || sessionStorage.getItem('admin_logged_in') === 'true') {
                 enableAdminMode();
@@ -739,7 +758,7 @@
             dropzone.addEventListener('drop', (e) => {
                 e.preventDefault();
                 dropzone.classList.remove('bg-emerald-100');
-                if (e.dataTransfer.files.length) handleCsvFile(e.dataTransfer.files[0]);
+                if (e.dataTransfer.files.length) handleUploadedFile(e.dataTransfer.files[0]);
             });
 
             const now = new Date();
@@ -750,6 +769,105 @@
             applyFilters();
         };
 
+        function renderProjectSelectOptions() {
+            const selectEl = document.getElementById('projectSelect');
+            selectEl.innerHTML = projectsList.map(p => `<option value="${p}" ${p === currentSelectedProject ? 'selected' : ''}>${p}</option>`).join('');
+        }
+
+        function loadProjectsFromStorage() {
+            const saved = localStorage.getItem('app_projects_list');
+            if (saved) {
+                try { projectsList = JSON.parse(saved); } catch(e){}
+            }
+            if (!projectsList.includes(currentSelectedProject)) {
+                currentSelectedProject = projectsList[0] || 'Default Project';
+            }
+            renderProjectSelectOptions();
+        }
+
+        function saveProjectsToStorage() {
+            localStorage.setItem('app_projects_list', JSON.stringify(projectsList));
+        }
+
+        function handleProjectChange() {
+            currentSelectedProject = document.getElementById('projectSelect').value;
+            populateFilterDropdowns();
+            applyFilters();
+            showToast(`Switched to project: ${currentSelectedProject}`, 'info');
+        }
+
+        function handleAddProjectSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('newProjectName').value.trim();
+            if (!name) return;
+            if (!projectsList.includes(name)) {
+                projectsList.push(name);
+                saveProjectsToStorage();
+            }
+            currentSelectedProject = name;
+            renderProjectSelectOptions();
+            closeModal('addProjectModal');
+            document.getElementById('newProjectName').value = '';
+            populateFilterDropdowns();
+            applyFilters();
+            showToast(`Project "${name}" berhasil dibuat!`, 'success');
+        }
+
+        function openEditProjectModal() {
+            document.getElementById('editProjectNameInput').value = currentSelectedProject;
+            openModal('editProjectModal');
+        }
+
+        function handleEditProjectSubmit(e) {
+            e.preventDefault();
+            const newName = document.getElementById('editProjectNameInput').value.trim();
+            if (!newName || newName === currentSelectedProject) {
+                closeModal('editProjectModal');
+                return;
+            }
+
+            const idx = projectsList.indexOf(currentSelectedProject);
+            if (idx !== -1) projectsList[idx] = newName;
+
+            postsData.forEach(p => {
+                if (p.project === currentSelectedProject || !p.project) p.project = newName;
+            });
+
+            currentSelectedProject = newName;
+            saveProjectsToStorage();
+            renderProjectSelectOptions();
+            closeModal('editProjectModal');
+            populateFilterDropdowns();
+            applyFilters();
+            showToast(`Nama project diperbarui menjadi "${newName}"!`, 'success');
+        }
+
+        function confirmDeleteCurrentProject() {
+            if (projectsList.length <= 1) {
+                showToast('Tidak bisa menghapus project terakhir!', 'error');
+                return;
+            }
+            if (confirm(`Apakah Anda yakin ingin menghapus project "${currentSelectedProject}" beserta seluruh datanya?`)) {
+                postsData = postsData.filter(p => p.project !== currentSelectedProject);
+                projectsList = projectsList.filter(p => p !== currentSelectedProject);
+                currentSelectedProject = projectsList[0];
+                saveProjectsToStorage();
+                renderProjectSelectOptions();
+                populateFilterDropdowns();
+                applyFilters();
+                showToast('Project berhasil dihapus.', 'info');
+            }
+        }
+
+        function confirmResetCurrentProjectData() {
+            if (confirm(`Apakah Anda yakin ingin menghapus SELURUH data post untuk project "${currentSelectedProject}"?`)) {
+                postsData = postsData.filter(p => p.project && p.project !== currentSelectedProject);
+                populateFilterDropdowns();
+                applyFilters();
+                showToast(`Data project "${currentSelectedProject}" berhasil di-reset.`, 'info');
+            }
+        }
+
         // ADMIN ACCESS CONTROL LOGIC
         function toggleAdminAuth() {
             if (isAdminMode) {
@@ -757,6 +875,182 @@
                 showToast('Keluar dari Modus Admin.', 'info');
             } else {
                 openModal('adminPasscodeModal');
+            }
+        }
+
+        function handleAdminAuthSubmit(e) {
+            e.preventDefault();
+            const inputVal = document.getElementById('adminPasscodeInput').value;
+            if (inputVal === ADMIN_PASSCODE) {
+                enableAdminMode();
+                closeModal('adminPasscodeModal');
+                document.getElementById('adminPasscodeInput').value = '';
+                document.getElementById('passcodeErrorText').classList.add('hidden');
+                showToast('Berhasil Login sebagai Admin!', 'success');
+            } else {
+                document.getElementById('passcodeErrorText').classList.remove('hidden');
+            }
+        }
+
+        function enableAdminMode() {
+            isAdminMode = true;
+            sessionStorage.setItem('admin_logged_in', 'true');
+            document.getElementById('adminActionGroup').classList.remove('hidden');
+            document.getElementById('adminActionGroup').classList.add('flex');
+            document.getElementById('adminProjectControlGroup').classList.remove('hidden');
+            document.getElementById('adminProjectControlGroup').classList.add('flex');
+            document.getElementById('tableAddRowBtn').classList.remove('hidden');
+            document.getElementById('tableAddRowBtn').classList.add('flex');
+            document.getElementById('thActionHeader').classList.remove('hidden');
+            
+            document.getElementById('accessModeBadge').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-emerald-700 font-bold">Modus Admin Active</span>`;
+            document.getElementById('clientHeaderBadge').innerText = 'Admin View';
+            document.getElementById('adminLoginBtnText').innerText = 'Logout Admin';
+            renderPostsTable();
+        }
+
+        function disableAdminMode() {
+            isAdminMode = false;
+            sessionStorage.removeItem('admin_logged_in');
+            document.getElementById('adminActionGroup').classList.add('hidden');
+            document.getElementById('adminActionGroup').classList.remove('flex');
+            document.getElementById('adminProjectControlGroup').classList.add('hidden');
+            document.getElementById('adminProjectControlGroup').classList.remove('flex');
+            document.getElementById('tableAddRowBtn').classList.add('hidden');
+            document.getElementById('tableAddRowBtn').classList.remove('flex');
+            document.getElementById('thActionHeader').classList.add('hidden');
+
+            document.getElementById('accessModeBadge').innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400"></span><span class="text-slate-600 font-bold">Mode View Client (Read-Only)</span>`;
+            document.getElementById('clientHeaderBadge').innerText = 'Client View';
+            document.getElementById('adminLoginBtnText').innerText = 'Login Admin';
+            renderPostsTable();
+        }
+
+        function populateFilterDropdowns() {
+            const accountSelect = document.getElementById('filterAccount');
+            const categorySelect = document.getElementById('filterCategory');
+
+            const currentProjectPosts = postsData.filter(p => !p.project || p.project === currentSelectedProject);
+
+            const accounts = ['ALL', ...new Set(currentProjectPosts.map(p => p.account))];
+            const categories = ['ALL', ...new Set(currentProjectPosts.map(p => p.category))];
+
+            accountSelect.innerHTML = accounts.map(a => `<option value="${a}">${a === 'ALL' ? 'Semua Akun' : a}</option>`).join('');
+            categorySelect.innerHTML = categories.map(c => `<option value="${c}">${c === 'ALL' ? 'Semua Kategori' : c}</option>`).join('');
+        }
+
+        function applyFilters() {
+            const platform = document.getElementById('filterPlatform').value;
+            const account = document.getElementById('filterAccount').value;
+            const category = document.getElementById('filterCategory').value;
+            const startDate = document.getElementById('filterStartDate').value;
+            const endDate = document.getElementById('filterEndDate').value;
+
+            filteredData = postsData.filter(item => {
+                if (item.project && item.project !== currentSelectedProject) return false;
+                if (platform !== 'ALL' && item.platform !== platform) return false;
+                if (account !== 'ALL' && item.account !== account) return false;
+                if (category !== 'ALL' && item.category !== category) return false;
+                if (startDate && new Date(item.date) < new Date(startDate)) return false;
+                if (endDate && new Date(item.date) > new Date(endDate)) return false;
+                return true;
+            });
+
+            currentPage = 1;
+            updateMetrics();
+            updateTopContentHighlight();
+            renderTop10Leaderboard();
+            renderCharts();
+            renderPostsTable();
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) handleUploadedFile(file);
+        }
+
+        function handleUploadedFile(file) {
+            const filename = file.name.toLowerCase();
+            if (filename.endsWith('.xlsx') || filename.endsWith('.xls')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.SheetNames[0];
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
+                    processRawImportData(jsonData);
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                Papa.parse(file, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        if (results.data) processRawImportData(results.data);
+                    }
+                });
+            }
+        }
+
+        function processRawImportData(rows) {
+            if (!rows || rows.length === 0) {
+                showToast('File kosong atau format tidak sesuai.', 'error');
+                return;
+            }
+            const parsedPosts = rows.map((row, idx) => ({
+                id: Date.now() + idx,
+                project: currentSelectedProject,
+                account: row.account || row.Account || '@unknown',
+                platform: row.platform || row.Platform || 'TikTok',
+                category: row.category || row.Category || 'General',
+                caption: row.caption || row.Caption || '-',
+                date: row.date || row.Date || new Date().toISOString().split('T')[0],
+                views: parseInt(row.views || row.Views || 0),
+                likes: parseInt(row.likes || row.Likes || 0),
+                comments: parseInt(row.comments || row.Comments || 0),
+                saves: parseInt(row.saves || row.Saves || 0),
+                shares: parseInt(row.shares || row.Shares || 0),
+                url: row.url || row.Url || '#'
+            }));
+
+            closeModal('uploadModal');
+            if (window.cloudAddPosts) {
+                window.cloudAddPosts(parsedPosts);
+            } else {
+                postsData.push(...parsedPosts);
+                populateFilterDropdowns();
+                applyFilters();
+                showToast(`Berhasil mengimpor ${parsedPosts.length} data ke project "${currentSelectedProject}"!`, 'success');
+            }
+        }
+
+        function handleAddPostSubmit(e) {
+            e.preventDefault();
+            const newPost = {
+                id: Date.now(),
+                project: currentSelectedProject,
+                platform: document.getElementById('newPlatform').value,
+                account: document.getElementById('newAccount').value,
+                category: document.getElementById('newCategory').value,
+                caption: document.getElementById('newCaption').value,
+                date: document.getElementById('newDate').value,
+                views: parseInt(document.getElementById('newViews').value || 0),
+                likes: parseInt(document.getElementById('newLikes').value || 0),
+                comments: parseInt(document.getElementById('newComments').value || 0),
+                saves: parseInt(document.getElementById('newSaves').value || 0),
+                shares: parseInt(document.getElementById('newShares').value || 0),
+                url: document.getElementById('newUrl').value || '#'
+            };
+
+            closeModal('addPostModal');
+            document.getElementById('addPostForm').reset();
+            if (window.cloudAddPosts) {
+                window.cloudAddPosts([newPost]);
+            } else {
+                postsData.push(newPost);
+                populateFilterDropdowns();
+                applyFilters();
+                showToast('Post baru berhasil ditambahkan!', 'success');
             }
         }
 
