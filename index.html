@@ -4,61 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Social Media Client Report Dashboard</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <!-- PapaParse for Google Sheets CSV parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <!-- SheetJS for Excel (.xlsx, .xls) export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
-                    },
-                    colors: {
-                        emerald: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857',
-                            800: '#065f46',
-                            900: '#064e3b',
-                        }
-                    }
-                }
-            }
-        }
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }, colors: { emerald: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' } } } } }
     </script>
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    </style>
+    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
-
-    <!-- Top Navigation Header -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
-            
-            <!-- Project Title Selector -->
             <div class="flex flex-wrap items-center gap-3">
-                <div class="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl font-bold">
-                    <i class="fa-solid fa-chart-line text-xl"></i>
-                </div>
+                <div class="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl font-bold"><i class="fa-solid fa-chart-line text-xl"></i></div>
                 <div>
                     <span class="text-xs uppercase tracking-wider font-semibold text-slate-400">PROJECT REPORT</span>
                     <div class="flex items-center gap-1 relative">
@@ -70,120 +31,61 @@
                         <i id="projectSelectChevron" class="fa-solid fa-chevron-down text-xs text-slate-400 pointer-events-none -ml-3 hidden"></i>
                     </div>
                 </div>
-
-                <!-- Admin Project Management Control Buttons -->
                 <div id="adminProjectControlGroup" class="hidden items-center gap-1.5 border-l border-slate-200 pl-3 my-1">
-                    <button onclick="openModal('addProjectModal')" class="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs" title="Tambah Project Baru">
-                        <i class="fa-solid fa-plus text-[10px]"></i> + Project Baru
-                    </button>
-                    <button onclick="openEditProjectModal()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs" title="Ubah Nama Project Saat Ini">
-                        <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit
-                    </button>
-                    <button onclick="confirmDeleteCurrentProject()" class="bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs" title="Hapus Project Saat Ini">
-                        <i class="fa-solid fa-trash text-[10px]"></i> Hapus
-                    </button>
+                    <button onclick="openModal('addProjectModal')" class="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs"><i class="fa-solid fa-plus text-[10px]"></i> + Project Baru</button>
+                    <button onclick="openEditProjectModal()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs"><i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit</button>
+                    <button onclick="confirmDeleteCurrentProject()" class="bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs"><i class="fa-solid fa-trash text-[10px]"></i> Hapus</button>
                 </div>
             </div>
-
-            <!-- Action Toolbar -->
             <div class="flex flex-wrap items-center gap-2">
-                <!-- Status Mode Badge (Hidden) -->
                 <div id="accessModeBadge" class="hidden"></div>
-
-                <!-- Settings Button (Gear Icon) -->
-                <button onclick="openModal('settingsModal')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 transition shadow-xs border border-slate-200">
-                    <i class="fa-solid fa-gear text-slate-500"></i>
-                    <span>Pengaturan</span>
-                </button>
-
-                <!-- Admin Action Buttons -->
+                <button onclick="openModal('settingsModal')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 transition shadow-xs border border-slate-200"><i class="fa-solid fa-gear text-slate-500"></i><span>Pengaturan</span></button>
                 <div id="adminActionGroup" class="hidden relative">
-                    <button onclick="toggleAdminMenu()" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-medium px-3.5 py-2 rounded-xl text-xs transition shadow-sm">
-                        <i class="fa-solid fa-sliders"></i>
-                        <span>Admin Tools</span>
-                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
-                    </button>
-
-                    <!-- Hidden Admin Popover Menu -->
+                    <button onclick="toggleAdminMenu()" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-medium px-3.5 py-2 rounded-xl text-xs transition shadow-sm"><i class="fa-solid fa-sliders"></i><span>Admin Tools</span><i class="fa-solid fa-chevron-down text-[10px]"></i></button>
                     <div id="adminDropdownMenu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 z-40 p-2 space-y-1">
-                        <button onclick="openModal('uploadModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition flex items-center gap-2">
-                            <i class="fa-solid fa-link text-emerald-600"></i> Hubungkan Sheets
-                        </button>
-                        <button onclick="openModal('addPostModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2">
-                            <i class="fa-solid fa-plus text-slate-600"></i> Tambah Post
-                        </button>
-                        <button onclick="exportExcel(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2">
-                            <i class="fa-solid fa-file-excel text-emerald-600"></i> Export Excel (.xlsx)
-                        </button>
+                        <button onclick="openModal('uploadModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-link text-emerald-600"></i> Hubungkan Sheets</button>
+                        <button onclick="openModal('addPostModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-plus text-slate-600"></i> Tambah Post</button>
+                        <button onclick="exportExcel(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-file-excel text-emerald-600"></i> Export Excel (.xlsx)</button>
                         <div class="border-t border-slate-100 my-1"></div>
-                        <button onclick="confirmResetCurrentProjectData(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition flex items-center gap-2">
-                            <i class="fa-solid fa-rotate-left"></i> Reset Data Project
-                        </button>
-                        <button onclick="disableAdminMode(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition flex items-center gap-2">
-                            <i class="fa-solid fa-right-from-bracket"></i> Keluar Admin
-                        </button>
+                        <button onclick="confirmResetCurrentProjectData(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-rotate-left"></i> Reset Data Project</button>
+                        <button onclick="disableAdminMode(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-right-from-bracket"></i> Keluar Admin</button>
                     </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Dashboard Body -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
-
-        <!-- Banner Header -->
         <div class="bg-emerald-800 text-white rounded-3xl p-6 sm:p-8 shadow-lg relative overflow-hidden">
             <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl font-black pointer-events-none">REPORT</div>
             <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-700/80 rounded-full text-xs font-semibold text-emerald-100 mb-2">
-                        <i class="fa-solid fa-circle-check text-emerald-300"></i>
-                        <span>Social Media Performance Hub</span>
-                    </div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-700/80 rounded-full text-xs font-semibold text-emerald-100 mb-2"><i class="fa-solid fa-circle-check text-emerald-300"></i><span>Social Media Performance Hub</span></div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">SOCIAL MEDIA REPORT</h1>
                     <p class="text-emerald-100 text-sm mt-1">Rekapitulasi performa konten & engagement akun sosial media secara real-time</p>
                 </div>
-                <div class="bg-emerald-900/60 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-emerald-700/50 text-xs flex items-center gap-2 self-start md:self-auto">
-                    <i class="fa-regular fa-clock text-emerald-300"></i>
-                    <span>Updated in: <strong id="lastUpdatedDate" class="text-white font-bold">Today</strong></span>
-                </div>
+                <div class="bg-emerald-900/60 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-emerald-700/50 text-xs flex items-center gap-2 self-start md:self-auto"><i class="fa-regular fa-clock text-emerald-300"></i><span>Updated in: <strong id="lastUpdatedDate" class="text-white font-bold">Today</strong></span></div>
             </div>
         </div>
 
-        <!-- Global Filter Bar -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
             <div class="flex items-center justify-between">
-                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-filter text-emerald-600"></i> Filter Data Laporan
-                </h3>
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-filter text-emerald-600"></i> Filter Data Laporan</h3>
                 <button onclick="resetFilters()" class="text-xs text-emerald-600 font-semibold hover:underline">Reset Filter</button>
             </div>
-            
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 mb-1">Platform</label>
-                    <select id="filterPlatform" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
-                        <option value="ALL">Semua Platform</option>
-                        <option value="TikTok">TikTok</option>
-                        <option value="Instagram">Instagram</option>
-                        <option value="Threads">Threads</option>
-                    </select>
+                    <select id="filterPlatform" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500"><option value="ALL">Semua Platform</option><option value="TikTok">TikTok</option><option value="Instagram">Instagram</option><option value="Threads">Threads</option></select>
                 </div>
-
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 mb-1">Account Handle</label>
-                    <select id="filterAccount" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
-                        <option value="ALL">Semua Akun</option>
-                    </select>
+                    <select id="filterAccount" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500"><option value="ALL">Semua Akun</option></select>
                 </div>
-
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 mb-1">Kategori Content</label>
-                    <select id="filterCategory" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
-                        <option value="ALL">Semua Kategori</option>
-                    </select>
+                    <select id="filterCategory" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500"><option value="ALL">Semua Kategori</option></select>
                 </div>
-
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 mb-1">Range Tanggal (Upload)</label>
                     <div class="flex items-center gap-1.5">
@@ -195,102 +97,53 @@
             </div>
         </div>
 
-        <!-- Summary Performance Metrics Section -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            <!-- TOTAL PERFORMANCE BOX -->
             <div class="md:col-span-2 bg-emerald-50 border border-emerald-200 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-4">
-                        <span class="text-xs font-extrabold uppercase tracking-widest text-emerald-800 bg-emerald-200/60 px-3 py-1 rounded-full">
-                            TOTAL PERFORMANCE
-                        </span>
+                        <span class="text-xs font-extrabold uppercase tracking-widest text-emerald-800 bg-emerald-200/60 px-3 py-1 rounded-full">TOTAL PERFORMANCE</span>
                         <span class="text-xs text-emerald-700 font-medium" id="postCountBadge">0 Posts Loaded</span>
                     </div>
-
                     <div class="grid grid-cols-3 gap-4 mb-6">
-                        <div>
-                            <span class="text-xs text-emerald-700 font-semibold block">Views</span>
-                            <span id="metricTotalViews" class="text-2xl sm:text-3xl font-extrabold text-emerald-950">0</span>
-                        </div>
-                        <div>
-                            <span class="text-xs text-emerald-700 font-semibold block">Likes</span>
-                            <span id="metricTotalLikes" class="text-2xl sm:text-3xl font-extrabold text-emerald-950">0</span>
-                        </div>
-                        <div>
-                            <span class="text-xs text-emerald-700 font-semibold block">Comments</span>
-                            <span id="metricTotalComments" class="text-2xl sm:text-3xl font-extrabold text-emerald-950">0</span>
-                        </div>
+                        <div><span class="text-xs text-emerald-700 font-semibold block">Views</span><span id="metricTotalViews" class="text-2xl sm:text-3xl font-extrabold text-emerald-950">0</span></div>
+                        <div><span class="text-xs text-emerald-700 font-semibold block">Likes</span><span id="metricTotalLikes" class="text-2xl sm:text-3xl font-extrabold text-emerald-950">0</span></div>
+                        <div><span class="text-xs text-emerald-700 font-semibold block">Comments</span><span id="metricTotalComments" class="text-2xl sm:text-3xl font-extrabold text-emerald-950">0</span></div>
                     </div>
-
                     <div class="grid grid-cols-3 gap-4">
-                        <div>
-                            <span class="text-xs text-emerald-700 font-semibold block">Saves</span>
-                            <span id="metricTotalSaves" class="text-xl sm:text-2xl font-bold text-emerald-900">0</span>
-                        </div>
-                        <div>
-                            <span class="text-xs text-emerald-700 font-semibold block">Shares</span>
-                            <span id="metricTotalShares" class="text-xl sm:text-2xl font-bold text-emerald-900">0</span>
-                        </div>
-                        <div>
-                            <span class="text-xs text-emerald-700 font-semibold block">Avg. Engagement</span>
-                            <span id="metricAvgEngagement" class="text-xl sm:text-2xl font-bold text-emerald-900">0%</span>
-                        </div>
+                        <div><span class="text-xs text-emerald-700 font-semibold block">Saves</span><span id="metricTotalSaves" class="text-xl sm:text-2xl font-bold text-emerald-900">0</span></div>
+                        <div><span class="text-xs text-emerald-700 font-semibold block">Shares</span><span id="metricTotalShares" class="text-xl sm:text-2xl font-bold text-emerald-900">0</span></div>
+                        <div><span class="text-xs text-emerald-700 font-semibold block">Avg. Engagement</span><span id="metricAvgEngagement" class="text-xl sm:text-2xl font-bold text-emerald-900">0%</span></div>
                     </div>
                 </div>
             </div>
 
-            <!-- SPOTLIGHT #1 TOP CONTENT -->
             <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white rounded-3xl p-6 shadow-md flex flex-col justify-between relative overflow-hidden">
                 <div>
                     <div class="flex items-center justify-between mb-3">
-                        <span class="bg-amber-400 text-slate-900 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-xs">
-                            <i class="fa-solid fa-trophy"></i> #1 TOP CONTENT
-                        </span>
+                        <span class="bg-amber-400 text-slate-900 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-xs"><i class="fa-solid fa-trophy"></i> #1 TOP CONTENT</span>
                         <span id="top1Platform" class="text-xs font-bold bg-white/20 px-2.5 py-0.5 rounded-full">-</span>
                     </div>
-
                     <div class="mt-4 space-y-2">
                         <div id="top1Account" class="text-sm font-bold text-emerald-200">@account</div>
                         <p id="top1Caption" class="text-xs text-emerald-50 line-clamp-2 italic">"Loading top post content..."</p>
                     </div>
-
                     <div class="grid grid-cols-3 gap-2 mt-6 pt-4 border-t border-emerald-500/50 text-center">
-                        <div>
-                            <span class="text-[10px] uppercase font-semibold text-emerald-200 block">Views</span>
-                            <span id="top1Views" class="text-sm font-extrabold text-white">0</span>
-                        </div>
-                        <div>
-                            <span class="text-[10px] uppercase font-semibold text-emerald-200 block">Likes</span>
-                            <span id="top1Likes" class="text-sm font-extrabold text-white">0</span>
-                        </div>
-                        <div>
-                            <span class="text-[10px] uppercase font-semibold text-emerald-200 block">Comments</span>
-                            <span id="top1Comments" class="text-sm font-extrabold text-white">0</span>
-                        </div>
+                        <div><span class="text-[10px] uppercase font-semibold text-emerald-200 block">Views</span><span id="top1Views" class="text-sm font-extrabold text-white">0</span></div>
+                        <div><span class="text-[10px] uppercase font-semibold text-emerald-200 block">Likes</span><span id="top1Likes" class="text-sm font-extrabold text-white">0</span></div>
+                        <div><span class="text-[10px] uppercase font-semibold text-emerald-200 block">Comments</span><span id="top1Comments" class="text-sm font-extrabold text-white">0</span></div>
                     </div>
                 </div>
-
-                <a id="top1Link" href="#" target="_blank" class="mt-4 w-full bg-white text-emerald-800 hover:bg-emerald-100 font-bold py-2 px-4 rounded-xl text-xs text-center transition block">
-                    Buka Link Konten <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-1"></i>
-                </a>
+                <a id="top1Link" href="#" target="_blank" class="mt-4 w-full bg-white text-emerald-800 hover:bg-emerald-100 font-bold py-2 px-4 rounded-xl text-xs text-center transition block">Buka Link Konten <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-1"></i></a>
             </div>
-
         </div>
 
-        <!-- Visual Charts & Leaderboard Row -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <!-- LEADERBOARD #10 TOP PERFORMANCE -->
             <div class="lg:col-span-2 bg-amber-50/80 border border-amber-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-sm font-extrabold uppercase tracking-wider text-amber-900 flex items-center gap-2">
-                            <i class="fa-solid fa-ranking-star text-amber-600"></i> #10 Top Performance Konten
-                        </h3>
+                        <h3 class="text-sm font-extrabold uppercase tracking-wider text-amber-900 flex items-center gap-2"><i class="fa-solid fa-ranking-star text-amber-600"></i> #10 Top Performance Konten</h3>
                         <span class="text-xs text-amber-700 font-medium">Sorted by Views</span>
                     </div>
-
                     <div class="overflow-x-auto rounded-2xl border border-amber-200 bg-white">
                         <table class="w-full text-left border-collapse">
                             <thead>
@@ -303,84 +156,47 @@
                                     <th class="py-2.5 px-3 text-center">Link</th>
                                 </tr>
                             </thead>
-                            <tbody id="top10TableBody" class="divide-y divide-amber-100 text-xs">
-                                <!-- Top 10 Dynamic Rows -->
-                            </tbody>
+                            <tbody id="top10TableBody" class="divide-y divide-amber-100 text-xs"></tbody>
                         </table>
                     </div>
-                    
-                    <!-- Tombol Lihat Semua Post -->
                     <div class="mt-4 flex justify-end">
-                        <button onclick="toggleAllPostsTable()" class="text-xs font-bold text-amber-600 hover:text-amber-800 flex items-center gap-1.5 transition">
-                            Lihat Semua Post <i class="fa-solid fa-arrow-right"></i>
-                        </button>
+                        <button onclick="toggleAllPostsTable()" class="text-xs font-bold text-amber-600 hover:text-amber-800 flex items-center gap-1.5 transition">Lihat Semua Post <i class="fa-solid fa-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
 
-            <!-- PLATFORM DISTRIBUTION PIE CHART -->
             <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
                 <div>
-                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie text-emerald-600"></i> Platform Views Share
-                    </h3>
+                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-emerald-600"></i> Platform Views Share</h3>
                     <p class="text-xs text-slate-400 mb-4">Proporsi tayangan berdasarkan platform</p>
-                    <div class="relative h-48 w-full flex items-center justify-center">
-                        <canvas id="platformPieChart"></canvas>
-                    </div>
+                    <div class="relative h-48 w-full flex items-center justify-center"><canvas id="platformPieChart"></canvas></div>
                 </div>
-                <div id="pieLegend" class="mt-4 pt-3 border-t border-slate-100 flex justify-around text-xs font-semibold text-slate-600">
-                    <!-- Legend dynamic -->
-                </div>
+                <div id="pieLegend" class="mt-4 pt-3 border-t border-slate-100 flex justify-around text-xs font-semibold text-slate-600"></div>
             </div>
-
         </div>
 
-        <!-- Secondary Charts Row: Daily Views Trend & Top Accounts - Admin Only -->
         <div id="adminOnlySecondaryCharts" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- DAILY VIEWS TREND -->
             <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs">
-                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1 flex items-center gap-2">
-                    <i class="fa-solid fa-chart-column text-emerald-600"></i> Tren Penambahan Views Per Hari
-                </h3>
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1 flex items-center gap-2"><i class="fa-solid fa-chart-column text-emerald-600"></i> Tren Penambahan Views Per Hari</h3>
                 <p class="text-xs text-slate-400 mb-4">Performa tayangan harian secara menyeluruh</p>
-                <div class="h-60 w-full">
-                    <canvas id="dailyTrendChart"></canvas>
-                </div>
+                <div class="h-60 w-full"><canvas id="dailyTrendChart"></canvas></div>
             </div>
-
-            <!-- TOP ACCOUNTS BY VIEWS BAR CHART -->
             <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs">
-                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1 flex items-center gap-2">
-                    <i class="fa-solid fa-users text-emerald-600"></i> Top Akun Menurut Total Views
-                </h3>
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1 flex items-center gap-2"><i class="fa-solid fa-users text-emerald-600"></i> Top Akun Menurut Total Views</h3>
                 <p class="text-xs text-slate-400 mb-4">Akun yang memiliki kontribusi views terbesar</p>
-                <div class="h-60 w-full">
-                    <canvas id="topAccountsBarChart"></canvas>
-                </div>
+                <div class="h-60 w-full"><canvas id="topAccountsBarChart"></canvas></div>
             </div>
         </div>
 
-        <!-- Detailed Posts Data Table Section -->
         <div id="allPostsTableSection" class="hidden bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden mt-6">
             <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                        <span>Rincian Posts Data</span>
-                        <span id="tableCountBadge" class="bg-slate-100 text-slate-600 text-xs font-semibold px-2.5 py-0.5 rounded-full">0</span>
-                    </h3>
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2"><span>Rincian Posts Data</span><span id="tableCountBadge" class="bg-slate-100 text-slate-600 text-xs font-semibold px-2.5 py-0.5 rounded-full">0</span></h3>
                 </div>
-
                 <div class="flex flex-wrap items-center gap-3">
-                    <!-- Search Input -->
-                    <div class="relative">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
-                        <input type="text" id="tableSearch" onkeyup="renderTable()" placeholder="Cari account atau caption..." class="bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500 w-48 sm:w-64">
-                    </div>
+                    <div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i><input type="text" id="tableSearch" onkeyup="renderTable()" placeholder="Cari account atau caption..." class="bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500 w-48 sm:w-64"></div>
                 </div>
             </div>
-
-            <!-- Table -->
             <div class="overflow-x-auto custom-scrollbar">
                 <table class="w-full text-left border-collapse text-xs">
                     <thead>
@@ -399,132 +215,66 @@
                             <th class="py-3 px-4 text-center">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="postsTableBody" class="divide-y divide-slate-100 text-slate-700">
-                        <!-- Table Rows Rendered via JS -->
-                    </tbody>
+                    <tbody id="postsTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
                 </table>
             </div>
-
-            <!-- Table Pagination & Summary -->
             <div class="p-4 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2">
                 <div id="tablePaginationInfo">Showing 1 to 10 entries</div>
                 <div class="flex items-center gap-1" id="paginationButtons"></div>
             </div>
         </div>
-
     </main>
 
-    <!-- MODAL 1: Connect Google Sheets Modal -->
+    <!-- Modals -->
     <div id="uploadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
-            <button onclick="closeModal('uploadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-            
+            <button onclick="closeModal('uploadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             <div class="flex items-center gap-3">
-                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-2xl">
-                    <i class="fa-solid fa-link text-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold text-slate-800">Hubungkan Google Sheets</h3>
-                    <p class="text-xs text-slate-500">Scan & analisis otomatis dari link Google Spreadsheet publik</p>
-                </div>
+                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-2xl"><i class="fa-solid fa-link text-xl"></i></div>
+                <div><h3 class="text-lg font-bold text-slate-800">Hubungkan Google Sheets</h3><p class="text-xs text-slate-500">Scan & analisis otomatis dari link Google Spreadsheet publik</p></div>
             </div>
-
             <div class="space-y-3 text-xs pt-2">
                 <div>
                     <label class="block font-semibold text-slate-600 mb-1">URL / Link Google Sheets</label>
                     <input type="url" id="sheetsUrlInput" placeholder="https://docs.google.com/spreadsheets/d/.../edit" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500">
                     <p class="text-[10px] text-slate-400 mt-1">*Pastikan spreadsheet berstatus <strong>"Anyone with the link can view"</strong> (Publik).</p>
                 </div>
-
                 <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-[11px] text-emerald-800 space-y-1">
                     <p class="font-bold"><i class="fa-solid fa-wand-magic-sparkles"></i> Fitur Auto-Scan & Analisis:</p>
-                    <p>Web akan otomatis mendeteksi kolom (seperti Akun, Views, Likes, Komentar) tanpa harus mengikuti template baku.</p>
+                    <p>Web akan otomatis mendeteksi kolom (Akun, Views, Likes, Komentar) tanpa template kaku.</p>
                 </div>
             </div>
-
             <div class="pt-2 flex justify-end gap-2">
                 <button type="button" onclick="closeModal('uploadModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-600 text-xs">Batal</button>
-                <button type="button" onclick="handleGoogleSheetsSync()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5">
-                    <i class="fa-solid fa-sync"></i> Scan & Analisis Data
-                </button>
+                <button type="button" onclick="handleGoogleSheetsSync()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-sync"></i> Scan & Analisis Data</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 2: Add Single Post Modal -->
     <div id="addPostModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
-            <button onclick="closeModal('addPostModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-
+            <button onclick="closeModal('addPostModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             <h3 class="text-lg font-bold text-slate-800">Tambah Post Baru</h3>
-
             <form onsubmit="handleAddPostSubmit(event)" class="space-y-3 text-xs">
                 <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="font-semibold text-slate-600 block mb-1">Account Handle</label>
-                        <input type="text" id="newAccount" required placeholder="@username" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                    </div>
-                    <div>
-                        <label class="font-semibold text-slate-600 block mb-1">Platform</label>
-                        <select id="newPlatform" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                            <option value="TikTok">TikTok</option>
-                            <option value="Instagram">Instagram</option>
-                            <option value="Threads">Threads</option>
-                        </select>
-                    </div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Account Handle</label><input type="text" id="newAccount" required placeholder="@username" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Platform</label><select id="newPlatform" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"><option value="TikTok">TikTok</option><option value="Instagram">Instagram</option><option value="Threads">Threads</option></select></div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="font-semibold text-slate-600 block mb-1">Kategori</label>
-                        <input type="text" id="newCategory" required placeholder="misal: Niche Media" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                    </div>
-                    <div>
-                        <label class="font-semibold text-slate-600 block mb-1">Tanggal Upload</label>
-                        <input type="date" id="newDate" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                    </div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Kategori</label><input type="text" id="newCategory" required placeholder="misal: Niche Media" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Tanggal Upload</label><input type="date" id="newDate" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
                 </div>
-
-                <div>
-                    <label class="font-semibold text-slate-600 block mb-1">Caption / Title</label>
-                    <input type="text" id="newCaption" required placeholder="Isi caption ringkas..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                </div>
-
+                <div><label class="font-semibold text-slate-600 block mb-1">Caption / Title</label><input type="text" id="newCaption" required placeholder="Isi caption ringkas..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
                 <div class="grid grid-cols-3 gap-2">
-                    <div>
-                        <label class="font-semibold text-slate-600 block mb-1">Views</label>
-                        <input type="number" id="newViews" required value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2">
-                    </div>
-                    <div>
-                        <label class="font-semibold text-slate-600 block mb-1">Likes</label>
-                        <input type="number" id="newLikes" required value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2">
-                    </div>
-                    <div>
-                        <label class="font-semibold text-slate-600 block mb-1">Comments</label>
-                        <input type="number" id="newComments" required value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2">
-                    </div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Views</label><input type="number" id="newViews" required value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2"></div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Likes</label><input type="number" id="newLikes" required value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2"></div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Comments</label><input type="number" id="newComments" required value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2"></div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="font-semibold text-slate-600 block mb-1">Saves</label>
-                        <input type="number" id="newSaves" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                    </div>
-                    <div>
-                        <label class="font-semibold text-slate-600 block mb-1">Shares</label>
-                        <input type="number" id="newShares" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                    </div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Saves</label><input type="number" id="newSaves" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Shares</label><input type="number" id="newShares" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
                 </div>
-
-                <div>
-                    <label class="font-semibold text-slate-600 block mb-1">Link Post (URL)</label>
-                    <input type="url" id="newUrl" placeholder="https://..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                </div>
-
+                <div><label class="font-semibold text-slate-600 block mb-1">Link Post (URL)</label><input type="url" id="newUrl" placeholder="https://..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
                 <div class="pt-2 flex justify-end gap-2">
                     <button type="button" onclick="closeModal('addPostModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-600">Batal</button>
                     <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold">Simpan Post</button>
@@ -533,17 +283,11 @@
         </div>
     </div>
 
-    <!-- MODAL 3: Add Project Modal -->
     <div id="addProjectModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative space-y-4">
-            <button onclick="closeModal('addProjectModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
+            <button onclick="closeModal('addProjectModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             <h3 class="text-base font-bold text-slate-800">Tambah Project Baru</h3>
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Project</label>
-                <input type="text" id="newProjectNameInput" placeholder="Contoh: Campaign Q4 2026" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500">
-            </div>
+            <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nama Project</label><input type="text" id="newProjectNameInput" placeholder="Contoh: Campaign Q4 2026" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"></div>
             <div class="flex justify-end gap-2 pt-2">
                 <button onclick="closeModal('addProjectModal')" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl">Batal</button>
                 <button onclick="handleAddNewProject()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl">Buat Project</button>
@@ -551,17 +295,11 @@
         </div>
     </div>
 
-    <!-- MODAL 4: Edit Project Modal -->
     <div id="editProjectModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative space-y-4">
-            <button onclick="closeModal('editProjectModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
+            <button onclick="closeModal('editProjectModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             <h3 class="text-base font-bold text-slate-800">Ubah Nama Project</h3>
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Project Baru</label>
-                <input type="text" id="editProjectNameInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500">
-            </div>
+            <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nama Project Baru</label><input type="text" id="editProjectNameInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"></div>
             <div class="flex justify-end gap-2 pt-2">
                 <button onclick="closeModal('editProjectModal')" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl">Batal</button>
                 <button onclick="handleRenameProject()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl">Simpan Changes</button>
@@ -569,123 +307,73 @@
         </div>
     </div>
 
-    <!-- MODAL 5: Secret Admin Passcode Modal -->
     <div id="adminPasscodeModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-xs w-full p-6 shadow-2xl relative space-y-4 text-center">
-            <button onclick="closeModal('adminPasscodeModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-            <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center mx-auto text-xl">
-                <i class="fa-solid fa-lock"></i>
-            </div>
+            <button onclick="closeModal('adminPasscodeModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center mx-auto text-xl"><i class="fa-solid fa-lock"></i></div>
             <h3 class="text-base font-bold text-slate-800">Login Modus Admin</h3>
             <p class="text-xs text-slate-500">Masukkan PIN Admin untuk mengedit project & data laporan.</p>
             <input type="password" id="adminPasscodeInput" placeholder="Masukkan PIN Admin" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-center text-sm tracking-widest focus:outline-none focus:border-emerald-500">
-            <button onclick="submitAdminPasscode()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition">
-                Masuk Admin
-            </button>
+            <button onclick="submitAdminPasscode()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition">Masuk Admin</button>
         </div>
     </div>
 
-    <!-- MODAL 6: Settings / Pengaturan Dashboard Modal -->
     <div id="settingsModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative space-y-5">
-            <button onclick="closeModal('settingsModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-
+            <button onclick="closeModal('settingsModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             <div class="flex items-center gap-3">
-                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-2xl">
-                    <i class="fa-solid fa-gear text-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold text-slate-800">Pengaturan Dashboard</h3>
-                    <p class="text-xs text-slate-500">Kelola akses admin, hubungkan data, dan ekspor laporan</p>
-                </div>
+                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-2xl"><i class="fa-solid fa-gear text-xl"></i></div>
+                <div><h3 class="text-lg font-bold text-slate-800">Pengaturan Dashboard</h3><p class="text-xs text-slate-500">Kelola akses admin, hubungkan data, dan ekspor laporan</p></div>
             </div>
-
-            <!-- Settings Content Sections -->
             <div class="space-y-4 text-xs">
-                
-                <!-- Section 1: Admin Authentication -->
                 <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-slate-700 flex items-center gap-2">
-                            <i class="fa-solid fa-user-shield text-emerald-600"></i> Status Akses Admin
-                        </span>
+                        <span class="font-bold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-user-shield text-emerald-600"></i> Status Akses Admin</span>
                         <span id="settingsAdminStatus" class="px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-slate-200 text-slate-700">Client Mode</span>
                     </div>
-
                     <div id="settingsLoginForm" class="pt-1">
                         <p class="text-[11px] text-slate-500 mb-2">Masuk sebagai Admin untuk membuka opsi edit, hubungkan sheets, dan manajemen project.</p>
                         <div class="flex gap-2">
                             <input type="password" id="settingsPinInput" placeholder="PIN Admin" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500">
-                            <button onclick="submitSettingsPin()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded-xl transition whitespace-nowrap">
-                                Login
-                            </button>
+                            <button onclick="submitSettingsPin()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded-xl transition whitespace-nowrap">Login</button>
                         </div>
                     </div>
-
                     <div id="settingsLogoutForm" class="hidden pt-1 flex items-center justify-between">
                         <span class="text-[11px] text-emerald-700 font-semibold">✓ Anda sedang berada dalam Modus Admin</span>
-                        <button onclick="disableAdminMode(); updateSettingsUI();" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold px-3 py-1.5 rounded-xl transition">
-                            Logout Admin
-                        </button>
+                        <button onclick="disableAdminMode(); updateSettingsUI();" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold px-3 py-1.5 rounded-xl transition">Logout Admin</button>
                     </div>
                 </div>
 
-                <!-- Section 1.5: Project Management (Admin Only) -->
                 <div id="settingsProjectSection" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
-                    <span class="font-bold text-slate-700 block flex items-center gap-2">
-                        <i class="fa-solid fa-folder-plus text-emerald-600"></i> Kelola Project Laporan
-                    </span>
-                    <p class="text-[11px] text-slate-500">Tambah project baru, ubah nama project aktif, atau hapus project yang tidak digunakan lagi.</p>
+                    <span class="font-bold text-slate-700 block flex items-center gap-2"><i class="fa-solid fa-folder-plus text-emerald-600"></i> Kelola Project Laporan</span>
+                    <p class="text-[11px] text-slate-500">Tambah project baru, ubah nama project aktif, atau hapus project.</p>
                     <div class="flex flex-wrap gap-2 pt-1">
-                        <button onclick="closeModal('settingsModal'); openModal('addProjectModal');" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-plus text-[10px]"></i> Project Baru
-                        </button>
-                        <button onclick="closeModal('settingsModal'); openEditProjectModal();" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-pen-to-square text-[10px]"></i> Ubah Nama
-                        </button>
-                        <button onclick="closeModal('settingsModal'); confirmDeleteCurrentProject();" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-trash text-[10px]"></i> Hapus Project
-                        </button>
+                        <button onclick="closeModal('settingsModal'); openModal('addProjectModal');" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-plus text-[10px]"></i> Project Baru</button>
+                        <button onclick="closeModal('settingsModal'); openEditProjectModal();" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-pen-to-square text-[10px]"></i> Ubah Nama</button>
+                        <button onclick="closeModal('settingsModal'); confirmDeleteCurrentProject();" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-trash text-[10px]"></i> Hapus Project</button>
                     </div>
                 </div>
 
-                <!-- Section 2: Google Sheets Sync (Admin Only) -->
                 <div id="settingsImportSection" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
-                    <span class="font-bold text-slate-700 block flex items-center gap-2">
-                        <i class="fa-solid fa-link text-emerald-600"></i> Hubungkan Google Sheets
-                    </span>
-                    <p class="text-[11px] text-slate-500">Masukkan link Google Spreadsheet publik untuk auto-scan dan analisis data secara otomatis.</p>
+                    <span class="font-bold text-slate-700 block flex items-center gap-2"><i class="fa-solid fa-link text-emerald-600"></i> Hubungkan Google Sheets</span>
+                    <p class="text-[11px] text-slate-500">Masukkan link Google Spreadsheet publik untuk auto-scan data.</p>
                     <div class="flex flex-wrap gap-2 pt-1">
-                        <button onclick="closeModal('settingsModal'); openModal('uploadModal');" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-sync"></i> Hubungkan Sheets
-                        </button>
+                        <button onclick="closeModal('settingsModal'); openModal('uploadModal');" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-sync"></i> Hubungkan Sheets</button>
                     </div>
                 </div>
 
-                <!-- Section 3: Data Export (Admin Only) -->
                 <div id="settingsExportSection" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
-                    <span class="font-bold text-slate-700 block flex items-center gap-2">
-                        <i class="fa-solid fa-file-export text-emerald-600"></i> Ekspor Laporan Client
-                    </span>
-                    <p class="text-[11px] text-slate-500">Unduh data laporan project saat ini ke dalam format spreadsheet Excel.</p>
+                    <span class="font-bold text-slate-700 block flex items-center gap-2"><i class="fa-solid fa-file-export text-emerald-600"></i> Ekspor Laporan Client</span>
+                    <p class="text-[11px] text-slate-500">Unduh data laporan ke dalam format spreadsheet Excel.</p>
                     <div class="flex flex-wrap gap-2 pt-1">
-                        <button onclick="exportExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-file-excel"></i> Export Excel (.xlsx)
-                        </button>
+                        <button onclick="exportExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-file-excel"></i> Export Excel (.xlsx)</button>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
     <script>
-        // Global Datasets Declarations
         const SAMPLE_POSTS = [
             { id: 1, account: '@twins.lila', platform: 'TikTok', category: 'Niche Media', caption: 'Terjebak di Rumah Sendiri! Barang Terror yang Gak Kasat Mata...', tgl_upload: '2026-06-12', views: 5700000, likes: 230000, cmt: 4500, save: 18200, share: 8900, url: 'https://tiktok.com' },
             { id: 2, account: '@horrorlila', platform: 'TikTok', category: 'Niche Media', caption: 'Sempat dikira kejadian nyata atau ODGJ yang lepas, lokasi ini...', tgl_upload: '2026-06-11', views: 4855386, likes: 198000, cmt: 3200, save: 14100, share: 6200, url: 'https://tiktok.com' },
@@ -699,339 +387,190 @@
             { id: 10, account: '@cipcuplim', platform: 'TikTok', category: 'Homeless Media', caption: 'Bikin mewek banget! Nggak bisa nahan air mata pas scene...', tgl_upload: '2026-06-12', views: 292000, likes: 11000, cmt: 140, save: 900, share: 310, url: 'https://tiktok.com' }
         ];
 
-        let projectsStore = {
-            "Cerita Lila": [...SAMPLE_POSTS],
-            "Campaign Media 2026": [
-                { id: 101, account: '@campaign_official', platform: 'TikTok', category: 'Official', caption: 'Grand Launching Campaign Media 2026!', tgl_upload: '2026-07-01', views: 1500000, likes: 95000, cmt: 1200, save: 4500, share: 2100, url: 'https://tiktok.com' }
-            ],
-            "Brand Performance Q3": [
-                { id: 201, account: '@brand_q3', platform: 'Instagram', category: 'Brand Review', caption: 'Q3 Recap Performance & Highlights', tgl_upload: '2026-08-01', views: 890000, likes: 42000, cmt: 610, save: 3100, share: 1400, url: 'https://instagram.com' }
-            ]
-        };
+        let projectsStore = { "Cerita Lila": [...SAMPLE_POSTS], "Campaign Media 2026": [], "Brand Performance Q3": [] };
+        let currentProjectName = "Cerita Lila", postsData = [], filteredPosts = [], isAdmin = false;
+        let pieChartInstance = null, dailyChartInstance = null, topAccountChartInstance = null;
 
-        let currentProjectName = "Cerita Lila";
-        let postsData = [];
-        let filteredPosts = [];
-        let isAdmin = false;
-
-        // Chart Instance Holds
-        let pieChartInstance = null;
-        let dailyChartInstance = null;
-        let topAccountChartInstance = null;
-
-        // Initialize App on DOM Load
         window.addEventListener('DOMContentLoaded', () => {
             loadProjectsFromStorage();
             checkURLParams();
             setCurrentProject(currentProjectName);
         });
 
-        // Local Storage Helpers
         function loadProjectsFromStorage() {
             const saved = localStorage.getItem('sm_report_projects_v2');
-            if (saved) {
-                try {
-                    projectsStore = JSON.parse(saved);
-                } catch(e) { console.error("Error loading saved projects", e); }
-            }
+            if (saved) { try { projectsStore = JSON.parse(saved); } catch(e) {} }
             renderProjectDropdown();
         }
 
-        function saveProjectsToStorage() {
-            localStorage.setItem('sm_report_projects_v2', JSON.stringify(projectsStore));
-        }
-
+        function saveProjectsToStorage() { localStorage.setItem('sm_report_projects_v2', JSON.stringify(projectsStore)); }
         function renderProjectDropdown() {
             const select = document.getElementById('projectSelect');
             select.innerHTML = '';
             Object.keys(projectsStore).forEach(projName => {
                 const opt = document.createElement('option');
-                opt.value = projName;
-                opt.textContent = projName;
+                opt.value = projName; opt.textContent = projName;
                 if(projName === currentProjectName) opt.selected = true;
                 select.appendChild(opt);
             });
         }
 
-        function handleProjectChange() {
-            const select = document.getElementById('projectSelect');
-            setCurrentProject(select.value);
-        }
-
+        function handleProjectChange() { setCurrentProject(document.getElementById('projectSelect').value); }
         function setCurrentProject(name) {
-            if(!projectsStore[name]) {
-                projectsStore[name] = [];
-            }
-            currentProjectName = name;
-            postsData = projectsStore[name];
-            
-            populateFilterDropdowns();
-            applyFilters();
+            if(!projectsStore[name]) projectsStore[name] = [];
+            currentProjectName = name; postsData = projectsStore[name];
+            populateFilterDropdowns(); applyFilters();
         }
 
-        // Admin Mode Toggle and Auth
         function checkURLParams() {
             const urlParams = new URLSearchParams(window.location.search);
-            
             const projParam = urlParams.get('project');
-            if (projParam && projectsStore[projParam]) {
-                currentProjectName = projParam;
-            }
-
-            if (urlParams.get('admin') === 'true') {
-                enableAdminMode();
-            } else {
-                disableAdminMode();
-            }
+            if (projParam && projectsStore[projParam]) currentProjectName = projParam;
+            if (urlParams.get('admin') === 'true') enableAdminMode(); else disableAdminMode();
         }
 
         function submitAdminPasscode() {
-            const pin = document.getElementById('adminPasscodeInput').value.trim();
-            if (pin === '0000') {
-                enableAdminMode();
-                closeModal('adminPasscodeModal');
-                document.getElementById('adminPasscodeInput').value = '';
-            } else {
-                alert('PIN Admin salah!');
-            }
+            if (document.getElementById('adminPasscodeInput').value.trim() === '0000') {
+                enableAdminMode(); closeModal('adminPasscodeModal'); document.getElementById('adminPasscodeInput').value = '';
+            } else { alert('PIN Admin salah!'); }
         }
 
         function enableAdminMode() {
             isAdmin = true;
-            document.getElementById('accessModeBadge').innerHTML = `
-                <span class="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-xl border border-emerald-300 shadow-xs">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Modus Admin Aktif
-                </span>
-            `;
-            const loginBtn = document.getElementById('adminLoginBtn');
-            if (loginBtn) loginBtn.classList.add('hidden');
+            document.getElementById('accessModeBadge').innerHTML = `<span class="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-xl border border-emerald-300 shadow-xs"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Modus Admin Aktif</span>`;
             document.getElementById('adminActionGroup').classList.remove('hidden');
-            document.getElementById('adminProjectControlGroup').classList.remove('hidden');
-            document.getElementById('adminProjectControlGroup').classList.add('flex');
-
-            const projSelect = document.getElementById('projectSelect');
-            if (projSelect) projSelect.disabled = false;
-            const chevron = document.getElementById('projectSelectChevron');
-            if (chevron) chevron.classList.remove('hidden');
-
-            const adminCharts = document.getElementById('adminOnlySecondaryCharts');
-            if (adminCharts) adminCharts.classList.remove('hidden');
-            
-            const adminTable = document.getElementById('allPostsTableSection');
-            if (adminTable) adminTable.classList.remove('hidden');
-
-            updateSettingsUI();
-            renderTable();
-
-            setTimeout(() => {
-                renderDailyTrendChart();
-                renderTopAccountsChart();
-            }, 50);
+            const ctrlGrp = document.getElementById('adminProjectControlGroup');
+            ctrlGrp.classList.remove('hidden'); ctrlGrp.classList.add('flex');
+            document.getElementById('projectSelect').disabled = false;
+            document.getElementById('projectSelectChevron').classList.remove('hidden');
+            document.getElementById('adminOnlySecondaryCharts').classList.remove('hidden');
+            document.getElementById('allPostsTableSection').classList.remove('hidden');
+            updateSettingsUI(); renderTable();
+            setTimeout(() => { renderDailyTrendChart(); renderTopAccountsChart(); }, 50);
         }
 
         function disableAdminMode() {
             isAdmin = false;
             document.getElementById('accessModeBadge').innerHTML = '';
-            const loginBtn = document.getElementById('adminLoginBtn');
-            if (loginBtn) loginBtn.classList.remove('hidden');
             document.getElementById('adminActionGroup').classList.add('hidden');
-            document.getElementById('adminProjectControlGroup').classList.add('hidden');
-            document.getElementById('adminProjectControlGroup').classList.remove('flex');
-
-            const projSelect = document.getElementById('projectSelect');
-            if (projSelect) projSelect.disabled = true;
-            const chevron = document.getElementById('projectSelectChevron');
-            if (chevron) chevron.classList.add('hidden');
-
-            const adminCharts = document.getElementById('adminOnlySecondaryCharts');
-            if (adminCharts) adminCharts.classList.add('hidden');
-            
-            updateSettingsUI();
-            renderTable();
+            const ctrlGrp = document.getElementById('adminProjectControlGroup');
+            ctrlGrp.classList.add('hidden'); ctrlGrp.classList.remove('flex');
+            document.getElementById('projectSelect').disabled = true;
+            document.getElementById('projectSelectChevron').classList.add('hidden');
+            document.getElementById('adminOnlySecondaryCharts').classList.add('hidden');
+            updateSettingsUI(); renderTable();
         }
 
         function updateSettingsUI() {
             const badge = document.getElementById('settingsAdminStatus');
-            const loginForm = document.getElementById('settingsLoginForm');
-            const logoutForm = document.getElementById('settingsLogoutForm');
-            const projectSection = document.getElementById('settingsProjectSection');
-            
-            const importSection = document.getElementById('settingsImportSection');
-            const exportSection = document.getElementById('settingsExportSection');
-
             if (!badge) return;
-
             if (isAdmin) {
-                badge.innerText = 'Admin Active';
-                badge.className = 'px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300';
-                loginForm.classList.add('hidden');
-                logoutForm.classList.remove('hidden');
-                if (projectSection) projectSection.classList.remove('hidden');
-                
-                if (importSection) importSection.classList.remove('hidden');
-                if (exportSection) exportSection.classList.remove('hidden');
+                badge.innerText = 'Admin Active'; badge.className = 'px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300';
+                document.getElementById('settingsLoginForm').classList.add('hidden');
+                document.getElementById('settingsLogoutForm').classList.remove('hidden');
+                document.getElementById('settingsProjectSection').classList.remove('hidden');
+                document.getElementById('settingsImportSection').classList.remove('hidden');
+                document.getElementById('settingsExportSection').classList.remove('hidden');
             } else {
-                badge.innerText = 'Client Mode';
-                badge.className = 'px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-slate-200 text-slate-700';
-                loginForm.classList.remove('hidden');
-                logoutForm.classList.add('hidden');
-                if (projectSection) projectSection.classList.add('hidden');
-                
-                if (importSection) importSection.classList.add('hidden');
-                if (exportSection) exportSection.classList.add('hidden');
+                badge.innerText = 'Client Mode'; badge.className = 'px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-slate-200 text-slate-700';
+                document.getElementById('settingsLoginForm').classList.remove('hidden');
+                document.getElementById('settingsLogoutForm').classList.add('hidden');
+                document.getElementById('settingsProjectSection').classList.add('hidden');
+                document.getElementById('settingsImportSection').classList.add('hidden');
+                document.getElementById('settingsExportSection').classList.add('hidden');
             }
         }
 
         function submitSettingsPin() {
-            const pin = document.getElementById('settingsPinInput').value.trim();
-            if (pin === '0000') {
-                enableAdminMode();
-                document.getElementById('settingsPinInput').value = '';
-                alert('Berhasil Login Modus Admin!');
-            } else {
-                alert('PIN Admin salah!');
-            }
+            if (document.getElementById('settingsPinInput').value.trim() === '0000') {
+                enableAdminMode(); document.getElementById('settingsPinInput').value = ''; alert('Berhasil Login Modus Admin!');
+            } else { alert('PIN Admin salah!'); }
         }
 
-        function toggleAdminMenu() {
-            const menu = document.getElementById('adminDropdownMenu');
-            menu.classList.toggle('hidden');
-        }
+        function toggleAdminMenu() { document.getElementById('adminDropdownMenu').classList.toggle('hidden'); }
 
-        // Project CRUD Operations
         function handleAddNewProject() {
-            const input = document.getElementById('newProjectNameInput');
-            const newName = input.value.trim();
-            if(!newName) return alert("Masukkan nama project!");
-            if(projectsStore[newName]) return alert("Nama project tersebut sudah ada!");
-
-            projectsStore[newName] = [];
-            saveProjectsToStorage();
-            renderProjectDropdown();
-            setCurrentProject(newName);
-            input.value = '';
-            closeModal('addProjectModal');
+            const input = document.getElementById('newProjectNameInput'), name = input.value.trim();
+            if(!name) return alert("Masukkan nama project!");
+            if(projectsStore[name]) return alert("Nama project sudah ada!");
+            projectsStore[name] = []; saveProjectsToStorage(); renderProjectDropdown(); setCurrentProject(name); input.value = ''; closeModal('addProjectModal');
         }
 
-        function openEditProjectModal() {
-            document.getElementById('editProjectNameInput').value = currentProjectName;
-            openModal('editProjectModal');
-        }
-
+        function openEditProjectModal() { document.getElementById('editProjectNameInput').value = currentProjectName; openModal('editProjectModal'); }
         function handleRenameProject() {
-            const input = document.getElementById('editProjectNameInput');
-            const newName = input.value.trim();
+            const input = document.getElementById('editProjectNameInput'), newName = input.value.trim();
             if(!newName || newName === currentProjectName) return closeModal('editProjectModal');
-
-            projectsStore[newName] = projectsStore[currentProjectName];
-            delete projectsStore[currentProjectName];
-            currentProjectName = newName;
-
-            saveProjectsToStorage();
-            renderProjectDropdown();
-            setCurrentProject(newName);
-            closeModal('editProjectModal');
+            projectsStore[newName] = projectsStore[currentProjectName]; delete projectsStore[currentProjectName]; currentProjectName = newName;
+            saveProjectsToStorage(); renderProjectDropdown(); setCurrentProject(newName); closeModal('editProjectModal');
         }
 
         function confirmDeleteCurrentProject() {
-            const keys = Object.keys(projectsStore);
-            if(keys.length <= 1) return alert("Minimal harus ada 1 project aktif!");
-            if(confirm(`Apakah Anda yakin ingin menghapus project "${currentProjectName}"? Data project ini akan hilang.`)) {
+            if(Object.keys(projectsStore).length <= 1) return alert("Minimal ada 1 project aktif!");
+            if(confirm(`Hapus project "${currentProjectName}"?`)) {
                 delete projectsStore[currentProjectName];
-                const nextProject = Object.keys(projectsStore)[0];
-                saveProjectsToStorage();
-                renderProjectDropdown();
-                setCurrentProject(nextProject);
+                saveProjectsToStorage(); renderProjectDropdown(); setCurrentProject(Object.keys(projectsStore)[0]);
             }
         }
 
         function confirmResetCurrentProjectData() {
-            if(confirm(`Yakin ingin mereset seluruh data post untuk project "${currentProjectName}"?`)) {
-                projectsStore[currentProjectName] = [];
-                saveProjectsToStorage();
-                setCurrentProject(currentProjectName);
+            if(confirm(`Reset data post untuk project "${currentProjectName}"?`)) {
+                projectsStore[currentProjectName] = []; saveProjectsToStorage(); setCurrentProject(currentProjectName);
             }
         }
 
-        // Dynamic Filter Populators
         function populateFilterDropdowns() {
-            const accounts = new Set();
-            const categories = new Set();
-
-            postsData.forEach(p => {
-                if(p.account) accounts.add(p.account);
-                if(p.category) categories.add(p.category);
-            });
-
+            const accounts = new Set(), categories = new Set();
+            postsData.forEach(p => { if(p.account) accounts.add(p.account); if(p.category) categories.add(p.category); });
+            
             const accSelect = document.getElementById('filterAccount');
             accSelect.innerHTML = '<option value="ALL">Semua Akun</option>';
-            accounts.forEach(acc => {
-                accSelect.innerHTML += `<option value="${acc}">${acc}</option>`;
-            });
+            accounts.forEach(acc => accSelect.innerHTML += `<option value="${acc}">${acc}</option>`);
 
             const catSelect = document.getElementById('filterCategory');
             catSelect.innerHTML = '<option value="ALL">Semua Kategori</option>';
-            categories.forEach(cat => {
-                catSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
-            });
+            categories.forEach(cat => catSelect.innerHTML += `<option value="${cat}">${cat}</option>`);
         }
 
         function resetFilters() {
-            document.getElementById('filterPlatform').value = 'ALL';
-            document.getElementById('filterAccount').value = 'ALL';
-            document.getElementById('filterCategory').value = 'ALL';
-            document.getElementById('filterStartDate').value = '';
-            document.getElementById('filterEndDate').value = '';
-            document.getElementById('tableSearch').value = '';
+            ['filterPlatform', 'filterAccount', 'filterCategory'].forEach(id => document.getElementById(id).value = 'ALL');
+            ['filterStartDate', 'filterEndDate', 'tableSearch'].forEach(id => document.getElementById(id).value = '');
             applyFilters();
         }
 
         function applyFilters() {
-            const platform = document.getElementById('filterPlatform').value;
-            const account = document.getElementById('filterAccount').value;
-            const category = document.getElementById('filterCategory').value;
-            const startDate = document.getElementById('filterStartDate').value;
-            const endDate = document.getElementById('filterEndDate').value;
+            const pF = document.getElementById('filterPlatform').value, aF = document.getElementById('filterAccount').value;
+            const cF = document.getElementById('filterCategory').value, sD = document.getElementById('filterStartDate').value, eD = document.getElementById('filterEndDate').value;
 
             filteredPosts = postsData.filter(p => {
-                if (platform !== 'ALL' && p.platform !== platform) return false;
-                if (account !== 'ALL' && p.account !== account) return false;
-                if (category !== 'ALL' && p.category !== category) return false;
-                if (startDate && p.tgl_upload < startDate) return false;
-                if (endDate && p.tgl_upload > endDate) return false;
+                if (pF !== 'ALL' && p.platform !== pF) return false;
+                if (aF !== 'ALL' && p.account !== aF) return false;
+                if (cF !== 'ALL' && p.category !== cF) return false;
+                if (sD && p.tgl_upload < sD) return false;
+                if (eD && p.tgl_upload > eD) return false;
                 return true;
             });
-
-            updateMetricsAndCharts();
-            renderTable();
+            updateMetricsAndCharts(); renderTable();
         }
 
-        // Render Summary Metrics & Visual Charts
         function updateMetricsAndCharts() {
-            let totalViews = 0, totalLikes = 0, totalComments = 0, totalSaves = 0, totalShares = 0;
-
+            let tViews = 0, tLikes = 0, tComments = 0, tSaves = 0, tShares = 0;
             filteredPosts.forEach(p => {
-                totalViews += Number(p.views || 0);
-                totalLikes += Number(p.likes || 0);
-                totalComments += Number(p.cmt || p.comments || 0);
-                totalSaves += Number(p.save || p.saves || 0);
-                totalShares += Number(p.share || p.shares || 0);
+                tViews += Number(p.views || 0); tLikes += Number(p.likes || 0);
+                tComments += Number(p.cmt || p.comments || 0); tSaves += Number(p.save || p.saves || 0); tShares += Number(p.share || p.shares || 0);
             });
 
-            const totalEngagement = totalLikes + totalComments + totalSaves + totalShares;
-            const avgEngRate = totalViews > 0 ? ((totalEngagement / totalViews) * 100).toFixed(2) : 0;
-
-            document.getElementById('metricTotalViews').innerText = totalViews.toLocaleString('id-ID');
-            document.getElementById('metricTotalLikes').innerText = totalLikes.toLocaleString('id-ID');
-            document.getElementById('metricTotalComments').innerText = totalComments.toLocaleString('id-ID');
-            document.getElementById('metricTotalSaves').innerText = totalSaves.toLocaleString('id-ID');
-            document.getElementById('metricTotalShares').innerText = totalShares.toLocaleString('id-ID');
-            document.getElementById('metricAvgEngagement').innerText = avgEngRate + '%';
+            const tEng = tLikes + tComments + tSaves + tShares;
+            document.getElementById('metricTotalViews').innerText = tViews.toLocaleString('id-ID');
+            document.getElementById('metricTotalLikes').innerText = tLikes.toLocaleString('id-ID');
+            document.getElementById('metricTotalComments').innerText = tComments.toLocaleString('id-ID');
+            document.getElementById('metricTotalSaves').innerText = tSaves.toLocaleString('id-ID');
+            document.getElementById('metricTotalShares').innerText = tShares.toLocaleString('id-ID');
+            document.getElementById('metricAvgEngagement').innerText = (tViews > 0 ? ((tEng / tViews) * 100).toFixed(2) : 0) + '%';
             document.getElementById('postCountBadge').innerText = filteredPosts.length + ' Posts Loaded';
 
-            const sortedByViews = [...filteredPosts].sort((a, b) => Number(b.views || 0) - Number(a.views || 0));
-            if (sortedByViews.length > 0) {
-                const top1 = sortedByViews[0];
+            const sorted = [...filteredPosts].sort((a, b) => Number(b.views || 0) - Number(a.views || 0));
+            if (sorted.length > 0) {
+                const top1 = sorted[0];
                 document.getElementById('top1Account').innerText = top1.account || '-';
                 document.getElementById('top1Caption').innerText = top1.caption ? `"${top1.caption}"` : '-';
                 document.getElementById('top1Platform').innerText = top1.platform || 'General';
@@ -1039,414 +578,147 @@
                 document.getElementById('top1Likes').innerText = Number(top1.likes || 0).toLocaleString('id-ID');
                 document.getElementById('top1Comments').innerText = Number(top1.cmt || top1.comments || 0).toLocaleString('id-ID');
                 document.getElementById('top1Link').href = top1.url || '#';
-            } else {
-                document.getElementById('top1Account').innerText = '@-';
-                document.getElementById('top1Caption').innerText = 'Tidak ada data post';
-                document.getElementById('top1Platform').innerText = '-';
-                document.getElementById('top1Views').innerText = '0';
-                document.getElementById('top1Likes').innerText = '0';
-                document.getElementById('top1Comments').innerText = '0';
-                document.getElementById('top1Link').href = '#';
             }
-
-            renderTop10Table(sortedByViews.slice(0, 10));
-
-            renderPieChart();
-            renderDailyTrendChart();
-            renderTopAccountsChart();
+            renderTop10Table(sorted.slice(0, 10));
+            renderPieChart(); renderDailyTrendChart(); renderTopAccountsChart();
         }
 
-        function renderTop10Table(top10List) {
-            const tbody = document.getElementById('top10TableBody');
-            tbody.innerHTML = '';
-
-            if (top10List.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-amber-700">Tidak ada data untuk ditayangkan.</td></tr>`;
-                return;
-            }
-
-            top10List.forEach((item, index) => {
-                const row = document.createElement('tr');
-                row.className = index % 2 === 0 ? 'bg-amber-50/40 hover:bg-amber-100/50' : 'bg-white hover:bg-amber-100/50';
-                row.innerHTML = `
-                    <td class="py-2.5 px-3 text-center font-extrabold text-amber-900">#${index + 1}</td>
-                    <td class="py-2.5 px-3">
-                        <div class="font-bold text-amber-950">${item.account || '@user'}</div>
-                        <div class="text-[10px] text-amber-800/80 truncate max-w-xs">${item.caption || '-'}</div>
-                    </td>
+        function renderTop10Table(list) {
+            const tbody = document.getElementById('top10TableBody'); tbody.innerHTML = '';
+            if (list.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-amber-700">Tidak ada data.</td></tr>`; return; }
+            list.forEach((item, idx) => {
+                tbody.innerHTML += `<tr class="${idx % 2 === 0 ? 'bg-amber-50/40' : 'bg-white'} hover:bg-amber-100/50">
+                    <td class="py-2.5 px-3 text-center font-extrabold text-amber-900">#${idx + 1}</td>
+                    <td class="py-2.5 px-3"><div class="font-bold text-amber-950">${item.account || '@user'}</div><div class="text-[10px] text-amber-800/80 truncate max-w-xs">${item.caption || '-'}</div></td>
                     <td class="py-2.5 px-3 text-right font-extrabold text-amber-950">${Number(item.views || 0).toLocaleString('id-ID')}</td>
                     <td class="py-2.5 px-3 text-right font-medium text-amber-900">${Number(item.likes || 0).toLocaleString('id-ID')}</td>
                     <td class="py-2.5 px-3 text-right font-medium text-amber-900">${Number(item.cmt || item.comments || 0).toLocaleString('id-ID')}</td>
-                    <td class="py-2.5 px-3 text-center">
-                        <a href="${item.url || '#'}" target="_blank" class="text-amber-700 hover:text-amber-900 font-bold underline text-[10px]">Link Post</a>
-                    </td>
-                `;
-                tbody.appendChild(row);
+                    <td class="py-2.5 px-3 text-center"><a href="${item.url || '#'}" target="_blank" class="text-amber-700 hover:text-amber-900 font-bold underline text-[10px]">Link Post</a></td></tr>`;
             });
         }
 
-        // Canvas Chart Rendering Functions
         function renderPieChart() {
-            const ctx = document.getElementById('platformPieChart').getContext('2d');
-            
-            const platformViews = {};
-            filteredPosts.forEach(p => {
-                const plat = p.platform || 'Other';
-                platformViews[plat] = (platformViews[plat] || 0) + Number(p.views || 0);
-            });
-
-            const labels = Object.keys(platformViews);
-            const dataValues = Object.values(platformViews);
+            const ctx = document.getElementById('platformPieChart').getContext('2d'), pViews = {};
+            filteredPosts.forEach(p => pViews[p.platform || 'Other'] = (pViews[p.platform || 'Other'] || 0) + Number(p.views || 0));
+            const labels = Object.keys(pViews), data = Object.values(pViews);
 
             if (pieChartInstance) pieChartInstance.destroy();
+            pieChartInstance = new Chart(ctx, { type: 'pie', data: { labels, datasets: [{ data, backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'], borderWidth: 2, borderColor: '#fff' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
 
-            pieChartInstance = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: dataValues,
-                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'],
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-
-            const legendDiv = document.getElementById('pieLegend');
-            const colors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'];
-            const totalSum = dataValues.reduce((a, b) => a + b, 0);
-
-            legendDiv.innerHTML = labels.map((lbl, idx) => {
-                const pct = totalSum > 0 ? ((dataValues[idx] / totalSum) * 100).toFixed(1) : 0;
-                return `
-                    <div class="flex items-center gap-1.5">
-                        <span class="w-3 h-3 rounded-full inline-block" style="background-color: ${colors[idx % colors.length]}"></span>
-                        <span>${lbl}: <strong>${pct}%</strong></span>
-                    </div>
-                `;
-            }).join('');
+            const colors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'], total = data.reduce((a, b) => a + b, 0);
+            document.getElementById('pieLegend').innerHTML = labels.map((l, i) => `<div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full inline-block" style="background:${colors[i]}"></span><span>${l}: <strong>${total > 0 ? ((data[i]/total)*100).toFixed(1) : 0}%</strong></span></div>`).join('');
         }
 
         function renderDailyTrendChart() {
-            const ctx = document.getElementById('dailyTrendChart').getContext('2d');
-
-            const dailyMap = {};
-            filteredPosts.forEach(p => {
-                if (p.tgl_upload) {
-                    dailyMap[p.tgl_upload] = (dailyMap[p.tgl_upload] || 0) + Number(p.views || 0);
-                }
-            });
-
-            const sortedDates = Object.keys(dailyMap).sort();
-            const values = sortedDates.map(d => dailyMap[d]);
-
+            const ctx = document.getElementById('dailyTrendChart').getContext('2d'), dMap = {};
+            filteredPosts.forEach(p => { if(p.tgl_upload) dMap[p.tgl_upload] = (dMap[p.tgl_upload] || 0) + Number(p.views || 0); });
+            const dates = Object.keys(dMap).sort();
             if (dailyChartInstance) dailyChartInstance.destroy();
-
-            dailyChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: sortedDates.map(d => d.slice(5)), // MM-DD
-                    datasets: [{
-                        label: 'Daily Views',
-                        data: values,
-                        backgroundColor: '#10b981',
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
+            dailyChartInstance = new Chart(ctx, { type: 'bar', data: { labels: dates.map(d => d.slice(5)), datasets: [{ data: dates.map(d => dMap[d]), backgroundColor: '#10b981', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
         }
 
         function renderTopAccountsChart() {
-            const ctx = document.getElementById('topAccountsBarChart').getContext('2d');
-
-            const accViews = {};
-            filteredPosts.forEach(p => {
-                const acc = p.account || '@unknown';
-                accViews[acc] = (accViews[acc] || 0) + Number(p.views || 0);
-            });
-
-            const sortedAccounts = Object.keys(accViews).sort((a, b) => accViews[b] - accViews[a]).slice(0, 6);
-            const values = sortedAccounts.map(a => accViews[a]);
-
+            const ctx = document.getElementById('topAccountsBarChart').getContext('2d'), aViews = {};
+            filteredPosts.forEach(p => aViews[p.account || '@unknown'] = (aViews[p.account || '@unknown'] || 0) + Number(p.views || 0));
+            const accs = Object.keys(aViews).sort((a,b) => aViews[b]-aViews[a]).slice(0, 6);
             if (topAccountChartInstance) topAccountChartInstance.destroy();
-
-            topAccountChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: sortedAccounts,
-                    datasets: [{
-                        label: 'Total Views',
-                        data: values,
-                        backgroundColor: '#064e3b',
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                        y: { grid: { display: false } }
-                    }
-                }
-            });
+            topAccountChartInstance = new Chart(ctx, { type: 'bar', data: { labels: accs, datasets: [{ data: accs.map(a => aViews[a]), backgroundColor: '#064e3b', borderRadius: 6 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
         }
 
-        // Main Table Render Logic
         function renderTable() {
-            const tbody = document.getElementById('postsTableBody');
-            const searchVal = document.getElementById('tableSearch').value.toLowerCase();
+            const tbody = document.getElementById('postsTableBody'), sVal = document.getElementById('tableSearch').value.toLowerCase();
+            const display = filteredPosts.filter(p => (p.account || '').toLowerCase().includes(sVal) || (p.caption || '').toLowerCase().includes(sVal));
+            
+            document.getElementById('tableCountBadge').innerText = display.length;
+            document.getElementById('tablePaginationInfo').innerText = `Showing ${display.length} entries`;
+            tbody.innerHTML = display.length === 0 ? `<tr><td colspan="12" class="py-8 text-center text-slate-400">Tidak ada data.</td></tr>` : '';
 
-            let displayPosts = filteredPosts.filter(p => {
-                const acc = (p.account || '').toLowerCase();
-                const cap = (p.caption || '').toLowerCase();
-                return acc.includes(searchVal) || cap.includes(searchVal);
-            });
-
-            document.getElementById('tableCountBadge').innerText = displayPosts.length;
-            document.getElementById('tablePaginationInfo').innerText = `Showing ${displayPosts.length} entries`;
-
-            tbody.innerHTML = '';
-
-            if (displayPosts.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="12" class="py-8 text-center text-slate-400">Tidak ada data post yang cocok.</td></tr>`;
-                return;
-            }
-
-            displayPosts.forEach(post => {
-                const views = Number(post.views || 0);
-                const likes = Number(post.likes || 0);
-                const cmt = Number(post.cmt || post.comments || 0);
-                const save = Number(post.save || post.saves || 0);
-                const share = Number(post.share || post.shares || 0);
-                
-                const engRate = views > 0 ? (((likes + cmt + save + share) / views) * 100).toFixed(2) : 0;
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition";
-                tr.innerHTML = `
+            display.forEach(post => {
+                const v = Number(post.views || 0), l = Number(post.likes || 0), c = Number(post.cmt || post.comments || 0), s = Number(post.save || post.saves || 0), sh = Number(post.share || post.shares || 0);
+                const eng = v > 0 ? (((l + c + s + sh) / v) * 100).toFixed(2) : 0;
+                tbody.innerHTML += `<tr class="hover:bg-slate-50 transition">
                     <td class="py-3 px-4 font-bold text-slate-800">${post.account || '-'}</td>
-                    <td class="py-3 px-4">
-                        <span class="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-slate-100 text-slate-700">${post.platform || 'TikTok'}</span>
-                    </td>
-                    <td class="py-3 px-4">
-                        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800">${post.category || 'General'}</span>
-                    </td>
+                    <td class="py-3 px-4"><span class="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-slate-100 text-slate-700">${post.platform || 'TikTok'}</span></td>
+                    <td class="py-3 px-4"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800">${post.category || 'General'}</span></td>
                     <td class="py-3 px-4 max-w-xs truncate" title="${post.caption || ''}">${post.caption || '-'}</td>
                     <td class="py-3 px-4 text-slate-500">${post.tgl_upload || '-'}</td>
-                    <td class="py-3 px-4 text-right font-extrabold text-slate-900">${views.toLocaleString('id-ID')}</td>
-                    <td class="py-3 px-4 text-right font-semibold">${likes.toLocaleString('id-ID')}</td>
-                    <td class="py-3 px-4 text-right">${cmt.toLocaleString('id-ID')}</td>
-                    <td class="py-3 px-4 text-right">${save.toLocaleString('id-ID')}</td>
-                    <td class="py-3 px-4 text-right">${share.toLocaleString('id-ID')}</td>
-                    <td class="py-3 px-4 text-right font-bold text-emerald-600">${engRate}%</td>
-                    <td class="py-3 px-4 text-center">
-                        <div class="flex items-center justify-center gap-1.5">
-                            <a href="${post.url || '#'}" target="_blank" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg" title="Buka Link">
-                                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                            </a>
-                            ${isAdmin ? `
-                                <button onclick="deletePost(${post.id})" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg" title="Hapus Post">
-                                    <i class="fa-solid fa-trash text-xs"></i>
-                                </button>
-                            ` : ''}
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+                    <td class="py-3 px-4 text-right font-extrabold text-slate-900">${v.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right font-semibold">${l.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right">${c.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right">${s.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right">${sh.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right font-bold text-emerald-600">${eng}%</td>
+                    <td class="py-3 px-4 text-center"><div class="flex items-center justify-center gap-1.5"><a href="${post.url || '#'}" target="_blank" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg"><i class="fa-solid fa-arrow-up-right-from-square text-xs"></i></a>${isAdmin ? `<button onclick="deletePost(${post.id})" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}</div></td></tr>`;
             });
         }
 
-        function sortTable(key) {
-            if (key === 'views') {
-                filteredPosts.sort((a, b) => Number(b.views || 0) - Number(a.views || 0));
-                renderTable();
-            }
-        }
+        function sortTable(key) { if (key === 'views') { filteredPosts.sort((a, b) => Number(b.views || 0) - Number(a.views || 0)); renderTable(); } }
+        function deletePost(id) { if (confirm("Hapus post ini?")) { postsData = postsData.filter(p => p.id !== id); projectsStore[currentProjectName] = postsData; saveProjectsToStorage(); setCurrentProject(currentProjectName); } }
+        function toggleAllPostsTable() { const ts = document.getElementById('allPostsTableSection'); ts.classList.toggle('hidden'); ts.scrollIntoView({ behavior: 'smooth' }); }
 
-        function deletePost(id) {
-            if (confirm("Apakah Anda yakin ingin menghapus post ini?")) {
-                postsData = postsData.filter(p => p.id !== id);
-                projectsStore[currentProjectName] = postsData;
-                saveProjectsToStorage();
-                setCurrentProject(currentProjectName);
-            }
-        }
-
-        // Toggle Table Section
-        function toggleAllPostsTable() {
-            const tableSection = document.getElementById('allPostsTableSection');
-            if (tableSection.classList.contains('hidden')) {
-                tableSection.classList.remove('hidden');
-                tableSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } else {
-                tableSection.classList.add('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        }
-
-        // Google Sheets Auto-Scan & Smart Mapping Sync
         async function handleGoogleSheetsSync() {
             const rawUrl = document.getElementById('sheetsUrlInput').value.trim();
-            if (!rawUrl) return alert("Masukkan link Google Sheets terlebih dahulu!");
-
+            if (!rawUrl) return alert("Masukkan link Google Sheets!");
             const match = rawUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-            if (!match || !match[1]) {
-                return alert("Format URL Google Sheets tidak valid! Pastikan link mengarah ke spreadsheet yang benar.");
-            }
-            const spreadsheetId = match[1];
-            const exportCsvUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv`;
-
-            try {
-                alert("Sedang melakukan scanning dan analisis data dari Google Sheets...");
-
-                Papa.parse(exportCsvUrl, {
-                    download: true,
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        if (results.data && results.data.length > 0) {
-                            processSmartMappedRows(results.data);
-                        } else {
-                            alert("Spreadsheet kosong atau tidak dapat diakses. Pastikan akses link diset ke 'Anyone with the link can view'.");
-                        }
-                    },
-                    error: function(err) {
-                        console.error(err);
-                        alert("Gagal membaca Google Sheets. Pastikan link sudah publik (di-share ke publik)!");
-                    }
-                });
-            } catch (error) {
-                console.error(error);
-                alert("Terjadi kesalahan saat menghubungkan ke Google Sheets.");
-            }
+            if (!match) return alert("URL Google Sheets tidak valid!");
+            
+            Papa.parse(`https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`, {
+                download: true, header: true, skipEmptyLines: true,
+                complete: function(results) {
+                    if (results.data && results.data.length > 0) processSmartMappedRows(results.data);
+                    else alert("Spreadsheet kosong / akses belum publik.");
+                },
+                error: () => alert("Gagal membaca Google Sheets. Pastikan akses link publik!")
+            });
         }
 
         function processSmartMappedRows(rows) {
-            const parsedPosts = rows.map((row, index) => {
-                const findField = (keywords) => {
-                    const keys = Object.keys(row);
-                    for (let key of keys) {
-                        const lowerKey = key.toLowerCase().trim();
-                        for (let kw of keywords) {
-                            if (lowerKey.includes(kw)) return row[key];
-                        }
-                    }
+            const parsed = rows.map((row, idx) => {
+                const getF = (kw) => {
+                    for (let k of Object.keys(row)) { if (kw.some(w => k.toLowerCase().trim().includes(w))) return row[k]; }
                     return null;
                 };
-
-                const account = findField(['account', 'akun', 'username', 'handle', 'creator']) || '@user';
-                const platform = findField(['platform', 'sosmed', 'channel', 'media']) || 'TikTok';
-                const category = findField(['category', 'kategori', 'niche', 'genre']) || 'General';
-                const caption = findField(['caption', 'title', 'judul', 'deskripsi', 'content']) || '';
-                const tgl_upload = findField(['date', 'tanggal', 'tgl', 'upload', 'waktu']) || new Date().toISOString().split('T')[0];
-                
-                const views = Number(findField(['view', 'tayangan', 'plays', 'penonton']) || 0);
-                const likes = Number(findField(['like', 'suka', 'love']) || 0);
-                const cmt = Number(findField(['comment', 'komen', 'komentar', 'cmt']) || 0);
-                const save = Number(findField(['save', 'simpan', 'bookmark']) || 0);
-                const share = Number(findField(['share', 'bagikan', 'retweet']) || 0);
-                const url = findField(['url', 'link', 'tautan']) || '#';
-
                 return {
-                    id: Date.now() + index,
-                    account: String(account),
-                    platform: String(platform),
-                    category: String(category),
-                    caption: String(caption),
-                    tgl_upload: String(tgl_upload),
-                    views: isNaN(views) ? 0 : views,
-                    likes: isNaN(likes) ? 0 : likes,
-                    cmt: isNaN(cmt) ? 0 : cmt,
-                    save: isNaN(save) ? 0 : save,
-                    share: isNaN(share) ? 0 : share,
-                    url: String(url)
+                    id: Date.now() + idx,
+                    account: String(getF(['account', 'akun', 'username', 'handle']) || '@user'),
+                    platform: String(getF(['platform', 'sosmed', 'channel']) || 'TikTok'),
+                    category: String(getF(['category', 'kategori', 'niche']) || 'General'),
+                    caption: String(getF(['caption', 'title', 'judul', 'content']) || ''),
+                    tgl_upload: String(getF(['date', 'tanggal', 'tgl', 'upload']) || new Date().toISOString().split('T')[0]),
+                    views: Number(getF(['view', 'tayangan', 'plays']) || 0),
+                    likes: Number(getF(['like', 'suka']) || 0),
+                    cmt: Number(getF(['comment', 'komen', 'cmt']) || 0),
+                    save: Number(getF(['save', 'simpan']) || 0),
+                    share: Number(getF(['share', 'bagikan']) || 0),
+                    url: String(getF(['url', 'link']) || '#')
                 };
             });
-
-            postsData = [...postsData, ...parsedPosts];
-            projectsStore[currentProjectName] = postsData;
-            saveProjectsToStorage();
-            setCurrentProject(currentProjectName);
-            closeModal('uploadModal');
-            document.getElementById('sheetsUrlInput').value = '';
-            alert(`Berhasil! Selesai melakukan scan & analisis ${parsedPosts.length} data post dari Google Sheets secara otomatis!`);
+            postsData = [...postsData, ...parsed]; projectsStore[currentProjectName] = postsData;
+            saveProjectsToStorage(); setCurrentProject(currentProjectName); closeModal('uploadModal');
+            alert(`Berhasil menyinkronkan ${parsed.length} data post!`);
         }
 
         function handleAddPostSubmit(e) {
             e.preventDefault();
-            const newPost = {
-                id: Date.now(),
-                account: document.getElementById('newAccount').value.trim(),
-                platform: document.getElementById('newPlatform').value,
-                category: document.getElementById('newCategory').value.trim(),
-                caption: document.getElementById('newCaption').value.trim(),
-                tgl_upload: document.getElementById('newDate').value,
-                views: Number(document.getElementById('newViews').value),
-                likes: Number(document.getElementById('newLikes').value),
-                cmt: Number(document.getElementById('newComments').value),
-                save: Number(document.getElementById('newSaves').value),
-                share: Number(document.getElementById('newShares').value),
-                url: document.getElementById('newUrl').value.trim() || '#'
-            };
-
-            postsData.unshift(newPost);
-            projectsStore[currentProjectName] = postsData;
-            saveProjectsToStorage();
-            setCurrentProject(currentProjectName);
-            closeModal('addPostModal');
+            postsData.unshift({
+                id: Date.now(), account: document.getElementById('newAccount').value.trim(), platform: document.getElementById('newPlatform').value,
+                category: document.getElementById('newCategory').value.trim(), caption: document.getElementById('newCaption').value.trim(),
+                tgl_upload: document.getElementById('newDate').value, views: Number(document.getElementById('newViews').value),
+                likes: Number(document.getElementById('newLikes').value), cmt: Number(document.getElementById('newComments').value),
+                save: Number(document.getElementById('newSaves').value), share: Number(document.getElementById('newShares').value), url: document.getElementById('newUrl').value.trim() || '#'
+            });
+            projectsStore[currentProjectName] = postsData; saveProjectsToStorage(); setCurrentProject(currentProjectName); closeModal('addPostModal');
         }
 
         function exportExcel() {
-            if (filteredPosts.length === 0) return alert("Tidak ada data untuk diekspor!");
-            
-            const exportData = filteredPosts.map(p => ({
-                "Account": p.account || '',
-                "Platform": p.platform || '',
-                "Category": p.category || '',
-                "Caption": p.caption || '',
-                "Tgl Upload": p.tgl_upload || '',
-                "Views": Number(p.views || 0),
-                "Likes": Number(p.likes || 0),
-                "Comments": Number(p.cmt || p.comments || 0),
-                "Saves": Number(p.save || p.saves || 0),
-                "Shares": Number(p.share || p.shares || 0),
-                "URL": p.url || ''
-            }));
-
-            const worksheet = XLSX.utils.json_to_sheet(exportData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Report " + currentProjectName);
-            
-            XLSX.writeFile(workbook, `report_${currentProjectName.toLowerCase().replace(/\s+/g, '_')}.xlsx`);
+            if (filteredPosts.length === 0) return alert("Tidak ada data!");
+            const data = filteredPosts.map(p => ({ "Account": p.account, "Platform": p.platform, "Category": p.category, "Caption": p.caption, "Tgl Upload": p.tgl_upload, "Views": p.views, "Likes": p.likes, "Comments": p.cmt, "Saves": p.save, "Shares": p.share, "URL": p.url }));
+            const ws = XLSX.utils.json_to_sheet(data), wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Report"); XLSX.writeFile(wb, `report_${currentProjectName.toLowerCase().replace(/\s+/g, '_')}.xlsx`);
         }
 
-        // Modal Utility Helpers
-        function openModal(id) {
-            document.getElementById(id).classList.remove('hidden');
-            if (id === 'settingsModal') updateSettingsUI();
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-        }
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); if(id==='settingsModal') updateSettingsUI(); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
     </script>
 </body>
 </html>
