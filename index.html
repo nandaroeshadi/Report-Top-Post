@@ -10,7 +10,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <!-- SheetJS for Excel (.xlsx, .xls) parsing -->
+    <!-- PapaParse for Google Sheets CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- SheetJS for Excel (.xlsx, .xls) export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -105,7 +107,7 @@
                     <!-- Hidden Admin Popover Menu -->
                     <div id="adminDropdownMenu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 z-40 p-2 space-y-1">
                         <button onclick="openModal('uploadModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition flex items-center gap-2">
-                            <i class="fa-solid fa-file-excel text-emerald-600"></i> Upload Excel
+                            <i class="fa-solid fa-link text-emerald-600"></i> Hubungkan Sheets
                         </button>
                         <button onclick="openModal('addPostModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2">
                             <i class="fa-solid fa-plus text-slate-600"></i> Tambah Post
@@ -307,7 +309,7 @@
                         </table>
                     </div>
                     
-                    <!-- Tambahan Tombol "Lihat Semua Post" -->
+                    <!-- Tombol Lihat Semua Post -->
                     <div class="mt-4 flex justify-end">
                         <button onclick="toggleAllPostsTable()" class="text-xs font-bold text-amber-600 hover:text-amber-800 flex items-center gap-1.5 transition">
                             Lihat Semua Post <i class="fa-solid fa-arrow-right"></i>
@@ -359,7 +361,7 @@
             </div>
         </div>
 
-        <!-- Detailed Posts Data Table Section (Tersedia untuk Semua jika tombol diklik) -->
+        <!-- Detailed Posts Data Table Section -->
         <div id="allPostsTableSection" class="hidden bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden mt-6">
             <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
                 <div>
@@ -406,38 +408,46 @@
             <!-- Table Pagination & Summary -->
             <div class="p-4 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2">
                 <div id="tablePaginationInfo">Showing 1 to 10 entries</div>
-                <div class="flex items-center gap-1" id="paginationButtons">
-                    <!-- Pagination dynamic -->
-                </div>
+                <div class="flex items-center gap-1" id="paginationButtons"></div>
             </div>
         </div>
 
     </main>
 
-    <!-- MODAL 1: Upload Excel Modal -->
+    <!-- MODAL 1: Connect Google Sheets Modal -->
     <div id="uploadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative space-y-5">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
             <button onclick="closeModal('uploadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
             
-            <div>
-                <h3 class="text-lg font-bold text-slate-800">Upload File Excel</h3>
-                <p class="text-xs text-slate-500 mt-1">Impor data rekapitulasi post dari Spreadsheet Excel</p>
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-2xl">
+                    <i class="fa-solid fa-link text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Hubungkan Google Sheets</h3>
+                    <p class="text-xs text-slate-500">Scan & analisis otomatis dari link Google Spreadsheet publik</p>
+                </div>
             </div>
 
-            <div class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl p-6 text-center bg-slate-50 transition cursor-pointer" onclick="document.getElementById('excelFileInput').click()">
-                <i class="fa-solid fa-file-excel text-4xl text-emerald-600 mb-2"></i>
-                <p class="text-xs font-semibold text-slate-700">Klik untuk pilih file Excel</p>
-                <p class="text-[10px] text-slate-400 mt-1">Mendukung format .xlsx, .xls</p>
-                <!-- Hapus CSV dari accept parameter -->
-                <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" onchange="handleFileUpload(event)">
+            <div class="space-y-3 text-xs pt-2">
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">URL / Link Google Sheets</label>
+                    <input type="url" id="sheetsUrlInput" placeholder="https://docs.google.com/spreadsheets/d/.../edit" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500">
+                    <p class="text-[10px] text-slate-400 mt-1">*Pastikan spreadsheet berstatus <strong>"Anyone with the link can view"</strong> (Publik).</p>
+                </div>
+
+                <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-[11px] text-emerald-800 space-y-1">
+                    <p class="font-bold"><i class="fa-solid fa-wand-magic-sparkles"></i> Fitur Auto-Scan & Analisis:</p>
+                    <p>Web akan otomatis mendeteksi kolom (seperti Akun, Views, Likes, Komentar) tanpa harus mengikuti template baku.</p>
+                </div>
             </div>
 
-            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 flex items-center justify-between">
-                <span>Belum punya formatnya? Download template:</span>
-                <button onclick="downloadTemplateExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded-lg text-[10px]">
-                    Template Excel
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" onclick="closeModal('uploadModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-600 text-xs">Batal</button>
+                <button type="button" onclick="handleGoogleSheetsSync()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5">
+                    <i class="fa-solid fa-sync"></i> Scan & Analisis Data
                 </button>
             </div>
         </div>
@@ -590,7 +600,7 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-bold text-slate-800">Pengaturan Dashboard</h3>
-                    <p class="text-xs text-slate-500">Kelola akses admin, impor data, dan ekspor laporan</p>
+                    <p class="text-xs text-slate-500">Kelola akses admin, hubungkan data, dan ekspor laporan</p>
                 </div>
             </div>
 
@@ -607,7 +617,7 @@
                     </div>
 
                     <div id="settingsLoginForm" class="pt-1">
-                        <p class="text-[11px] text-slate-500 mb-2">Masuk sebagai Admin untuk membuka opsi edit, upload, dan manajemen project.</p>
+                        <p class="text-[11px] text-slate-500 mb-2">Masuk sebagai Admin untuk membuka opsi edit, hubungkan sheets, dan manajemen project.</p>
                         <div class="flex gap-2">
                             <input type="password" id="settingsPinInput" placeholder="PIN Admin" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500">
                             <button onclick="submitSettingsPin()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded-xl transition whitespace-nowrap">
@@ -643,23 +653,20 @@
                     </div>
                 </div>
 
-                <!-- Section 2: Data Import (Excel) - Admin Only -->
+                <!-- Section 2: Google Sheets Sync (Admin Only) -->
                 <div id="settingsImportSection" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
                     <span class="font-bold text-slate-700 block flex items-center gap-2">
-                        <i class="fa-solid fa-file-import text-emerald-600"></i> Impor Data File
+                        <i class="fa-solid fa-link text-emerald-600"></i> Hubungkan Google Sheets
                     </span>
-                    <p class="text-[11px] text-slate-500">Upload file Excel (.xlsx, .xls) rekapitulasi post untuk dikombinasikan ke project aktif.</p>
+                    <p class="text-[11px] text-slate-500">Masukkan link Google Spreadsheet publik untuk auto-scan dan analisis data secara otomatis.</p>
                     <div class="flex flex-wrap gap-2 pt-1">
                         <button onclick="closeModal('settingsModal'); openModal('uploadModal');" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-upload"></i> Upload Excel
-                        </button>
-                        <button onclick="downloadTemplateExcel()" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-download text-emerald-600"></i> Download Template
+                            <i class="fa-solid fa-sync"></i> Hubungkan Sheets
                         </button>
                     </div>
                 </div>
 
-                <!-- Section 3: Data Export - Admin Only -->
+                <!-- Section 3: Data Export (Admin Only) -->
                 <div id="settingsExportSection" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
                     <span class="font-bold text-slate-700 block flex items-center gap-2">
                         <i class="fa-solid fa-file-export text-emerald-600"></i> Ekspor Laporan Client
@@ -758,7 +765,6 @@
             currentProjectName = name;
             postsData = projectsStore[name];
             
-            // Populate options for Filters
             populateFilterDropdowns();
             applyFilters();
         }
@@ -1289,62 +1295,99 @@
             const tableSection = document.getElementById('allPostsTableSection');
             if (tableSection.classList.contains('hidden')) {
                 tableSection.classList.remove('hidden');
-                // Scroll otomatis ke area tabel
                 tableSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             } else {
                 tableSection.classList.add('hidden');
-                // Scroll kembali ke atas perlahan jika disembunyikan
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
-        // File Upload Handlers (Excel)
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        // Google Sheets Auto-Scan & Smart Mapping Sync
+        async function handleGoogleSheetsSync() {
+            const rawUrl = document.getElementById('sheetsUrlInput').value.trim();
+            if (!rawUrl) return alert("Masukkan link Google Sheets terlebih dahulu!");
 
-            const filename = file.name.toLowerCase();
-
-            if (filename.endsWith('.xlsx') || filename.endsWith('.xls')) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.SheetNames[0];
-                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
-                    processParsedRows(jsonData);
-                };
-                reader.readAsArrayBuffer(file);
-            } else {
-                alert("Format file tidak didukung! Pastikan file berekstensi .xlsx atau .xls");
+            const match = rawUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+            if (!match || !match[1]) {
+                return alert("Format URL Google Sheets tidak valid! Pastikan link mengarah ke spreadsheet yang benar.");
             }
-            
-            // Reset form input agar dapat re-upload
-            event.target.value = '';
+            const spreadsheetId = match[1];
+            const exportCsvUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv`;
+
+            try {
+                alert("Sedang melakukan scanning dan analisis data dari Google Sheets...");
+
+                Papa.parse(exportCsvUrl, {
+                    download: true,
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        if (results.data && results.data.length > 0) {
+                            processSmartMappedRows(results.data);
+                        } else {
+                            alert("Spreadsheet kosong atau tidak dapat diakses. Pastikan akses link diset ke 'Anyone with the link can view'.");
+                        }
+                    },
+                    error: function(err) {
+                        console.error(err);
+                        alert("Gagal membaca Google Sheets. Pastikan link sudah publik (di-share ke publik)!");
+                    }
+                });
+            } catch (error) {
+                console.error(error);
+                alert("Terjadi kesalahan saat menghubungkan ke Google Sheets.");
+            }
         }
 
-        function processParsedRows(rows) {
-            const parsedPosts = rows.map((row, index) => ({
-                id: Date.now() + index,
-                account: row.Account || row.account || '@user',
-                platform: row.Platform || row.platform || 'TikTok',
-                category: row.Category || row.category || row.Kategori || 'General',
-                caption: row.Caption || row.caption || '',
-                tgl_upload: row['Tgl Upload'] || row.tgl_upload || row.Date || new Date().toISOString().split('T')[0],
-                views: Number(row.Views || row.views || 0),
-                likes: Number(row.Likes || row.likes || 0),
-                cmt: Number(row.Comments || row.cmt || row.comments || 0),
-                save: Number(row.Saves || row.save || row.saves || 0),
-                share: Number(row.Shares || row.share || row.shares || 0),
-                url: row.URL || row.url || row.Link || '#'
-            }));
+        function processSmartMappedRows(rows) {
+            const parsedPosts = rows.map((row, index) => {
+                const findField = (keywords) => {
+                    const keys = Object.keys(row);
+                    for (let key of keys) {
+                        const lowerKey = key.toLowerCase().trim();
+                        for (let kw of keywords) {
+                            if (lowerKey.includes(kw)) return row[key];
+                        }
+                    }
+                    return null;
+                };
+
+                const account = findField(['account', 'akun', 'username', 'handle', 'creator']) || '@user';
+                const platform = findField(['platform', 'sosmed', 'channel', 'media']) || 'TikTok';
+                const category = findField(['category', 'kategori', 'niche', 'genre']) || 'General';
+                const caption = findField(['caption', 'title', 'judul', 'deskripsi', 'content']) || '';
+                const tgl_upload = findField(['date', 'tanggal', 'tgl', 'upload', 'waktu']) || new Date().toISOString().split('T')[0];
+                
+                const views = Number(findField(['view', 'tayangan', 'plays', 'penonton']) || 0);
+                const likes = Number(findField(['like', 'suka', 'love']) || 0);
+                const cmt = Number(findField(['comment', 'komen', 'komentar', 'cmt']) || 0);
+                const save = Number(findField(['save', 'simpan', 'bookmark']) || 0);
+                const share = Number(findField(['share', 'bagikan', 'retweet']) || 0);
+                const url = findField(['url', 'link', 'tautan']) || '#';
+
+                return {
+                    id: Date.now() + index,
+                    account: String(account),
+                    platform: String(platform),
+                    category: String(category),
+                    caption: String(caption),
+                    tgl_upload: String(tgl_upload),
+                    views: isNaN(views) ? 0 : views,
+                    likes: isNaN(likes) ? 0 : likes,
+                    cmt: isNaN(cmt) ? 0 : cmt,
+                    save: isNaN(save) ? 0 : save,
+                    share: isNaN(share) ? 0 : share,
+                    url: String(url)
+                };
+            });
 
             postsData = [...postsData, ...parsedPosts];
             projectsStore[currentProjectName] = postsData;
             saveProjectsToStorage();
             setCurrentProject(currentProjectName);
             closeModal('uploadModal');
-            alert(`Berhasil mengimpor ${parsedPosts.length} data post dari Excel!`);
+            document.getElementById('sheetsUrlInput').value = '';
+            alert(`Berhasil! Selesai melakukan scan & analisis ${parsedPosts.length} data post dari Google Sheets secara otomatis!`);
         }
 
         function handleAddPostSubmit(e) {
@@ -1369,28 +1412,6 @@
             saveProjectsToStorage();
             setCurrentProject(currentProjectName);
             closeModal('addPostModal');
-        }
-
-        function downloadTemplateExcel() {
-            const templateData = [{
-                "Account": "@twins.lila",
-                "Platform": "TikTok",
-                "Category": "Niche Media",
-                "Caption": "Contoh caption post viral",
-                "Tgl Upload": "2026-06-12",
-                "Views": 1500000,
-                "Likes": 50000,
-                "Comments": 1200,
-                "Saves": 3400,
-                "Shares": 1200,
-                "URL": "https://tiktok.com"
-            }];
-            
-            const worksheet = XLSX.utils.json_to_sheet(templateData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
-            
-            XLSX.writeFile(workbook, "template_report_social_media.xlsx");
         }
 
         function exportExcel() {
