@@ -240,8 +240,8 @@
                     <p class="text-[10px] text-slate-400 mt-1">*Pastikan spreadsheet berstatus <strong>"Anyone with the link can view"</strong> (Publik).</p>
                 </div>
                 <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-[11px] text-emerald-800 space-y-1">
-                    <p class="font-bold"><i class="fa-solid fa-wand-magic-sparkles"></i> Fitur Auto-Scan & Analisis:</p>
-                    <p>Web akan otomatis mendeteksi kolom (Akun, Views, Likes, Komentar) tanpa template kaku.</p>
+                    <p class="font-bold"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Smart Scan & Analisis:</p>
+                    <p>Sistem otomatis mengenali berbagai macam nama kolom tanpa perlu mengikuti template tertentu.</p>
                 </div>
             </div>
             <div class="pt-2 flex justify-end gap-2">
@@ -366,7 +366,7 @@
                     <span class="font-bold text-slate-700 block flex items-center gap-2"><i class="fa-solid fa-file-export text-emerald-600"></i> Ekspor Laporan Client</span>
                     <p class="text-[11px] text-slate-500">Unduh data laporan ke dalam format spreadsheet Excel.</p>
                     <div class="flex flex-wrap gap-2 pt-1">
-                        <button onclick="exportExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-file-excel"></i> Export Excel (.xlsx)</button>
+                        <button onclick="exportExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-file-excel"></i> Export Excel (.xlsx)</button>
                     </div>
                 </div>
             </div>
@@ -672,30 +672,60 @@
             });
         }
 
+        // Fitur AI Smart-Mapping (Otomatis menganalisis berbagai variasi nama kolom tanpa template kaku)
         function processSmartMappedRows(rows) {
             const parsed = rows.map((row, idx) => {
-                const getF = (kw) => {
-                    for (let k of Object.keys(row)) { if (kw.some(w => k.toLowerCase().trim().includes(w))) return row[k]; }
-                    return null;
+                const findValueByKeywords = (keywords, fallback = '') => {
+                    const keys = Object.keys(row);
+                    for (let key of keys) {
+                        const cleanKey = key.toLowerCase().trim();
+                        for (let kw of keywords) {
+                            if (cleanKey.includes(kw)) {
+                                const val = row[key];
+                                if (val !== undefined && val !== null && val !== '') return val;
+                            }
+                        }
+                    }
+                    return fallback;
                 };
+
+                const account = findValueByKeywords(['account', 'akun', 'username', 'handle', 'creator', 'profil'], '@user');
+                const platform = findValueByKeywords(['platform', 'sosmed', 'channel', 'media', 'aplikasi'], 'TikTok');
+                const category = findValueByKeywords(['category', 'kategori', 'niche', 'genre', 'topik'], 'General');
+                const caption = findValueByKeywords(['caption', 'title', 'judul', 'deskripsi', 'content', 'teks', 'pesan'], '');
+                const tgl_upload = findValueByKeywords(['date', 'tanggal', 'tgl', 'upload', 'waktu', 'time', 'hari'], new Date().toISOString().split('T')[0]);
+                
+                const parseNum = (kwList) => {
+                    const raw = findValueByKeywords(kwList, '0');
+                    const cleaned = String(raw).replace(/[^0-9]/g, '');
+                    return Number(cleaned) || 0;
+                };
+
+                const views = parseNum(['view', 'tayangan', 'plays', 'penonton', 'dilihat']);
+                const likes = parseNum(['like', 'suka', 'love', 'jempol']);
+                const cmt = parseNum(['comment', 'komen', 'komentar', 'cmt', 'tanggapan']);
+                const save = parseNum(['save', 'simpan', 'bookmark', 'favorit']);
+                const share = parseNum(['share', 'bagikan', 'retweet', 'kirim']);
+                const url = findValueByKeywords(['url', 'link', 'tautan', 'address', 'http'], '#');
+
                 return {
                     id: Date.now() + idx,
-                    account: String(getF(['account', 'akun', 'username', 'handle']) || '@user'),
-                    platform: String(getF(['platform', 'sosmed', 'channel']) || 'TikTok'),
-                    category: String(getF(['category', 'kategori', 'niche']) || 'General'),
-                    caption: String(getF(['caption', 'title', 'judul', 'content']) || ''),
-                    tgl_upload: String(getF(['date', 'tanggal', 'tgl', 'upload']) || new Date().toISOString().split('T')[0]),
-                    views: Number(getF(['view', 'tayangan', 'plays']) || 0),
-                    likes: Number(getF(['like', 'suka']) || 0),
-                    cmt: Number(getF(['comment', 'komen', 'cmt']) || 0),
-                    save: Number(getF(['save', 'simpan']) || 0),
-                    share: Number(getF(['share', 'bagikan']) || 0),
-                    url: String(getF(['url', 'link']) || '#')
+                    account: String(account),
+                    platform: String(platform),
+                    category: String(category),
+                    caption: String(caption),
+                    tgl_upload: String(tgl_upload),
+                    views, likes, cmt, save, share,
+                    url: String(url)
                 };
             });
-            postsData = [...postsData, ...parsed]; projectsStore[currentProjectName] = postsData;
-            saveProjectsToStorage(); setCurrentProject(currentProjectName); closeModal('uploadModal');
-            alert(`Berhasil menyinkronkan ${parsed.length} data post!`);
+
+            postsData = [...postsData, ...parsed]; 
+            projectsStore[currentProjectName] = postsData;
+            saveProjectsToStorage(); 
+            setCurrentProject(currentProjectName); 
+            closeModal('uploadModal');
+            alert(`AI berhasil menganalisis & menyinkronkan ${parsed.length} data post dari Google Sheets secara otomatis!`);
         }
 
         function handleAddPostSubmit(e) {
