@@ -134,7 +134,7 @@
     <!-- Main Dashboard Body -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
 
-        <!-- Banner Header (Green Theme inspired by Screenshot 2) -->
+        <!-- Banner Header -->
         <div class="bg-emerald-800 text-white rounded-3xl p-6 sm:p-8 shadow-lg relative overflow-hidden">
             <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl font-black pointer-events-none">REPORT</div>
             <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -153,7 +153,7 @@
             </div>
         </div>
 
-        <!-- Global Filter Bar (Concept from Screenshot 2) -->
+        <!-- Global Filter Bar -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
             <div class="flex items-center justify-between">
                 <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
@@ -198,7 +198,7 @@
             </div>
         </div>
 
-        <!-- Summary Performance Metrics Section (Screenshot 2: Green Section) -->
+        <!-- Summary Performance Metrics Section -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             <!-- TOTAL PERFORMANCE BOX -->
@@ -281,10 +281,10 @@
 
         </div>
 
-        <!-- Visual Charts & Leaderboard Row (SS 1 + SS 2 Combined) -->
+        <!-- Visual Charts & Leaderboard Row -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <!-- LEADERBOARD #10 TOP PERFORMANCE (Screenshot 2: Yellow Table) -->
+            <!-- LEADERBOARD #10 TOP PERFORMANCE -->
             <div class="lg:col-span-2 bg-amber-50/80 border border-amber-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-4">
@@ -311,10 +311,17 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    <!-- Tambahan Tombol "Lihat Semua Post" -->
+                    <div class="mt-4 flex justify-end">
+                        <button onclick="toggleAllPostsTable()" class="text-xs font-bold text-amber-600 hover:text-amber-800 flex items-center gap-1.5 transition">
+                            Lihat Semua Post <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- PLATFORM DISTRIBUTION PIE CHART (Screenshot 2 Right Top) -->
+            <!-- PLATFORM DISTRIBUTION PIE CHART -->
             <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
                 <div>
                     <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2 flex items-center gap-2">
@@ -332,9 +339,9 @@
 
         </div>
 
-        <!-- Secondary Charts Row: Daily Views Trend & Top Accounts (Screenshot 1 & 2) - Admin Only -->
+        <!-- Secondary Charts Row: Daily Views Trend & Top Accounts - Admin Only -->
         <div id="adminOnlySecondaryCharts" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- DAILY VIEWS TREND (SS 2) -->
+            <!-- DAILY VIEWS TREND -->
             <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs">
                 <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1 flex items-center gap-2">
                     <i class="fa-solid fa-chart-column text-emerald-600"></i> Tren Penambahan Views Per Hari
@@ -345,7 +352,7 @@
                 </div>
             </div>
 
-            <!-- TOP ACCOUNTS BY VIEWS BAR CHART (SS 1) -->
+            <!-- TOP ACCOUNTS BY VIEWS BAR CHART -->
             <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs">
                 <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1 flex items-center gap-2">
                     <i class="fa-solid fa-users text-emerald-600"></i> Top Akun Menurut Total Views
@@ -357,8 +364,8 @@
             </div>
         </div>
 
-        <!-- Detailed Posts Data Table Section (Screenshot 1) - Admin Only -->
-        <div id="adminOnlyTableSection" class="hidden bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+        <!-- Detailed Posts Data Table Section (Tersedia untuk Semua jika tombol diklik) -->
+        <div id="allPostsTableSection" class="hidden bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden mt-6">
             <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
@@ -812,10 +819,12 @@
             const chevron = document.getElementById('projectSelectChevron');
             if (chevron) chevron.classList.remove('hidden');
 
-            // Show Admin-Only Sections (Daily Trend, Top Accounts Chart & Detailed Posts Table)
+            // Show Admin-Only Sections (Daily Trend & Top Accounts Chart)
             const adminCharts = document.getElementById('adminOnlySecondaryCharts');
-            const adminTable = document.getElementById('adminOnlyTableSection');
             if (adminCharts) adminCharts.classList.remove('hidden');
+            
+            // Ensure the main data table is shown for admin
+            const adminTable = document.getElementById('allPostsTableSection');
             if (adminTable) adminTable.classList.remove('hidden');
 
             updateSettingsUI();
@@ -845,10 +854,8 @@
 
             // Hide Admin-Only Sections for Client View
             const adminCharts = document.getElementById('adminOnlySecondaryCharts');
-            const adminTable = document.getElementById('adminOnlyTableSection');
             if (adminCharts) adminCharts.classList.add('hidden');
-            if (adminTable) adminTable.classList.add('hidden');
-
+            
             updateSettingsUI();
             renderTable();
         }
@@ -1287,6 +1294,20 @@
                 projectsStore[currentProjectName] = postsData;
                 saveProjectsToStorage();
                 setCurrentProject(currentProjectName);
+            }
+        }
+
+        // Toggle Table Section
+        function toggleAllPostsTable() {
+            const tableSection = document.getElementById('allPostsTableSection');
+            if (tableSection.classList.contains('hidden')) {
+                tableSection.classList.remove('hidden');
+                // Scroll otomatis ke area tabel
+                tableSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                tableSection.classList.add('hidden');
+                // Scroll kembali ke atas perlahan jika disembunyikan
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
