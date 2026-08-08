@@ -656,32 +656,45 @@
         function deletePost(id) { if (confirm("Hapus post ini?")) { postsData = postsData.filter(p => p.id !== id); projectsStore[currentProjectName] = postsData; saveProjectsToStorage(); setCurrentProject(currentProjectName); } }
         function toggleAllPostsTable() { const ts = document.getElementById('allPostsTableSection'); ts.classList.toggle('hidden'); ts.scrollIntoView({ behavior: 'smooth' }); }
 
+        // Perbaikan Utama untuk Mengatasi Masalah CORS & Gagal Parse Angka (0)
         async function handleGoogleSheetsSync() {
             const rawUrl = document.getElementById('sheetsUrlInput').value.trim();
             if (!rawUrl) return alert("Masukkan link Google Sheets!");
             const match = rawUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
             if (!match) return alert("URL Google Sheets tidak valid!");
             
-            Papa.parse(`https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`, {
+            // Menggunakan layanan pihak ketiga CORS-proxy agar link Google Sheets publik terbaca stabil di browser tanpa error
+            const exportCsvUrl = `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`;
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(exportCsvUrl)}`;
+
+            Papa.parse(proxyUrl, {
                 download: true, header: true, skipEmptyLines: true,
                 complete: function(results) {
-                    if (results.data && results.data.length > 0) processSmartMappedRows(results.data);
-                    else alert("Spreadsheet kosong / akses belum publik.");
+                    if (results.data && results.data.length > 0) {
+                        processSmartAIIntelligence(results.data);
+                    } else {
+                        alert("Spreadsheet kosong atau tidak dapat diakses.");
+                    }
                 },
-                error: () => alert("Gagal membaca Google Sheets. Pastikan akses link publik!")
+                error: (err) => {
+                    console.error(err);
+                    alert("Gagal membaca Google Sheets. Pastikan akses link sudah 'Anyone with the link can view' (Publik).");
+                }
             });
         }
 
-        // Fitur AI Smart-Mapping (Otomatis menganalisis berbagai variasi nama kolom tanpa template kaku)
-        function processSmartMappedRows(rows) {
+        // AI Smart Intelligence Mapping (Mendeteksi kolom & membersihkan format angka agar tidak 0)
+        function processSmartAIIntelligence(rows) {
             const parsed = rows.map((row, idx) => {
-                const findValueByKeywords = (keywords, fallback = '') => {
-                    const keys = Object.keys(row);
-                    for (let key of keys) {
-                        const cleanKey = key.toLowerCase().trim();
-                        for (let kw of keywords) {
-                            if (cleanKey.includes(kw)) {
-                                const val = row[key];
+                // Cari key object secara fleksibel tidak peduli huruf besar/kecil atau spasi
+                const getVal = (possibleKeys, fallback = '') => {
+                    const rowKeys = Object.keys(row);
+                    for (let rKey of rowKeys) {
+                        const cleanRKey = rKey.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+                        for (let pKey of possibleKeys) {
+                            const cleanPKey = pKey.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+                            if (cleanRKey.includes(cleanPKey)) {
+                                const val = row[rKey];
                                 if (val !== undefined && val !== null && val !== '') return val;
                             }
                         }
@@ -689,24 +702,26 @@
                     return fallback;
                 };
 
-                const account = findValueByKeywords(['account', 'akun', 'username', 'handle', 'creator', 'profil'], '@user');
-                const platform = findValueByKeywords(['platform', 'sosmed', 'channel', 'media', 'aplikasi'], 'TikTok');
-                const category = findValueByKeywords(['category', 'kategori', 'niche', 'genre', 'topik'], 'General');
-                const caption = findValueByKeywords(['caption', 'title', 'judul', 'deskripsi', 'content', 'teks', 'pesan'], '');
-                const tgl_upload = findValueByKeywords(['date', 'tanggal', 'tgl', 'upload', 'waktu', 'time', 'hari'], new Date().toISOString().split('T')[0]);
+                const account = getVal(['account', 'akun', 'username', 'handle', 'creator', 'profil'], '@user');
+                const platform = getVal(['platform', 'sosmed', 'channel', 'media', 'aplikasi'], 'TikTok');
+                const category = getVal(['category', 'kategori', 'niche', 'genre', 'topik'], 'General');
+                const caption = getVal(['caption', 'title', 'judul', 'deskripsi', 'content', 'teks', 'pesan'], '-');
+                const tgl_upload = getVal(['date', 'tanggal', 'tgl', 'upload', 'waktu', 'time', 'hari'], new Date().toISOString().split('T')[0]);
                 
-                const parseNum = (kwList) => {
-                    const raw = findValueByKeywords(kwList, '0');
-                    const cleaned = String(raw).replace(/[^0-9]/g, '');
-                    return Number(cleaned) || 0;
+                // Fungsi cerdas pembersih string angka (menghapus titik, koma, spasi agar jadi angka murni)
+                const extractNumber = (keys) => {
+                    const raw = getVal(keys, '0');
+                    // Mengganti koma jadi titik jika format desimal, lalu ambil angka murninya
+                    const cleanStr = String(raw).replace(/\./g, '').replace(/,/g, '.').replace(/[^0-9]/g, '');
+                    return Number(cleanStr) || 0;
                 };
 
-                const views = parseNum(['view', 'tayangan', 'plays', 'penonton', 'dilihat']);
-                const likes = parseNum(['like', 'suka', 'love', 'jempol']);
-                const cmt = parseNum(['comment', 'komen', 'komentar', 'cmt', 'tanggapan']);
-                const save = parseNum(['save', 'simpan', 'bookmark', 'favorit']);
-                const share = parseNum(['share', 'bagikan', 'retweet', 'kirim']);
-                const url = findValueByKeywords(['url', 'link', 'tautan', 'address', 'http'], '#');
+                const views = extractNumber(['view', 'tayangan', 'plays', 'penonton', 'dilihat', 'jmlview']);
+                const likes = extractNumber(['like', 'suka', 'love', 'jempol']);
+                const cmt = extractNumber(['comment', 'komen', 'komentar', 'cmt', 'tanggapan']);
+                const save = extractNumber(['save', 'simpan', 'bookmark', 'favorit']);
+                const share = extractNumber(['share', 'bagikan', 'retweet', 'kirim']);
+                const url = getVal(['url', 'link', 'tautan', 'address', 'http'], '#');
 
                 return {
                     id: Date.now() + idx,
@@ -725,7 +740,8 @@
             saveProjectsToStorage(); 
             setCurrentProject(currentProjectName); 
             closeModal('uploadModal');
-            alert(`AI berhasil menganalisis & menyinkronkan ${parsed.length} data post dari Google Sheets secara otomatis!`);
+            document.getElementById('sheetsUrlInput').value = '';
+            alert(`AI berhasil menganalisis & menyinkronkan ${parsed.length} data post dari Google Sheets!`);
         }
 
         function handleAddPostSubmit(e) {
