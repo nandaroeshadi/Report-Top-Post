@@ -10,8 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <!-- PapaParse for CSV parsing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <!-- SheetJS for Excel (.xlsx, .xls) parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Google Fonts -->
@@ -71,7 +69,7 @@
                     </div>
                 </div>
 
-                <!-- Admin Project Management Control Buttons (Admin Only - Beside dropdown) -->
+                <!-- Admin Project Management Control Buttons -->
                 <div id="adminProjectControlGroup" class="hidden items-center gap-1.5 border-l border-slate-200 pl-3 my-1">
                     <button onclick="openModal('addProjectModal')" class="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs" title="Tambah Project Baru">
                         <i class="fa-solid fa-plus text-[10px]"></i> + Project Baru
@@ -85,7 +83,7 @@
                 </div>
             </div>
 
-            <!-- Action Toolbar (Dynamic based on Admin vs Client Mode) -->
+            <!-- Action Toolbar -->
             <div class="flex flex-wrap items-center gap-2">
                 <!-- Status Mode Badge (Hidden) -->
                 <div id="accessModeBadge" class="hidden"></div>
@@ -96,7 +94,7 @@
                     <span>Pengaturan</span>
                 </button>
 
-                <!-- Admin Action Buttons (Discreet Popover Menu) -->
+                <!-- Admin Action Buttons -->
                 <div id="adminActionGroup" class="hidden relative">
                     <button onclick="toggleAdminMenu()" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-medium px-3.5 py-2 rounded-xl text-xs transition shadow-sm">
                         <i class="fa-solid fa-sliders"></i>
@@ -107,16 +105,13 @@
                     <!-- Hidden Admin Popover Menu -->
                     <div id="adminDropdownMenu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 z-40 p-2 space-y-1">
                         <button onclick="openModal('uploadModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition flex items-center gap-2">
-                            <i class="fa-solid fa-file-excel text-emerald-600"></i> Upload Excel / CSV
+                            <i class="fa-solid fa-file-excel text-emerald-600"></i> Upload Excel
                         </button>
                         <button onclick="openModal('addPostModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2">
                             <i class="fa-solid fa-plus text-slate-600"></i> Tambah Post
                         </button>
                         <button onclick="exportExcel(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2">
                             <i class="fa-solid fa-file-excel text-emerald-600"></i> Export Excel (.xlsx)
-                        </button>
-                        <button onclick="exportCSV(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2">
-                            <i class="fa-solid fa-file-csv text-slate-600"></i> Export CSV
                         </button>
                         <div class="border-t border-slate-100 my-1"></div>
                         <button onclick="confirmResetCurrentProjectData(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition flex items-center gap-2">
@@ -419,7 +414,7 @@
 
     </main>
 
-    <!-- MODAL 1: Upload Excel/CSV Modal -->
+    <!-- MODAL 1: Upload Excel Modal -->
     <div id="uploadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative space-y-5">
             <button onclick="closeModal('uploadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
@@ -427,21 +422,22 @@
             </button>
             
             <div>
-                <h3 class="text-lg font-bold text-slate-800">Upload File Excel / CSV</h3>
-                <p class="text-xs text-slate-500 mt-1">Impor data rekapitulasi post dari Spreadsheet/Excel/CSV</p>
+                <h3 class="text-lg font-bold text-slate-800">Upload File Excel</h3>
+                <p class="text-xs text-slate-500 mt-1">Impor data rekapitulasi post dari Spreadsheet Excel</p>
             </div>
 
-            <div class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl p-6 text-center bg-slate-50 transition cursor-pointer" onclick="document.getElementById('csvFileInput').click()">
+            <div class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl p-6 text-center bg-slate-50 transition cursor-pointer" onclick="document.getElementById('excelFileInput').click()">
                 <i class="fa-solid fa-file-excel text-4xl text-emerald-600 mb-2"></i>
-                <p class="text-xs font-semibold text-slate-700">Klik untuk pilih file Excel/CSV</p>
-                <p class="text-[10px] text-slate-400 mt-1">Mendukung format .xlsx, .xls, .csv</p>
-                <input type="file" id="csvFileInput" accept=".csv, .xlsx, .xls" class="hidden" onchange="handleFileUpload(event)">
+                <p class="text-xs font-semibold text-slate-700">Klik untuk pilih file Excel</p>
+                <p class="text-[10px] text-slate-400 mt-1">Mendukung format .xlsx, .xls</p>
+                <!-- Hapus CSV dari accept parameter -->
+                <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" onchange="handleFileUpload(event)">
             </div>
 
             <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 flex items-center justify-between">
                 <span>Belum punya formatnya? Download template:</span>
-                <button onclick="downloadTemplateCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded-lg text-[10px]">
-                    Template CSV
+                <button onclick="downloadTemplateExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded-lg text-[10px]">
+                    Template Excel
                 </button>
             </div>
         </div>
@@ -647,34 +643,31 @@
                     </div>
                 </div>
 
-                <!-- Section 2: Data Import (Excel / CSV) -->
-                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                <!-- Section 2: Data Import (Excel) - Admin Only -->
+                <div id="settingsImportSection" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
                     <span class="font-bold text-slate-700 block flex items-center gap-2">
                         <i class="fa-solid fa-file-import text-emerald-600"></i> Impor Data File
                     </span>
-                    <p class="text-[11px] text-slate-500">Upload file Excel (.xlsx, .xls) atau CSV rekapitulasi post untuk dikombinasikan ke project aktif.</p>
+                    <p class="text-[11px] text-slate-500">Upload file Excel (.xlsx, .xls) rekapitulasi post untuk dikombinasikan ke project aktif.</p>
                     <div class="flex flex-wrap gap-2 pt-1">
                         <button onclick="closeModal('settingsModal'); openModal('uploadModal');" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-upload"></i> Upload Excel / CSV
+                            <i class="fa-solid fa-upload"></i> Upload Excel
                         </button>
-                        <button onclick="downloadTemplateCSV()" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+                        <button onclick="downloadTemplateExcel()" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5">
                             <i class="fa-solid fa-download text-emerald-600"></i> Download Template
                         </button>
                     </div>
                 </div>
 
-                <!-- Section 3: Data Export -->
-                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                <!-- Section 3: Data Export - Admin Only -->
+                <div id="settingsExportSection" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
                     <span class="font-bold text-slate-700 block flex items-center gap-2">
                         <i class="fa-solid fa-file-export text-emerald-600"></i> Ekspor Laporan Client
                     </span>
-                    <p class="text-[11px] text-slate-500">Unduh data laporan project saat ini ke dalam format spreadsheet Excel atau CSV.</p>
+                    <p class="text-[11px] text-slate-500">Unduh data laporan project saat ini ke dalam format spreadsheet Excel.</p>
                     <div class="flex flex-wrap gap-2 pt-1">
                         <button onclick="exportExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5">
                             <i class="fa-solid fa-file-excel"></i> Export Excel (.xlsx)
-                        </button>
-                        <button onclick="exportCSV()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-file-csv"></i> Export CSV
                         </button>
                     </div>
                 </div>
@@ -713,8 +706,6 @@
         let postsData = [];
         let filteredPosts = [];
         let isAdmin = false;
-        let currentPage = 1;
-        const pageSize = 10;
 
         // Chart Instance Holds
         let pieChartInstance = null;
@@ -776,7 +767,6 @@
         function checkURLParams() {
             const urlParams = new URLSearchParams(window.location.search);
             
-            // Check project parameter if client opens specific project link
             const projParam = urlParams.get('project');
             if (projParam && projectsStore[projParam]) {
                 currentProjectName = projParam;
@@ -813,24 +803,20 @@
             document.getElementById('adminProjectControlGroup').classList.remove('hidden');
             document.getElementById('adminProjectControlGroup').classList.add('flex');
 
-            // Unlock project dropdown for Admin
             const projSelect = document.getElementById('projectSelect');
             if (projSelect) projSelect.disabled = false;
             const chevron = document.getElementById('projectSelectChevron');
             if (chevron) chevron.classList.remove('hidden');
 
-            // Show Admin-Only Sections (Daily Trend & Top Accounts Chart)
             const adminCharts = document.getElementById('adminOnlySecondaryCharts');
             if (adminCharts) adminCharts.classList.remove('hidden');
             
-            // Ensure the main data table is shown for admin
             const adminTable = document.getElementById('allPostsTableSection');
             if (adminTable) adminTable.classList.remove('hidden');
 
             updateSettingsUI();
             renderTable();
 
-            // Refresh chart canvas rendering after unhiding
             setTimeout(() => {
                 renderDailyTrendChart();
                 renderTopAccountsChart();
@@ -846,13 +832,11 @@
             document.getElementById('adminProjectControlGroup').classList.add('hidden');
             document.getElementById('adminProjectControlGroup').classList.remove('flex');
 
-            // Lock project dropdown for Client Mode
             const projSelect = document.getElementById('projectSelect');
             if (projSelect) projSelect.disabled = true;
             const chevron = document.getElementById('projectSelectChevron');
             if (chevron) chevron.classList.add('hidden');
 
-            // Hide Admin-Only Sections for Client View
             const adminCharts = document.getElementById('adminOnlySecondaryCharts');
             if (adminCharts) adminCharts.classList.add('hidden');
             
@@ -865,6 +849,9 @@
             const loginForm = document.getElementById('settingsLoginForm');
             const logoutForm = document.getElementById('settingsLogoutForm');
             const projectSection = document.getElementById('settingsProjectSection');
+            
+            const importSection = document.getElementById('settingsImportSection');
+            const exportSection = document.getElementById('settingsExportSection');
 
             if (!badge) return;
 
@@ -874,12 +861,18 @@
                 loginForm.classList.add('hidden');
                 logoutForm.classList.remove('hidden');
                 if (projectSection) projectSection.classList.remove('hidden');
+                
+                if (importSection) importSection.classList.remove('hidden');
+                if (exportSection) exportSection.classList.remove('hidden');
             } else {
                 badge.innerText = 'Client Mode';
                 badge.className = 'px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-slate-200 text-slate-700';
                 loginForm.classList.remove('hidden');
                 logoutForm.classList.add('hidden');
                 if (projectSection) projectSection.classList.add('hidden');
+                
+                if (importSection) importSection.classList.add('hidden');
+                if (exportSection) exportSection.classList.add('hidden');
             }
         }
 
@@ -1019,11 +1012,9 @@
                 totalShares += Number(p.share || p.shares || 0);
             });
 
-            // Average Engagement Calculation
             const totalEngagement = totalLikes + totalComments + totalSaves + totalShares;
             const avgEngRate = totalViews > 0 ? ((totalEngagement / totalViews) * 100).toFixed(2) : 0;
 
-            // DOM Updates
             document.getElementById('metricTotalViews').innerText = totalViews.toLocaleString('id-ID');
             document.getElementById('metricTotalLikes').innerText = totalLikes.toLocaleString('id-ID');
             document.getElementById('metricTotalComments').innerText = totalComments.toLocaleString('id-ID');
@@ -1032,7 +1023,6 @@
             document.getElementById('metricAvgEngagement').innerText = avgEngRate + '%';
             document.getElementById('postCountBadge').innerText = filteredPosts.length + ' Posts Loaded';
 
-            // #1 Top Content Spotlight
             const sortedByViews = [...filteredPosts].sort((a, b) => Number(b.views || 0) - Number(a.views || 0));
             if (sortedByViews.length > 0) {
                 const top1 = sortedByViews[0];
@@ -1053,10 +1043,8 @@
                 document.getElementById('top1Link').href = '#';
             }
 
-            // Render #10 Top Performance Table
             renderTop10Table(sortedByViews.slice(0, 10));
 
-            // Render Charts
             renderPieChart();
             renderDailyTrendChart();
             renderTopAccountsChart();
@@ -1124,7 +1112,6 @@
                 }
             });
 
-            // Render custom HTML legend
             const legendDiv = document.getElementById('pieLegend');
             const colors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'];
             const totalSum = dataValues.reduce((a, b) => a + b, 0);
@@ -1311,22 +1298,14 @@
             }
         }
 
-        // File Upload Handlers (Excel / CSV)
+        // File Upload Handlers (Excel)
         function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             const filename = file.name.toLowerCase();
 
-            if (filename.endsWith('.csv')) {
-                Papa.parse(file, {
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        processParsedRows(results.data);
-                    }
-                });
-            } else if (filename.endsWith('.xlsx') || filename.endsWith('.xls')) {
+            if (filename.endsWith('.xlsx') || filename.endsWith('.xls')) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const data = new Uint8Array(e.target.result);
@@ -1337,8 +1316,11 @@
                 };
                 reader.readAsArrayBuffer(file);
             } else {
-                alert("Format file tidak didukung! Upload file .csv, .xlsx, atau .xls");
+                alert("Format file tidak didukung! Pastikan file berekstensi .xlsx atau .xls");
             }
+            
+            // Reset form input agar dapat re-upload
+            event.target.value = '';
         }
 
         function processParsedRows(rows) {
@@ -1362,7 +1344,7 @@
             saveProjectsToStorage();
             setCurrentProject(currentProjectName);
             closeModal('uploadModal');
-            alert(`Berhasil mengimpor ${parsedPosts.length} data post!`);
+            alert(`Berhasil mengimpor ${parsedPosts.length} data post dari Excel!`);
         }
 
         function handleAddPostSubmit(e) {
@@ -1389,18 +1371,26 @@
             closeModal('addPostModal');
         }
 
-        function downloadTemplateCSV() {
-            const csvContent = "data:text/csv;charset=utf-8," + 
-                "Account,Platform,Category,Caption,Tgl Upload,Views,Likes,Comments,Saves,Shares,URL\n" +
-                "@twins.lila,TikTok,Niche Media,Contoh caption post viral,2026-06-12,1500000,50000,1200,3400,1200,https://tiktok.com";
+        function downloadTemplateExcel() {
+            const templateData = [{
+                "Account": "@twins.lila",
+                "Platform": "TikTok",
+                "Category": "Niche Media",
+                "Caption": "Contoh caption post viral",
+                "Tgl Upload": "2026-06-12",
+                "Views": 1500000,
+                "Likes": 50000,
+                "Comments": 1200,
+                "Saves": 3400,
+                "Shares": 1200,
+                "URL": "https://tiktok.com"
+            }];
             
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "template_report_social_media.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const worksheet = XLSX.utils.json_to_sheet(templateData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+            
+            XLSX.writeFile(workbook, "template_report_social_media.xlsx");
         }
 
         function exportExcel() {
@@ -1425,32 +1415,6 @@
             XLSX.utils.book_append_sheet(workbook, worksheet, "Report " + currentProjectName);
             
             XLSX.writeFile(workbook, `report_${currentProjectName.toLowerCase().replace(/\s+/g, '_')}.xlsx`);
-        }
-
-        function exportCSV() {
-            if (filteredPosts.length === 0) return alert("Tidak ada data untuk diekspor!");
-            
-            const headers = ["Account", "Platform", "Category", "Caption", "Tgl Upload", "Views", "Likes", "Comments", "Saves", "Shares", "URL"];
-            const rows = filteredPosts.map(p => [
-                `"${p.account || ''}"`,
-                `"${p.platform || ''}"`,
-                `"${p.category || ''}"`,
-                `"${(p.caption || '').replace(/"/g, '""')}"`,
-                `"${p.tgl_upload || ''}"`,
-                p.views || 0,
-                p.likes || 0,
-                p.cmt || p.comments || 0,
-                p.save || p.saves || 0,
-                p.share || p.shares || 0,
-                `"${p.url || ''}"`
-            ]);
-
-            const csvString = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `report_${currentProjectName.toLowerCase().replace(/\s+/g, '_')}.csv`;
-            link.click();
         }
 
         // Modal Utility Helpers
