@@ -11,33 +11,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
-                    colors: {
-                        emerald: {
-                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0',
-                            500: '#10b981', 600: '#059669', 700: '#047857',
-                            800: '#065f46', 900: '#064e3b'
-                        }
-                    }
-                }
-            }
-        }
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }, colors: { emerald: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' } } } } }
     </script>
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    </style>
+    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
-    <!-- Custom Toast Message Area -->
-    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
-
     <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
             <div class="flex flex-wrap items-center gap-3">
@@ -47,30 +25,29 @@
                     <div class="flex items-center gap-1 relative">
                         <select id="projectSelect" onchange="handleProjectChange()" disabled class="appearance-none bg-transparent font-bold text-xl text-slate-800 focus:outline-none cursor-pointer hover:text-emerald-600 transition pr-5 disabled:cursor-default disabled:hover:text-slate-800 disabled:opacity-100">
                             <option value="Cerita Lila">Cerita Lila</option>
-                            <option value="Campaign Media 2026">Campaign Media 2026</option>
-                            <option value="Brand Performance Q3">Brand Performance Q3</option>
                         </select>
                         <i id="projectSelectChevron" class="fa-solid fa-chevron-down text-xs text-slate-400 pointer-events-none -ml-3 hidden"></i>
                     </div>
                 </div>
                 <div id="adminProjectControlGroup" class="hidden items-center gap-1.5 border-l border-slate-200 pl-3 my-1">
-                    <button onclick="openModal('addProjectModal')" class="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs"><i class="fa-solid fa-plus text-[10px]"></i> + Project Baru</button>
-                    <button onclick="openEditProjectModal()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs"><i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit</button>
-                    <button onclick="confirmDeleteCurrentProject()" class="bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs"><i class="fa-solid fa-trash text-[10px]"></i> Hapus</button>
+                    <button type="button" onclick="openModal('addProjectModal')" class="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs"><i class="fa-solid fa-plus text-[10px]"></i> + Project Baru</button>
+                    <button type="button" onclick="openEditProjectModal()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs"><i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit</button>
+                    <button type="button" onclick="confirmDeleteCurrentProject()" class="bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs"><i class="fa-solid fa-trash text-[10px]"></i> Hapus</button>
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <div id="accessModeBadge" class="hidden"></div>
-                <button onclick="openModal('settingsModal')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 transition shadow-xs border border-slate-200"><i class="fa-solid fa-gear text-slate-500"></i><span>Pengaturan</span></button>
+                <button type="button" onclick="openModal('settingsModal')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 transition shadow-xs border border-slate-200"><i class="fa-solid fa-gear text-slate-500"></i><span>Pengaturan</span></button>
                 <div id="adminActionGroup" class="hidden relative">
-                    <button onclick="toggleAdminMenu()" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-medium px-3.5 py-2 rounded-xl text-xs transition shadow-sm"><i class="fa-solid fa-sliders"></i><span>Admin Tools</span><i class="fa-solid fa-chevron-down text-[10px]"></i></button>
+                    <button type="button" onclick="toggleAdminMenu()" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-medium px-3.5 py-2 rounded-xl text-xs transition shadow-sm"><i class="fa-solid fa-sliders"></i><span>Admin Tools</span><i class="fa-solid fa-chevron-down text-[10px]"></i></button>
                     <div id="adminDropdownMenu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 z-40 p-2 space-y-1">
-                        <button onclick="openModal('uploadModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-file-import text-emerald-600"></i> Import Data (Excel / Sheets)</button>
-                        <button onclick="openModal('addPostModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-plus text-slate-600"></i> Tambah Post</button>
-                        <button onclick="exportExcel(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-file-excel text-emerald-600"></i> Export Excel (.xlsx)</button>
+                        <button type="button" onclick="openModal('uploadModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-file-excel text-emerald-600"></i> Import Excel / Sheets</button>
+                        <button type="button" onclick="openModal('addPostModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-plus text-slate-600"></i> Tambah Post</button>
+                        <button type="button" onclick="exportExcel(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-file-excel text-emerald-600"></i> Export Excel (.xlsx)</button>
+                        <button type="button" onclick="copyShareLink(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-share-nodes"></i> Salin Link Client Mode</button>
                         <div class="border-t border-slate-100 my-1"></div>
-                        <button onclick="confirmResetCurrentProjectData(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-rotate-left"></i> Reset Data Project</button>
-                        <button onclick="disableAdminMode(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-right-from-bracket"></i> Keluar Admin</button>
+                        <button type="button" onclick="confirmResetCurrentProjectData(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-rotate-left"></i> Reset Data Project</button>
+                        <button type="button" onclick="disableAdminMode(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-right-from-bracket"></i> Keluar Admin</button>
                     </div>
                 </div>
             </div>
@@ -78,7 +55,6 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
-        <!-- Hero Banner -->
         <div class="bg-emerald-800 text-white rounded-3xl p-6 sm:p-8 shadow-lg relative overflow-hidden">
             <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl font-black pointer-events-none">REPORT</div>
             <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -87,36 +63,23 @@
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">SOCIAL MEDIA REPORT</h1>
                     <p class="text-emerald-100 text-sm mt-1">Rekapitulasi performa konten & engagement akun sosial media secara real-time</p>
                 </div>
-                <div class="bg-emerald-900/60 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-emerald-700/50 text-xs flex items-center gap-2 self-start md:self-auto"><i class="fa-regular fa-clock text-emerald-300"></i><span>Updated: <strong id="lastUpdatedDate" class="text-white font-bold">Today</strong></span></div>
+                <div class="bg-emerald-900/60 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-emerald-700/50 text-xs flex items-center gap-2 self-start md:self-auto"><i class="fa-regular fa-clock text-emerald-300"></i><span>Updated in: <strong id="lastUpdatedDate" class="text-white font-bold">Today</strong></span></div>
             </div>
         </div>
 
-        <!-- Filter Controls (Updated with Period Filter) -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
             <div class="flex items-center justify-between">
                 <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-filter text-emerald-600"></i> Filter Data Laporan</h3>
-                <button onclick="resetFilters()" class="text-xs text-emerald-600 font-semibold hover:underline">Reset Filter</button>
+                <button type="button" onclick="resetFilters()" class="text-xs text-emerald-600 font-semibold hover:underline">Reset Filter</button>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 mb-1">Periode</label>
-                    <select id="filterPeriode" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
-                        <option value="ALL">Semua Periode</option>
-                        <option value="Periode 1">Periode 1</option>
-                        <option value="Periode 2">Periode 2</option>
-                        <option value="Periode 3">Periode 3</option>
-                        <option value="Periode 4">Periode 4</option>
-                        <option value="Periode 5">Periode 5</option>
-                    </select>
+                    <select id="filterPeriod" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500"><option value="ALL">Semua Periode</option><option value="Periode 1">Periode 1</option><option value="Periode 2">Periode 2</option><option value="Periode 3">Periode 3</option><option value="Periode 4">Periode 4</option><option value="Periode 5">Periode 5</option></select>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 mb-1">Platform</label>
-                    <select id="filterPlatform" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
-                        <option value="ALL">Semua Platform</option>
-                        <option value="TikTok">TikTok</option>
-                        <option value="Instagram">Instagram</option>
-                        <option value="Threads">Threads</option>
-                    </select>
+                    <select id="filterPlatform" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500"><option value="ALL">Semua Platform</option><option value="TikTok">TikTok</option><option value="Instagram">Instagram</option><option value="Threads">Threads</option></select>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 mb-1">Account Handle</label>
@@ -128,16 +91,15 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 mb-1">Range Tanggal (Upload)</label>
-                    <div class="flex items-center gap-1">
-                        <input type="date" id="filterStartDate" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-1.5 py-2 text-[11px] font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
+                    <div class="flex items-center gap-1.5">
+                        <input type="date" id="filterStartDate" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-[11px] font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
                         <span class="text-xs text-slate-400">-</span>
-                        <input type="date" id="filterEndDate" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-1.5 py-2 text-[11px] font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
+                        <input type="date" id="filterEndDate" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-[11px] font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Metrics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="md:col-span-2 bg-emerald-50 border border-emerald-200 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between">
                 <div>
@@ -158,7 +120,6 @@
                 </div>
             </div>
 
-            <!-- Top 1 Content Card -->
             <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white rounded-3xl p-6 shadow-md flex flex-col justify-between relative overflow-hidden">
                 <div>
                     <div class="flex items-center justify-between mb-3">
@@ -179,7 +140,6 @@
             </div>
         </div>
 
-        <!-- Top 10 Table & Pie Chart -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 bg-amber-50/80 border border-amber-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
                 <div>
@@ -193,7 +153,7 @@
                                 <tr class="bg-amber-100/70 text-amber-900 text-xs font-bold border-b border-amber-200">
                                     <th class="py-2.5 px-3 text-center">Rank</th>
                                     <th class="py-2.5 px-3">Account / Caption</th>
-                                    <th class="py-2.5 px-3 text-center">Periode</th>
+                                    <th class="py-2.5 px-3">Periode</th>
                                     <th class="py-2.5 px-3 text-right">Views</th>
                                     <th class="py-2.5 px-3 text-right">Likes</th>
                                     <th class="py-2.5 px-3 text-center">Link</th>
@@ -203,7 +163,7 @@
                         </table>
                     </div>
                     <div class="mt-4 flex justify-end">
-                        <button onclick="toggleAllPostsTable()" class="text-xs font-bold text-amber-600 hover:text-amber-800 flex items-center gap-1.5 transition">Lihat Semua Post <i class="fa-solid fa-arrow-right"></i></button>
+                        <button type="button" onclick="toggleAllPostsTable()" class="text-xs font-bold text-amber-600 hover:text-amber-800 flex items-center gap-1.5 transition">Lihat Semua Post <i class="fa-solid fa-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -218,7 +178,6 @@
             </div>
         </div>
 
-        <!-- Admin Secondary Charts -->
         <div id="adminOnlySecondaryCharts" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs">
                 <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1 flex items-center gap-2"><i class="fa-solid fa-chart-column text-emerald-600"></i> Tren Penambahan Views Per Hari</h3>
@@ -232,7 +191,6 @@
             </div>
         </div>
 
-        <!-- All Posts Table -->
         <div id="allPostsTableSection" class="hidden bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden mt-6">
             <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
                 <div>
@@ -246,7 +204,7 @@
                 <table class="w-full text-left border-collapse text-xs">
                     <thead>
                         <tr class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase tracking-wider">
-                            <th class="py-3 px-3 text-center">No</th>
+                            <th class="py-3 px-4 text-center">No</th>
                             <th class="py-3 px-4">Tgl Upload</th>
                             <th class="py-3 px-4">Account</th>
                             <th class="py-3 px-4 max-w-xs">Caption</th>
@@ -269,105 +227,62 @@
         </div>
     </main>
 
-    <!-- Modal: Import Data (Excel Upload + Google Sheets Sync) -->
     <div id="uploadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
-            <button onclick="closeModal('uploadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <button type="button" onclick="closeModal('uploadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             <div class="flex items-center gap-3">
-                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-2xl"><i class="fa-solid fa-file-import text-xl"></i></div>
-                <div><h3 class="text-lg font-bold text-slate-800">Import Data Post</h3><p class="text-xs text-slate-500">Upload dari file Excel (.xlsx / .csv) atau Link Google Sheets</p></div>
+                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-2xl"><i class="fa-solid fa-file-excel text-xl"></i></div>
+                <div><h3 class="text-lg font-bold text-slate-800">Import Excel / Sheets</h3><p class="text-xs text-slate-500">Upload file Excel lokal (.xlsx, .csv) atau hubungkan Google Sheets</p></div>
             </div>
-
-            <!-- Tab Switching Buttons -->
-            <div class="flex border-b border-slate-200 text-xs font-bold">
-                <button id="tabBtnExcel" onclick="switchImportTab('excel')" class="py-2.5 px-4 border-b-2 border-emerald-600 text-emerald-700 font-bold flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> File Excel / CSV</button>
-                <button id="tabBtnSheets" onclick="switchImportTab('sheets')" class="py-2.5 px-4 border-b-2 border-transparent text-slate-400 hover:text-slate-600 flex items-center gap-2"><i class="fa-solid fa-link"></i> Link Google Sheets</button>
-            </div>
-
-            <!-- Tab 1: Upload Excel File -->
-            <div id="importTabExcel" class="space-y-3 pt-1">
-                <!-- Template Banner & Download Button -->
-                <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 flex items-center justify-between gap-3">
-                    <div class="text-xs">
-                        <p class="font-bold text-emerald-900 flex items-center gap-1.5"><i class="fa-solid fa-circle-info text-emerald-600"></i> Belum punya format Excel?</p>
-                        <p class="text-[11px] text-emerald-700">Unduh contoh template yang sudah terformat siap diisi.</p>
-                    </div>
-                    <button type="button" onclick="downloadExcelTemplate()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition whitespace-nowrap shadow-xs">
-                        <i class="fa-solid fa-download"></i> Unduh Template
-                    </button>
-                </div>
-
+            <div class="space-y-3 text-xs pt-2">
                 <div>
-                    <label class="block font-semibold text-slate-600 text-xs mb-2">Pilih File Excel / CSV</label>
-                    <div class="border-2 border-dashed border-slate-200 hover:border-emerald-500 rounded-2xl p-6 text-center bg-slate-50 hover:bg-emerald-50/50 transition cursor-pointer" onclick="document.getElementById('excelFileInput').click()">
-                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-emerald-600 mb-2"></i>
-                        <p class="text-xs font-bold text-slate-700" id="excelFileNameDisplay">Klik untuk memilih file Excel (.xlsx, .xls, .csv)</p>
-                        <p class="text-[10px] text-slate-400 mt-1">Otomatis mendeteksi kolom Periode, Views, Likes, Account, dll.</p>
-                        <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" onchange="handleExcelFileSelect(event)" class="hidden">
-                    </div>
+                    <label class="block font-semibold text-slate-600 mb-1">Upload File Excel / CSV dari Komputer</label>
+                    <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs file:mr-4 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 cursor-pointer">
                 </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('uploadModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-600 text-xs">Batal</button>
-                    <button type="button" onclick="handleExcelUploadProcess()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-file-import"></i> Upload & Proses Excel</button>
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Atau URL Google Sheets Publik</label>
+                    <input type="url" id="sheetsUrlInput" placeholder="https://docs.google.com/spreadsheets/d/.../edit" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="flex items-center justify-between bg-emerald-50 p-3 rounded-2xl border border-emerald-200">
+                    <div>
+                        <p class="font-bold text-emerald-900">Butuh Template Excel?</p>
+                        <p class="text-[11px] text-emerald-700">Unduh contoh format file Excel agar data langsung cocok.</p>
+                    </div>
+                    <button type="button" onclick="downloadExcelTemplate()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition shadow-xs">Unduh Template</button>
                 </div>
             </div>
-
-            <!-- Tab 2: Sync Google Sheets -->
-            <div id="importTabSheets" class="hidden space-y-3 pt-1">
-                <div>
-                    <label class="block font-semibold text-slate-600 text-xs mb-1">URL / Link Google Sheets</label>
-                    <input type="url" id="sheetsUrlInput" placeholder="https://docs.google.com/spreadsheets/d/.../edit" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-emerald-500">
-                    <p class="text-[10px] text-slate-400 mt-1">*Pastikan spreadsheet berstatus <strong>"Anyone with the link can view"</strong> (Publik).</p>
-                </div>
-                <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-[11px] text-emerald-800 space-y-1">
-                    <p class="font-bold"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Smart Scan & Analisis:</p>
-                    <p>Sistem otomatis mengenali berbagai kolom nama periode, views, account, platform, dll.</p>
-                </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('uploadModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-600 text-xs">Batal</button>
-                    <button type="button" onclick="handleGoogleSheetsSync()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-sync"></i> Scan & Analisis Link</button>
-                </div>
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" onclick="closeModal('uploadModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-600 text-xs">Batal</button>
+                <button type="button" onclick="handleImportExcelOrSheets()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-upload"></i> Proses Data Excel</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Add Post (Updated with Period Selection) -->
     <div id="addPostModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
-            <button onclick="closeModal('addPostModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <button type="button" onclick="closeModal('addPostModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             <h3 class="text-lg font-bold text-slate-800">Tambah Post Baru</h3>
             <form onsubmit="handleAddPostSubmit(event)" class="space-y-3 text-xs">
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-3 gap-2">
+                    <div><label class="font-semibold text-slate-600 block mb-1">Periode</label><select id="newPeriod" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"><option value="Periode 1">Periode 1</option><option value="Periode 2">Periode 2</option><option value="Periode 3">Periode 3</option><option value="Periode 4">Periode 4</option><option value="Periode 5">Periode 5</option></select></div>
                     <div><label class="font-semibold text-slate-600 block mb-1">Account Handle</label><input type="text" id="newAccount" required placeholder="@username" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
                     <div><label class="font-semibold text-slate-600 block mb-1">Platform</label><select id="newPlatform" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"><option value="TikTok">TikTok</option><option value="Instagram">Instagram</option><option value="Threads">Threads</option></select></div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="font-semibold text-slate-600 block mb-1">Periode</label>
-                        <select id="newPeriode" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                            <option value="Periode 1">Periode 1</option>
-                            <option value="Periode 2">Periode 2</option>
-                            <option value="Periode 3">Periode 3</option>
-                            <option value="Periode 4">Periode 4</option>
-                            <option value="Periode 5">Periode 5</option>
-                        </select>
-                    </div>
                     <div><label class="font-semibold text-slate-600 block mb-1">Kategori</label><input type="text" id="newCategory" required placeholder="misal: Niche Media" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
                     <div><label class="font-semibold text-slate-600 block mb-1">Tanggal Upload</label><input type="date" id="newDate" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
-                    <div><label class="font-semibold text-slate-600 block mb-1">Link Post (URL)</label><input type="url" id="newUrl" placeholder="https://..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
                 </div>
                 <div><label class="font-semibold text-slate-600 block mb-1">Caption / Title</label><input type="text" id="newCaption" required placeholder="Isi caption ringkas..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
                 <div class="grid grid-cols-3 gap-2">
                     <div><label class="font-semibold text-slate-600 block mb-1">Views</label><input type="number" id="newViews" required value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2"></div>
                     <div><label class="font-semibold text-slate-600 block mb-1">Likes</label><input type="number" id="newLikes" required value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2"></div>
-                    <div><label class="font-semibold text-slate-600 block mb-1">Comments</label><input type="number" id="newComments" required value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2"></div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Comment</label><input type="number" id="newComments" required value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div><label class="font-semibold text-slate-600 block mb-1">Saves</label><input type="number" id="newSaves" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
-                    <div><label class="font-semibold text-slate-600 block mb-1">Shares</label><input type="number" id="newShares" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Save</label><input type="number" id="newSaves" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Share</label><input type="number" id="newShares" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
                 </div>
+                <div><label class="font-semibold text-slate-600 block mb-1">Link Post (URL)</label><input type="url" id="newUrl" placeholder="https://..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
                 <div class="pt-2 flex justify-end gap-2">
                     <button type="button" onclick="closeModal('addPostModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-600">Batal</button>
                     <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold">Simpan Post</button>
@@ -376,36 +291,33 @@
         </div>
     </div>
 
-    <!-- Modal: Add Project -->
     <div id="addProjectModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative space-y-4">
-            <button onclick="closeModal('addProjectModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <button type="button" onclick="closeModal('addProjectModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             <h3 class="text-base font-bold text-slate-800">Tambah Project Baru</h3>
             <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nama Project</label><input type="text" id="newProjectNameInput" placeholder="Contoh: Campaign Q4 2026" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"></div>
             <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closeModal('addProjectModal')" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl">Batal</button>
-                <button onclick="handleAddNewProject()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl">Buat Project</button>
+                <button type="button" onclick="closeModal('addProjectModal')" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl">Batal</button>
+                <button type="button" onclick="handleAddNewProject()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl">Buat Project</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Edit Project -->
     <div id="editProjectModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative space-y-4">
-            <button onclick="closeModal('editProjectModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <button type="button" onclick="closeModal('editProjectModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             <h3 class="text-base font-bold text-slate-800">Ubah Nama Project</h3>
             <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nama Project Baru</label><input type="text" id="editProjectNameInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"></div>
             <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closeModal('editProjectModal')" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl">Batal</button>
-                <button onclick="handleRenameProject()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl">Simpan Changes</button>
+                <button type="button" onclick="closeModal('editProjectModal')" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl">Batal</button>
+                <button type="button" onclick="handleRenameProject()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl">Simpan Changes</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Settings -->
     <div id="settingsModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative space-y-5">
-            <button onclick="closeModal('settingsModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <button type="button" onclick="closeModal('settingsModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             <div class="flex items-center gap-3">
                 <div class="p-3 bg-emerald-100 text-emerald-700 rounded-2xl"><i class="fa-solid fa-gear text-xl"></i></div>
                 <div><h3 class="text-lg font-bold text-slate-800">Pengaturan Dashboard</h3><p class="text-xs text-slate-500">Kelola akses admin, hubungkan data, dan ekspor laporan</p></div>
@@ -417,140 +329,161 @@
                         <span id="settingsAdminStatus" class="px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-slate-200 text-slate-700">Client Mode</span>
                     </div>
                     <div id="settingsLoginForm" class="pt-1">
-                        <p class="text-[11px] text-slate-500 mb-2">Masuk sebagai Admin (PIN: 0000) untuk membuka opsi edit, import data, dan manajemen project.</p>
+                        <p class="text-[11px] text-slate-500 mb-2">Masuk sebagai Admin untuk membuka opsi edit, hubungkan sheets, dan manajemen project.</p>
                         <div class="flex gap-2">
-                            <input type="password" id="settingsPinInput" placeholder="PIN Admin" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500">
-                            <button onclick="submitSettingsPin()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded-xl transition whitespace-nowrap">Login</button>
+                            <input type="password" id="settingsPinInput" placeholder="PIN Admin (0000)" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500">
+                            <button type="button" onclick="submitSettingsPin()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded-xl transition whitespace-nowrap">Login</button>
                         </div>
                     </div>
                     <div id="settingsLogoutForm" class="hidden pt-1 flex items-center justify-between">
                         <span class="text-[11px] text-emerald-700 font-semibold">✓ Anda sedang berada dalam Modus Admin</span>
-                        <button onclick="disableAdminMode(); updateSettingsUI();" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold px-3 py-1.5 rounded-xl transition">Logout Admin</button>
+                        <button type="button" onclick="disableAdminMode(); updateSettingsUI();" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold px-3 py-1.5 rounded-xl transition">Logout Admin</button>
                     </div>
                 </div>
 
                 <div id="settingsProjectSection" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
                     <span class="font-bold text-slate-700 block flex items-center gap-2"><i class="fa-solid fa-folder-plus text-emerald-600"></i> Kelola Project Laporan</span>
-                    <p class="text-[11px] text-slate-500">Tambah project baru, ubah nama project aktif, atau hapus project.</p>
+                    <p class="text-[11px] text-slate-500">Tambah project baru, jadikan project utama untuk klien, atau hapus project.</p>
                     <div class="flex flex-wrap gap-2 pt-1">
-                        <button onclick="closeModal('settingsModal'); openModal('addProjectModal');" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-plus text-[10px]"></i> Project Baru</button>
-                        <button onclick="closeModal('settingsModal'); openEditProjectModal();" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-pen-to-square text-[10px]"></i> Ubah Nama</button>
-                        <button onclick="closeModal('settingsModal'); confirmDeleteCurrentProject();" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-trash text-[10px]"></i> Hapus Project</button>
+                        <button type="button" onclick="closeModal('settingsModal'); openModal('addProjectModal');" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-plus text-[10px]"></i> Project Baru</button>
+                        <button type="button" onclick="closeModal('settingsModal'); openEditProjectModal();" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-pen-to-square text-[10px]"></i> Ubah Nama</button>
+                        <button type="button" onclick="closeModal('settingsModal'); setDefaultProject();" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-star text-[10px]"></i> Set Project Utama Client</button>
                     </div>
                 </div>
 
-                <div id="settingsImportSection" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
-                    <span class="font-bold text-slate-700 block flex items-center gap-2"><i class="fa-solid fa-file-import text-emerald-600"></i> Import Data Laporan</span>
-                    <p class="text-[11px] text-slate-500">Upload dari file Excel (.xlsx) atau hubungkan Google Sheets publik.</p>
-                    <div class="flex flex-wrap gap-2 pt-1">
-                        <button onclick="closeModal('settingsModal'); openModal('uploadModal');" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-file-excel"></i> Import Excel / Sheets</button>
-                    </div>
-                </div>
-
-                <div id="settingsExportSection" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
-                    <span class="font-bold text-slate-700 block flex items-center gap-2"><i class="fa-solid fa-file-export text-emerald-600"></i> Ekspor Laporan Client</span>
-                    <p class="text-[11px] text-slate-500">Unduh data laporan ke dalam format spreadsheet Excel.</p>
-                    <div class="flex flex-wrap gap-2 pt-1">
-                        <button onclick="exportExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-file-excel"></i> Export Excel (.xlsx)</button>
-                    </div>
+                <div id="settingsShareSection" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                    <span class="font-bold text-slate-700 block flex items-center gap-2"><i class="fa-solid fa-share-nodes text-emerald-600"></i> Link Client Mode</span>
+                    <p class="text-[11px] text-slate-500">Salin link khusus project ini untuk dibagikan ke klien agar langsung terbuka di mode client.</p>
+                    <button type="button" onclick="copyShareLink()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl transition flex items-center justify-center gap-2"><i class="fa-solid fa-link"></i> Salin Link Client Project Ini</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Custom Action Confirmation Dialog -->
     <div id="confirmModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative space-y-4 text-center">
-            <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mx-auto text-xl">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-            </div>
+            <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mx-auto text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
             <div>
                 <h3 id="confirmModalTitle" class="text-base font-bold text-slate-800">Konfirmasi Hapus</h3>
                 <p id="confirmModalMessage" class="text-xs text-slate-500 mt-1">Apakah Anda yakin ingin melanjutkan tindakan ini?</p>
             </div>
             <div class="flex items-center gap-2 pt-2">
                 <button type="button" onclick="closeConfirmModal()" class="w-1/2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition">Batal</button>
-                <button type="button" id="confirmModalActionBtn" onclick="executeConfirmAction()" class="w-1/2 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition">Ya, Hapus</button>
+                <button type="button" id="confirmModalActionBtn" onclick="executeConfirmAction()" class="w-1/2 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition">Ya, Lanjutkan</button>
             </div>
         </div>
     </div>
 
-    <script>
-        // Sample Posts with Period attribute included
-        const SAMPLE_POSTS = [
-            { id: 1, account: '@twins.lila', platform: 'TikTok', periode: 'Periode 1', category: 'Niche Media', caption: 'Terjebak di Rumah Sendiri! Barang Terror yang Gak Kasat Mata...', tgl_upload: '2026-06-12', views: 5700000, likes: 230000, cmt: 4500, save: 18200, share: 8900, url: 'https://tiktok.com' },
-            { id: 2, account: '@horrorlila', platform: 'TikTok', periode: 'Periode 1', category: 'Niche Media', caption: 'Sempat dikira kejadian nyata atau ODGJ yang lepas, lokasi ini...', tgl_upload: '2026-06-11', views: 4855386, likes: 198000, cmt: 3200, save: 14100, share: 6200, url: 'https://tiktok.com' },
-            { id: 3, account: '@obrolan.bioskop', platform: 'TikTok', periode: 'Periode 2', category: 'Niche Media', caption: 'Diluar nalar banget! Momen yang harusnya cuma sekadar nonton...', tgl_upload: '2026-06-10', views: 2900000, likes: 132800, cmt: 813, save: 13800, share: 4179, url: 'https://tiktok.com' },
-            { id: 4, account: '@seremfilm_', platform: 'TikTok', periode: 'Periode 2', category: 'Homeless Media', caption: 'Bagaimana cara sineas mendekati sebuah kisah nyata tanpa...', tgl_upload: '2026-06-12', views: 2150000, likes: 89000, cmt: 1200, save: 9100, share: 3100, url: 'https://tiktok.com' },
-            { id: 5, account: '@lila.story', platform: 'Instagram', periode: 'Periode 3', category: 'Niche Media', caption: 'Punya support system berbentuk kakak 1st tier emang rejeki...', tgl_upload: '2026-06-08', views: 1240000, likes: 54000, cmt: 980, save: 6100, share: 2200, url: 'https://instagram.com' },
-            { id: 6, account: '@filmlila', platform: 'Instagram', periode: 'Periode 3', category: 'UGC Media', caption: 'Jagat maya kembali dibikin nangis berjamaah dengan rilisan...', tgl_upload: '2026-06-12', views: 820000, likes: 31000, cmt: 420, save: 3200, share: 1100, url: 'https://instagram.com' },
-            { id: 7, account: '@ceritasilila', platform: 'TikTok', periode: 'Periode 4', category: 'Homeless Media', caption: 'Pernah kepikiran nggak sih, kenapa kadang plot twist terbaik...', tgl_upload: '2026-06-12', views: 780000, likes: 29000, cmt: 310, save: 2800, share: 950, url: 'https://tiktok.com' },
-            { id: 8, account: '@ngobrolfilm_', platform: 'TikTok', periode: 'Periode 4', category: 'Homeless Media', caption: 'Geger se-Blok M! Video amatir yang ngeremok nurani netizen...', tgl_upload: '2026-06-12', views: 650000, likes: 21000, cmt: 290, save: 2100, share: 800, url: 'https://tiktok.com' },
-            { id: 9, account: '@lilafilm_', platform: 'Threads', periode: 'Periode 5', category: 'Niche Media', caption: 'Definisi sibling goals yang sesungguhnya! Reaksi penonton...', tgl_upload: '2026-06-12', views: 420000, likes: 18000, cmt: 190, save: 1500, share: 400, url: 'https://threads.net' },
-            { id: 10, account: '@cipcuplim', platform: 'TikTok', periode: 'Periode 5', category: 'Homeless Media', caption: 'Bikin mewek banget! Nggak bisa nahan air mata pas scene...', tgl_upload: '2026-06-12', views: 292000, likes: 11000, cmt: 140, save: 900, share: 310, url: 'https://tiktok.com' }
-        ];
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        let projectsStore = { "Cerita Lila": [...SAMPLE_POSTS], "Campaign Media 2026": [], "Brand Performance Q3": [] };
+        const firebaseConfig = typeof __FIREBASE_CONFIG__ !== 'undefined' ? JSON.parse(__FIREBASE_CONFIG__) : {
+            apiKey: "AIzaSyDummyKeyForLocalEnvironmentOnly99",
+            authDomain: "dummy-project.firebaseapp.com",
+            projectId: "dummy-project",
+            storageBucket: "dummy-project.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdef"
+        };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-social-media-app';
+
+        let db = null, auth = null, currentUser = null;
+        let projectsStore = { "Cerita Lila": [] };
         let currentProjectName = "Cerita Lila", postsData = [], filteredPosts = [], isAdmin = false;
         let pieChartInstance = null, dailyChartInstance = null, topAccountChartInstance = null;
-        let selectedExcelFile = null;
-        let pendingConfirmAction = null;
+        let activeConfirmCallback = null;
 
-        // Custom Confirmation Dialog Handler
-        function showConfirmModal(title, message, actionCallback, btnText = 'Ya, Hapus', btnClass = 'bg-rose-600 hover:bg-rose-700') {
+        window.openModal = function(id) { const el = document.getElementById(id); if(el) el.classList.remove('hidden'); if(id === 'settingsModal') updateSettingsUI(); }
+        window.closeModal = function(id) { const el = document.getElementById(id); if(el) el.classList.add('hidden'); }
+        window.showToast = function(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white flex items-center gap-2 transition-all transform translate-y-10 opacity-0 ${type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'}`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i><span>${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-10', 'opacity-0'), 50);
+            setTimeout(() => { toast.classList.add('translate-y-10', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3500);
+        }
+        window.openConfirmModal = function(title, message, callback, btnText = 'Ya, Hapus') {
             document.getElementById('confirmModalTitle').innerText = title;
             document.getElementById('confirmModalMessage').innerText = message;
-            const btn = document.getElementById('confirmModalActionBtn');
-            btn.innerText = btnText;
-            btn.className = `w-1/2 py-2 text-white font-bold text-xs rounded-xl transition ${btnClass}`;
-            pendingConfirmAction = actionCallback;
-            openModal('confirmModal');
+            document.getElementById('confirmModalActionBtn').innerText = btnText;
+            activeConfirmCallback = callback;
+            window.openModal('confirmModal');
         }
+        window.closeConfirmModal = function() { window.closeModal('confirmModal'); activeConfirmCallback = null; }
+        window.executeConfirmAction = function() { if (activeConfirmCallback) activeConfirmCallback(); window.closeConfirmModal(); }
 
-        function closeConfirmModal() {
-            closeModal('confirmModal');
-            pendingConfirmAction = null;
-        }
-
-        function executeConfirmAction() {
-            if (typeof pendingConfirmAction === 'function') {
-                pendingConfirmAction();
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                currentUser = auth.currentUser;
+                await loadCloudData();
+            } catch (err) {
+                console.warn("Cloud connection fallback to local:", err);
+                loadLocalStorageFallback();
             }
-            closeConfirmModal();
-        }
-
-        // Custom Toast Notification System
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            const bgClass = type === 'error' ? 'bg-rose-800 text-white' : type === 'success' ? 'bg-emerald-800 text-white' : 'bg-slate-800 text-white';
-            const icon = type === 'error' ? 'fa-circle-exclamation text-rose-300' : type === 'success' ? 'fa-circle-check text-emerald-300' : 'fa-circle-info text-sky-300';
-            
-            toast.className = `${bgClass} shadow-2xl rounded-2xl px-4 py-3 text-xs font-semibold flex items-center gap-2.5 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto border border-white/10`;
-            toast.innerHTML = `<i class="fa-solid ${icon} text-base"></i><span>${message}</span>`;
-            
-            container.appendChild(toast);
-            setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 10);
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            loadProjectsFromStorage();
             checkURLParams();
-            setCurrentProject(currentProjectName);
         });
 
-        function loadProjectsFromStorage() {
-            const saved = localStorage.getItem('sm_report_projects_v3');
-            if (saved) { try { projectsStore = JSON.parse(saved); } catch(e) {} }
+        async function loadCloudData() {
+            if (!db || !currentUser) return loadLocalStorageFallback();
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data');
+                const snap = await getDoc(docRef);
+                if (snap.exists() && snap.data().projectsStore) {
+                    projectsStore = snap.data().projectsStore;
+                } else {
+                    projectsStore = { "Cerita Lila": [
+                        { id: 1, period: 'Periode 1', account: '@twins.lila', platform: 'TikTok', category: 'Niche Media', caption: 'Terjebak di Rumah Sendiri! Barang Terror yang Gak Kasat Mata...', tgl_upload: '2026-06-12', views: 5700000, likes: 230000, cmt: 4500, save: 18200, share: 8900, url: 'https://tiktok.com' },
+                        { id: 2, period: 'Periode 1', account: '@horrorlila', platform: 'TikTok', category: 'Niche Media', caption: 'Sempat dikira kejadian nyata atau ODGJ yang lepas, lokasi ini...', tgl_upload: '2026-06-11', views: 4855386, likes: 198000, cmt: 3200, save: 14100, share: 6200, url: 'https://tiktok.com' }
+                    ]};
+                    await saveCloudData();
+                }
+            } catch(e) {
+                console.error(e);
+            }
+            const defaultProj = localStorage.getItem('sm_default_project') || Object.keys(projectsStore)[0];
+            if(projectsStore[defaultProj]) currentProjectName = defaultProj;
             renderProjectDropdown();
+            setCurrentProject(currentProjectName);
         }
 
-        function saveProjectsToStorage() { localStorage.setItem('sm_report_projects_v3', JSON.stringify(projectsStore)); }
-        
+        async function saveCloudData() {
+            if (!db || !currentUser) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data');
+                await setDoc(docRef, { projectsStore }, { merge: true });
+            } catch(e) { console.error(e); }
+        }
+
+        function loadLocalStorageFallback() {
+            const saved = localStorage.getItem('sm_report_projects_v3');
+            if (saved) { try { projectsStore = JSON.parse(saved); } catch(e) {} }
+            else {
+                projectsStore = { "Cerita Lila": [
+                    { id: 1, period: 'Periode 1', account: '@twins.lila', platform: 'TikTok', category: 'Niche Media', caption: 'Terjebak di Rumah Sendiri! Barang Terror yang Gak Kasat Mata...', tgl_upload: '2026-06-12', views: 5700000, likes: 230000, cmt: 4500, save: 18200, share: 8900, url: 'https://tiktok.com' }
+                ]};
+            }
+            const defaultProj = localStorage.getItem('sm_default_project') || Object.keys(projectsStore)[0];
+            if(projectsStore[defaultProj]) currentProjectName = defaultProj;
+            renderProjectDropdown();
+            setCurrentProject(currentProjectName);
+        }
+
+        function saveProjectsToStorage() {
+            localStorage.setItem('sm_report_projects_v3', JSON.stringify(projectsStore));
+            saveCloudData();
+        }
+
         function renderProjectDropdown() {
             const select = document.getElementById('projectSelect');
             select.innerHTML = '';
@@ -562,8 +495,10 @@
             });
         }
 
-        function handleProjectChange() { setCurrentProject(document.getElementById('projectSelect').value); }
-        
+        window.handleProjectChange = function() {
+            setCurrentProject(document.getElementById('projectSelect').value);
+        }
+
         function setCurrentProject(name) {
             if(!projectsStore[name]) projectsStore[name] = [];
             currentProjectName = name; postsData = projectsStore[name];
@@ -573,13 +508,18 @@
         function checkURLParams() {
             const urlParams = new URLSearchParams(window.location.search);
             const projParam = urlParams.get('project');
-            if (projParam && projectsStore[projParam]) currentProjectName = projParam;
+            if (projParam && projectsStore[projParam]) {
+                currentProjectName = projParam;
+                renderProjectDropdown();
+                setCurrentProject(projParam);
+            }
             if (urlParams.get('admin') === 'true') enableAdminMode(); else disableAdminMode();
         }
 
-        function submitAdminPasscode() {
-            enableAdminMode();
-            showToast('Berhasil masuk sebagai Admin', 'success');
+        window.submitSettingsPin = function() {
+            if (document.getElementById('settingsPinInput').value.trim() === '0000') {
+                enableAdminMode(); document.getElementById('settingsPinInput').value = ''; window.showToast('Berhasil Login Modus Admin!', 'success'); window.closeModal('settingsModal');
+            } else { window.showToast('PIN Admin salah!', 'error'); }
         }
 
         function enableAdminMode() {
@@ -616,78 +556,83 @@
                 document.getElementById('settingsLoginForm').classList.add('hidden');
                 document.getElementById('settingsLogoutForm').classList.remove('hidden');
                 document.getElementById('settingsProjectSection').classList.remove('hidden');
-                document.getElementById('settingsImportSection').classList.remove('hidden');
-                document.getElementById('settingsExportSection').classList.remove('hidden');
+                document.getElementById('settingsShareSection').classList.remove('hidden');
             } else {
                 badge.innerText = 'Client Mode'; badge.className = 'px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-slate-200 text-slate-700';
                 document.getElementById('settingsLoginForm').classList.remove('hidden');
                 document.getElementById('settingsLogoutForm').classList.add('hidden');
                 document.getElementById('settingsProjectSection').classList.add('hidden');
-                document.getElementById('settingsImportSection').classList.add('hidden');
-                document.getElementById('settingsExportSection').classList.add('hidden');
+                document.getElementById('settingsShareSection').classList.add('hidden');
             }
         }
 
-        function submitSettingsPin() {
-            if (document.getElementById('settingsPinInput').value.trim() === '0000') {
-                enableAdminMode(); document.getElementById('settingsPinInput').value = ''; showToast('Login Admin Berhasil!', 'success');
-            } else { showToast('PIN Admin salah! (PIN standar: 0000)', 'error'); }
-        }
+        window.toggleAdminMenu = function() { document.getElementById('adminDropdownMenu').classList.toggle('hidden'); }
 
-        function toggleAdminMenu() { document.getElementById('adminDropdownMenu').classList.toggle('hidden'); }
-
-        function handleAddNewProject() {
+        window.handleAddNewProject = function() {
             const input = document.getElementById('newProjectNameInput'), name = input.value.trim();
-            if(!name) return showToast("Masukkan nama project!", 'error');
-            if(projectsStore[name]) return showToast("Nama project sudah ada!", 'error');
-            projectsStore[name] = []; saveProjectsToStorage(); renderProjectDropdown(); setCurrentProject(name); input.value = ''; closeModal('addProjectModal');
-            showToast(`Project "${name}" berhasil dibuat`, 'success');
+            if(!name) return window.showToast("Masukkan nama project!", 'error');
+            if(projectsStore[name]) return window.showToast("Nama project sudah ada!", 'error');
+            projectsStore[name] = []; saveProjectsToStorage(); renderProjectDropdown(); setCurrentProject(name); input.value = ''; window.closeModal('addProjectModal');
+            window.showToast(`Project "${name}" berhasil dibuat!`, 'success');
         }
 
-        function openEditProjectModal() { document.getElementById('editProjectNameInput').value = currentProjectName; openModal('editProjectModal'); }
-        
-        function handleRenameProject() {
+        window.openEditProjectModal = function() { document.getElementById('editProjectNameInput').value = currentProjectName; window.openModal('editProjectModal'); }
+        window.handleRenameProject = function() {
             const input = document.getElementById('editProjectNameInput'), newName = input.value.trim();
-            if(!newName || newName === currentProjectName) return closeModal('editProjectModal');
+            if(!newName || newName === currentProjectName) return window.closeModal('editProjectModal');
             projectsStore[newName] = projectsStore[currentProjectName]; delete projectsStore[currentProjectName]; currentProjectName = newName;
-            saveProjectsToStorage(); renderProjectDropdown(); setCurrentProject(newName); closeModal('editProjectModal');
-            showToast('Nama project berhasil diubah', 'success');
+            saveProjectsToStorage(); renderProjectDropdown(); setCurrentProject(newName); window.closeModal('editProjectModal');
+            window.showToast("Nama project berhasil diubah!", 'success');
         }
 
-        function confirmDeleteCurrentProject() {
-            if(Object.keys(projectsStore).length <= 1) return showToast("Minimal harus ada 1 project aktif!", 'error');
-            showConfirmModal(
-                "Hapus Project",
-                `Apakah Anda yakin ingin menghapus project "${currentProjectName}" beserta seluruh datanya?`,
-                () => {
-                    delete projectsStore[currentProjectName];
-                    saveProjectsToStorage(); 
-                    renderProjectDropdown(); 
-                    setCurrentProject(Object.keys(projectsStore)[0]);
-                    showToast('Project berhasil dihapus', 'info');
-                },
-                "Ya, Hapus Project"
-            );
+        window.setDefaultProject = function() {
+            localStorage.setItem('sm_default_project', currentProjectName);
+            window.showToast(`Project "${currentProjectName}" kini diset sebagai default utama untuk client!`, 'success');
         }
 
-        function confirmResetCurrentProjectData() {
-            showConfirmModal(
-                "Reset Data Project",
-                `Apakah Anda yakin ingin menghapus seluruh data post pada project "${currentProjectName}"? Data yang sudah dihapus tidak dapat dikembalikan.`,
-                () => {
-                    projectsStore[currentProjectName] = []; 
-                    saveProjectsToStorage(); 
-                    setCurrentProject(currentProjectName);
-                    showToast('Data project berhasil direset', 'info');
-                },
-                "Ya, Reset Data"
-            );
+        window.confirmDeleteCurrentProject = function() {
+            if(Object.keys(projectsStore).length <= 1) return window.showToast("Minimal ada 1 project aktif!", 'error');
+            window.openConfirmModal("Hapus Project", `Apakah Anda yakin ingin menghapus project "${currentProjectName}"?`, () => {
+                delete projectsStore[currentProjectName];
+                saveProjectsToStorage(); renderProjectDropdown(); setCurrentProject(Object.keys(projectsStore)[0]);
+                window.showToast("Project berhasil dihapus.", 'success');
+            }, 'Ya, Hapus Project');
+        }
+
+        window.confirmResetCurrentProjectData = function() {
+            window.openConfirmModal("Reset Data", `Reset semua data post untuk project "${currentProjectName}"?`, () => {
+                projectsStore[currentProjectName] = []; saveProjectsToStorage(); setCurrentProject(currentProjectName);
+                window.showToast("Data project berhasil di-reset.", 'success');
+            }, 'Ya, Reset Data');
+        }
+
+        window.copyShareLink = function() {
+            const currentUrl = window.location.href.split('?')[0];
+            const shareUrl = `${currentUrl}?project=${encodeURIComponent(currentProjectName)}`;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    window.showToast(`Link client "${currentProjectName}" berhasil disalin!`, 'success');
+                }).catch(() => fallbackCopyText(shareUrl));
+            } else { fallbackCopyText(shareUrl); }
+        }
+
+        function fallbackCopyText(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text; textArea.style.position = "fixed"; document.body.appendChild(textArea);
+            textArea.focus(); textArea.select();
+            try { document.execCommand('copy'); window.showToast("Link client berhasil disalin!", 'success'); }
+            catch (err) { window.showToast("Gagal menyalin link.", 'error'); }
+            document.body.removeChild(textArea);
         }
 
         function populateFilterDropdowns() {
-            const accounts = new Set(), categories = new Set();
-            postsData.forEach(p => { if(p.account) accounts.add(p.account); if(p.category) categories.add(p.category); });
+            const periods = new Set(), accounts = new Set(), categories = new Set();
+            postsData.forEach(p => { if(p.period) periods.add(p.period); if(p.account) accounts.add(p.account); if(p.category) categories.add(p.category); });
             
+            const pSelect = document.getElementById('filterPeriod');
+            pSelect.innerHTML = '<option value="ALL">Semua Periode</option>';
+            periods.forEach(per => pSelect.innerHTML += `<option value="${per}">${per}</option>`);
+
             const accSelect = document.getElementById('filterAccount');
             accSelect.innerHTML = '<option value="ALL">Semua Akun</option>';
             accounts.forEach(acc => accSelect.innerHTML += `<option value="${acc}">${acc}</option>`);
@@ -697,20 +642,18 @@
             categories.forEach(cat => catSelect.innerHTML += `<option value="${cat}">${cat}</option>`);
         }
 
-        function resetFilters() {
-            ['filterPeriode', 'filterPlatform', 'filterAccount', 'filterCategory'].forEach(id => document.getElementById(id).value = 'ALL');
+        window.resetFilters = function() {
+            ['filterPeriod', 'filterPlatform', 'filterAccount', 'filterCategory'].forEach(id => document.getElementById(id).value = 'ALL');
             ['filterStartDate', 'filterEndDate', 'tableSearch'].forEach(id => document.getElementById(id).value = '');
             applyFilters();
         }
 
-        // Filter calculation with Periode support
-        function applyFilters() {
-            const peF = document.getElementById('filterPeriode').value;
-            const pF = document.getElementById('filterPlatform').value, aF = document.getElementById('filterAccount').value;
+        window.applyFilters = function() {
+            const peF = document.getElementById('filterPeriod').value, pF = document.getElementById('filterPlatform').value, aF = document.getElementById('filterAccount').value;
             const cF = document.getElementById('filterCategory').value, sD = document.getElementById('filterStartDate').value, eD = document.getElementById('filterEndDate').value;
 
             filteredPosts = postsData.filter(p => {
-                if (peF !== 'ALL' && (p.periode || 'Periode 1') !== peF) return false;
+                if (peF !== 'ALL' && p.period !== peF) return false;
                 if (pF !== 'ALL' && p.platform !== pF) return false;
                 if (aF !== 'ALL' && p.account !== aF) return false;
                 if (cF !== 'ALL' && p.category !== cF) return false;
@@ -754,12 +697,12 @@
 
         function renderTop10Table(list) {
             const tbody = document.getElementById('top10TableBody'); tbody.innerHTML = '';
-            if (list.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-amber-700 font-medium">Tidak ada data post untuk filter ini.</td></tr>`; return; }
+            if (list.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-amber-700">Tidak ada data.</td></tr>`; return; }
             list.forEach((item, idx) => {
-                tbody.innerHTML += `<tr class="${idx % 2 === 0 ? 'bg-amber-50/40' : 'bg-white'} hover:bg-amber-100/50 transition">
+                tbody.innerHTML += `<tr class="${idx % 2 === 0 ? 'bg-amber-50/40' : 'bg-white'} hover:bg-amber-100/50">
                     <td class="py-2.5 px-3 text-center font-extrabold text-amber-900">#${idx + 1}</td>
                     <td class="py-2.5 px-3"><div class="font-bold text-amber-950">${item.account || '@user'}</div><div class="text-[10px] text-amber-800/80 truncate max-w-xs">${item.caption || '-'}</div></td>
-                    <td class="py-2.5 px-3 text-center"><span class="px-2 py-0.5 rounded-full bg-amber-100 font-bold text-[10px] text-amber-800">${item.periode || 'Periode 1'}</span></td>
+                    <td class="py-2.5 px-3"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-200 text-amber-900">${item.period || 'Periode 1'}</span></td>
                     <td class="py-2.5 px-3 text-right font-extrabold text-amber-950">${Number(item.views || 0).toLocaleString('id-ID')}</td>
                     <td class="py-2.5 px-3 text-right font-medium text-amber-900">${Number(item.likes || 0).toLocaleString('id-ID')}</td>
                     <td class="py-2.5 px-3 text-center"><a href="${item.url || '#'}" target="_blank" class="text-amber-700 hover:text-amber-900 font-bold underline text-[10px]">Link Post</a></td></tr>`;
@@ -794,7 +737,7 @@
             topAccountChartInstance = new Chart(ctx, { type: 'bar', data: { labels: accs, datasets: [{ data: accs.map(a => aViews[a]), backgroundColor: '#064e3b', borderRadius: 6 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
         }
 
-        function renderTable() {
+        window.renderTable = function() {
             const tbody = document.getElementById('postsTableBody'), sVal = document.getElementById('tableSearch').value.toLowerCase();
             const display = filteredPosts.filter(p => (p.account || '').toLowerCase().includes(sVal) || (p.caption || '').toLowerCase().includes(sVal));
             
@@ -802,191 +745,101 @@
             document.getElementById('tablePaginationInfo').innerText = `Showing ${display.length} entries`;
             tbody.innerHTML = display.length === 0 ? `<tr><td colspan="11" class="py-8 text-center text-slate-400">Tidak ada data.</td></tr>` : '';
 
-            display.forEach((post, index) => {
+            display.forEach((post, idx) => {
                 const v = Number(post.views || 0), l = Number(post.likes || 0), c = Number(post.cmt || post.comments || 0), s = Number(post.save || post.saves || 0), sh = Number(post.share || post.shares || 0);
-                
-                // Formatted render according to specified order: No, Tgl Upload, Account, Caption, Link Post, Views, Likes, Comment, Save, Share
                 tbody.innerHTML += `<tr class="hover:bg-slate-50 transition">
-                    <td class="py-3 px-3 text-center font-bold text-slate-400">${index + 1}</td>
-                    <td class="py-3 px-4 font-semibold text-slate-600 whitespace-nowrap">${post.tgl_upload || '-'}</td>
-                    <td class="py-3 px-4 font-bold text-slate-800">
-                        <div>${post.account || '-'}</div>
-                        <div class="flex items-center gap-1 mt-0.5">
-                            <span class="px-1.5 py-0.5 text-[9px] font-extrabold rounded-md bg-slate-100 text-slate-600">${post.platform || 'TikTok'}</span>
-                            <span class="px-1.5 py-0.5 text-[9px] font-extrabold rounded-md bg-emerald-100 text-emerald-800">${post.periode || 'Periode 1'}</span>
-                        </div>
-                    </td>
+                    <td class="py-3 px-4 text-center font-bold text-slate-500">${idx + 1}</td>
+                    <td class="py-3 px-4 text-slate-600">${post.tgl_upload || '-'}</td>
+                    <td class="py-3 px-4 font-bold text-slate-800">${post.account || '-'}</td>
                     <td class="py-3 px-4 max-w-xs truncate" title="${post.caption || ''}">${post.caption || '-'}</td>
-                    <td class="py-3 px-4 text-center">
-                        <a href="${post.url || '#'}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 rounded-xl border border-slate-200 transition font-bold text-[10px]">
-                            <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i> Link Post
-                        </a>
-                    </td>
+                    <td class="py-3 px-4 text-center"><a href="${post.url || '#'}" target="_blank" class="text-emerald-600 hover:text-emerald-800 font-bold underline">Link Post</a></td>
                     <td class="py-3 px-4 text-right font-extrabold text-slate-900">${v.toLocaleString('id-ID')}</td>
-                    <td class="py-3 px-4 text-right font-semibold text-slate-700">${l.toLocaleString('id-ID')}</td>
-                    <td class="py-3 px-4 text-right font-semibold text-slate-700">${c.toLocaleString('id-ID')}</td>
-                    <td class="py-3 px-4 text-right font-semibold text-slate-700">${s.toLocaleString('id-ID')}</td>
-                    <td class="py-3 px-4 text-right font-semibold text-slate-700">${sh.toLocaleString('id-ID')}</td>
-                    <td class="py-3 px-4 text-center">
-                        ${isAdmin ? `<button onclick="confirmDeletePost(${post.id})" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition" title="Hapus Post"><i class="fa-solid fa-trash text-xs"></i></button>` : `<span class="text-slate-300">-</span>`}
-                    </td>
-                </tr>`;
+                    <td class="py-3 px-4 text-right font-semibold">${l.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right">${c.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right">${s.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right">${sh.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-center">${isAdmin ? `<button type="button" onclick="confirmDeletePost(${post.id})" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg"><i class="fa-solid fa-trash text-xs"></i></button>` : '<span class="text-slate-300">-</span>'}</td></tr>`;
             });
         }
 
-        function downloadExcelTemplate() {
-            const templateData = [
-                {
-                    "Periode": "Periode 1",
-                    "Tanggal Upload": "2026-06-12",
-                    "Account": "@twins.lila",
-                    "Platform": "TikTok",
-                    "Kategori": "Niche Media",
-                    "Caption": "Terjebak di Rumah Sendiri! Barang Terror yang Gak Kasat Mata...",
-                    "Link Post": "https://tiktok.com/@twins.lila/video/1",
-                    "Views": 5700000,
-                    "Likes": 230000,
-                    "Comment": 4500,
-                    "Save": 18200,
-                    "Share": 8900
-                },
-                {
-                    "Periode": "Periode 1",
-                    "Tanggal Upload": "2026-06-11",
-                    "Account": "@horrorlila",
-                    "Platform": "TikTok",
-                    "Kategori": "Niche Media",
-                    "Caption": "Sempat dikira kejadian nyata atau ODGJ yang lepas...",
-                    "Link Post": "https://tiktok.com/@horrorlila/video/2",
-                    "Views": 4855386,
-                    "Likes": 198000,
-                    "Comment": 3200,
-                    "Save": 14100,
-                    "Share": 6200
-                },
-                {
-                    "Periode": "Periode 2",
-                    "Tanggal Upload": "2026-06-10",
-                    "Account": "@lila.story",
-                    "Platform": "Instagram",
-                    "Kategori": "Niche Media",
-                    "Caption": "Punya support system berbentuk kakak 1st tier emang rejeki...",
-                    "Link Post": "https://instagram.com/p/123456",
-                    "Views": 1240000,
-                    "Likes": 54000,
-                    "Comment": 980,
-                    "Save": 6100,
-                    "Share": 2200
-                }
-            ];
-
-            const ws = XLSX.utils.json_to_sheet(templateData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Template_Report");
-            XLSX.writeFile(wb, "Template_Import_Laporan_Excel.xlsx");
-            showToast("Template Excel berhasil diunduh!", "success");
-        }
-
-        function sortTable(key) { if (key === 'views') { filteredPosts.sort((a, b) => Number(b.views || 0) - Number(a.views || 0)); renderTable(); } }
+        window.sortTable = function(key) { if (key === 'views') { filteredPosts.sort((a, b) => Number(b.views || 0) - Number(a.views || 0)); renderTable(); } }
         
-        function confirmDeletePost(id) { 
-            showConfirmModal(
-                "Hapus Post",
-                "Apakah Anda yakin ingin menghapus post ini dari daftar laporan?",
-                () => {
-                    postsData = postsData.filter(p => p.id !== id); 
-                    projectsStore[currentProjectName] = postsData; 
-                    saveProjectsToStorage(); 
-                    setCurrentProject(currentProjectName); 
-                    showToast('Post berhasil dihapus', 'info');
-                },
-                "Ya, Hapus"
-            );
+        window.confirmDeletePost = function(id) {
+            window.openConfirmModal("Hapus Post", "Apakah Anda yakin ingin menghapus post ini dari laporan?", () => {
+                postsData = postsData.filter(p => p.id !== id);
+                projectsStore[currentProjectName] = postsData;
+                saveProjectsToStorage();
+                setCurrentProject(currentProjectName);
+                window.showToast("Post berhasil dihapus.", 'success');
+            }, 'Ya, Hapus');
         }
 
-        function toggleAllPostsTable() { const ts = document.getElementById('allPostsTableSection'); ts.classList.toggle('hidden'); ts.scrollIntoView({ behavior: 'smooth' }); }
+        window.toggleAllPostsTable = function() { const ts = document.getElementById('allPostsTableSection'); ts.classList.toggle('hidden'); ts.scrollIntoView({ behavior: 'smooth' }); }
 
-        // Import Tab Switcher
-        function switchImportTab(tab) {
-            if (tab === 'excel') {
-                document.getElementById('importTabExcel').classList.remove('hidden');
-                document.getElementById('importTabSheets').classList.add('hidden');
-                document.getElementById('tabBtnExcel').className = "py-2.5 px-4 border-b-2 border-emerald-600 text-emerald-700 font-bold flex items-center gap-2";
-                document.getElementById('tabBtnSheets').className = "py-2.5 px-4 border-b-2 border-transparent text-slate-400 hover:text-slate-600 flex items-center gap-2";
-            } else {
-                document.getElementById('importTabSheets').classList.remove('hidden');
-                document.getElementById('importTabExcel').classList.add('hidden');
-                document.getElementById('tabBtnSheets').className = "py-2.5 px-4 border-b-2 border-emerald-600 text-emerald-700 font-bold flex items-center gap-2";
-                document.getElementById('tabBtnExcel').className = "py-2.5 px-4 border-b-2 border-transparent text-slate-400 hover:text-slate-600 flex items-center gap-2";
-            }
+        window.downloadExcelTemplate = function() {
+            const templateData = [
+                { "Periode": "Periode 1", "Account": "@twins.lila", "Platform": "TikTok", "Category": "Niche Media", "Tanggal Upload": "2026-06-12", "Caption": "Terjebak di Rumah Sendiri! Barang Terror yang Gak Kasat Mata...", "Views": 5700000, "Likes": 230000, "Comment": 4500, "Save": 18200, "Share": 8900, "Link": "https://tiktok.com/@twins.lila/video/1" },
+                { "Periode": "Periode 1", "Account": "@horrorlila", "Platform": "TikTok", "Category": "Niche Media", "Tanggal Upload": "2026-06-11", "Caption": "Sempat dikira kejadian nyata atau ODGJ yang lepas, lokasi ini...", "Views": 4855386, "Likes": 198000, "Comment": 3200, "Save": 14100, "Share": 6200, "Link": "https://tiktok.com/@horrorlila/video/2" }
+            ];
+            const ws = XLSX.utils.json_to_sheet(templateData), wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Template");
+            XLSX.writeFile(wb, `template_laporan_social_media.xlsx`);
+            window.showToast("Template Excel berhasil diunduh!", 'success');
         }
 
-        // Excel File Selection UI Handler
-        function handleExcelFileSelect(e) {
-            const file = e.target.files[0];
-            if (file) {
-                selectedExcelFile = file;
-                document.getElementById('excelFileNameDisplay').innerHTML = `<i class="fa-solid fa-file-excel text-emerald-600"></i> ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
-            }
-        }
-
-        // Excel File Processing
-        function handleExcelUploadProcess() {
-            if (!selectedExcelFile) return showToast("Silakan pilih file Excel (.xlsx / .csv) terlebih dahulu!", 'error');
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const jsonRows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-
-                    if (jsonRows && jsonRows.length > 0) {
-                        processSmartAIIntelligence(jsonRows, `File Excel (${selectedExcelFile.name})`);
-                        selectedExcelFile = null;
-                        document.getElementById('excelFileInput').value = '';
-                        document.getElementById('excelFileNameDisplay').innerText = "Klik untuk memilih file Excel (.xlsx, .xls, .csv)";
-                    } else {
-                        showToast("File Excel kosong atau format tidak valid.", 'error');
-                    }
-                } catch(err) {
-                    console.error(err);
-                    showToast("Gagal membaca file Excel!", 'error');
-                }
-            };
-            reader.readAsArrayBuffer(selectedExcelFile);
-        }
-
-        // Google Sheets Integration
-        async function handleGoogleSheetsSync() {
+        window.handleImportExcelOrSheets = function() {
+            const fileInput = document.getElementById('excelFileInput');
             const rawUrl = document.getElementById('sheetsUrlInput').value.trim();
-            if (!rawUrl) return showToast("Masukkan link Google Sheets!", 'error');
-            const match = rawUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-            if (!match) return showToast("URL Google Sheets tidak valid!", 'error');
-            
-            const exportCsvUrl = `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`;
-            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(exportCsvUrl)}`;
 
-            Papa.parse(proxyUrl, {
-                download: true, header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    if (results.data && results.data.length > 0) {
-                        processSmartAIIntelligence(results.data, "Google Sheets");
-                    } else {
-                        showToast("Spreadsheet kosong atau tidak dapat diakses.", 'error');
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json(firstSheet);
+                        if (rows && rows.length > 0) {
+                            processSmartAIIntelligence(rows);
+                        } else {
+                            window.showToast("File Excel kosong atau format tidak sesuai.", 'error');
+                        }
+                    } catch(err) {
+                        console.error(err);
+                        window.showToast("Gagal membaca file Excel.", 'error');
                     }
-                },
-                error: (err) => {
-                    console.error(err);
-                    showToast("Gagal membaca Google Sheets. Pastikan akses link sudah 'Anyone with the link can view' (Publik).", 'error');
-                }
-            });
+                };
+                reader.readAsArrayBuffer(file);
+                return;
+            }
+
+            if (rawUrl) {
+                const match = rawUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (!match) return window.showToast("URL Google Sheets tidak valid!", 'error');
+                const exportCsvUrl = `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`;
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(exportCsvUrl)}`;
+
+                Papa.parse(proxyUrl, {
+                    download: true, header: true, skipEmptyLines: true,
+                    complete: function(results) {
+                        if (results.data && results.data.length > 0) {
+                            processSmartAIIntelligence(results.data);
+                        } else {
+                            window.showToast("Spreadsheet kosong atau tidak dapat diakses.", 'error');
+                        }
+                    },
+                    error: () => {
+                        window.showToast("Gagal membaca Google Sheets. Pastikan akses link sudah publik.", 'error');
+                    }
+                });
+                return;
+            }
+
+            window.showToast("Pilih file Excel atau masukkan URL Google Sheets terlebih dahulu!", 'error');
         }
 
-        // AI Smart Intelligence Mapping (Includes Periode mapping)
-        function processSmartAIIntelligence(rows, sourceName = "Data") {
+        function processSmartAIIntelligence(rows) {
             const parsed = rows.map((row, idx) => {
                 const getVal = (possibleKeys, fallback = '') => {
                     const rowKeys = Object.keys(row);
@@ -1003,21 +856,8 @@
                     return fallback;
                 };
 
-                // Smart Mapping Periode Detection
-                let rawPeriode = getVal(['periode', 'period', 'batch', 'wave', 'gelombang', 'tahap', 'siklus'], 'Periode 1');
-                let periode = 'Periode 1';
-                if (rawPeriode) {
-                    let strP = String(rawPeriode).trim();
-                    if (/^[1-5]$/.test(strP)) {
-                        periode = `Periode ${strP}`;
-                    } else if (/^periode\s*[1-5]$/i.test(strP)) {
-                        let num = strP.match(/[1-5]/)[0];
-                        periode = `Periode ${num}`;
-                    } else {
-                        periode = strP;
-                    }
-                }
-
+                const rawPer = String(getVal(['periode', 'period', 'batch', 'wave', 'gelombang', 'tahap'], 'Periode 1'));
+                const period = rawPer.toLowerCase().includes('periode') || rawPer.toLowerCase().includes('batch') || rawPer.toLowerCase().includes('wave') ? rawPer : `Periode ${rawPer.replace(/[^0-9]/g, '') || '1'}`;
                 const account = getVal(['account', 'akun', 'username', 'handle', 'creator', 'profil'], '@user');
                 const platform = getVal(['platform', 'sosmed', 'channel', 'media', 'aplikasi'], 'TikTok');
                 const category = getVal(['category', 'kategori', 'niche', 'genre', 'topik'], 'General');
@@ -1039,9 +879,9 @@
 
                 return {
                     id: Date.now() + idx,
+                    period: String(period),
                     account: String(account),
                     platform: String(platform),
-                    periode: String(periode),
                     category: String(category),
                     caption: String(caption),
                     tgl_upload: String(tgl_upload),
@@ -1054,57 +894,33 @@
             projectsStore[currentProjectName] = postsData;
             saveProjectsToStorage(); 
             setCurrentProject(currentProjectName); 
-            closeModal('uploadModal');
+            window.closeModal('uploadModal');
             document.getElementById('sheetsUrlInput').value = '';
-            showToast(`Berhasil mengimpor ${parsed.length} data post dari ${sourceName}!`, 'success');
+            document.getElementById('excelFileInput').value = '';
+            window.showToast(`Berhasil mengimpor ${parsed.length} data post!`, 'success');
         }
 
-        function handleAddPostSubmit(e) {
+        window.handleAddPostSubmit = function(e) {
             e.preventDefault();
             postsData.unshift({
-                id: Date.now(),
-                account: document.getElementById('newAccount').value.trim(),
-                platform: document.getElementById('newPlatform').value,
-                periode: document.getElementById('newPeriode').value,
-                category: document.getElementById('newCategory').value.trim(),
-                caption: document.getElementById('newCaption').value.trim(),
-                tgl_upload: document.getElementById('newDate').value,
-                views: Number(document.getElementById('newViews').value),
-                likes: Number(document.getElementById('newLikes').value),
-                cmt: Number(document.getElementById('newComments').value),
-                save: Number(document.getElementById('newSaves').value),
-                share: Number(document.getElementById('newShares').value),
-                url: document.getElementById('newUrl').value.trim() || '#'
+                id: Date.now(), period: document.getElementById('newPeriod').value,
+                account: document.getElementById('newAccount').value.trim(), platform: document.getElementById('newPlatform').value,
+                category: document.getElementById('newCategory').value.trim(), caption: document.getElementById('newCaption').value.trim(),
+                tgl_upload: document.getElementById('newDate').value, views: Number(document.getElementById('newViews').value),
+                likes: Number(document.getElementById('newLikes').value), cmt: Number(document.getElementById('newComments').value),
+                save: Number(document.getElementById('newSaves').value), share: Number(document.getElementById('newShares').value), url: document.getElementById('newUrl').value.trim() || '#'
             });
-            projectsStore[currentProjectName] = postsData; saveProjectsToStorage(); setCurrentProject(currentProjectName); closeModal('addPostModal');
-            showToast('Post baru berhasil ditambahkan', 'success');
+            projectsStore[currentProjectName] = postsData; saveProjectsToStorage(); setCurrentProject(currentProjectName); window.closeModal('addPostModal');
+            window.showToast("Post baru berhasil disimpan!", 'success');
         }
 
-        function exportExcel() {
-            if (filteredPosts.length === 0) return showToast("Tidak ada data untuk diekspor!", 'error');
-            const data = filteredPosts.map((p, idx) => ({
-                "No": idx + 1,
-                "Tgl Upload": p.tgl_upload,
-                "Account": p.account,
-                "Caption": p.caption,
-                "Link Post": p.url,
-                "Views": p.views,
-                "Likes": p.likes,
-                "Comment": p.cmt,
-                "Save": p.save,
-                "Share": p.share,
-                "Platform": p.platform,
-                "Periode": p.periode || 'Periode 1',
-                "Category": p.category
-            }));
+        window.exportExcel = function() {
+            if (filteredPosts.length === 0) return window.showToast("Tidak ada data untuk diexport!", 'error');
+            const data = filteredPosts.map((p, idx) => ({ "No": idx + 1, "Periode": p.period, "Tgl Upload": p.tgl_upload, "Account": p.account, "Platform": p.platform, "Category": p.category, "Caption": p.caption, "Views": p.views, "Likes": p.likes, "Comment": p.cmt, "Save": p.save, "Share": p.share, "Link Post": p.url }));
             const ws = XLSX.utils.json_to_sheet(data), wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Report");
-            XLSX.writeFile(wb, `report_${currentProjectName.toLowerCase().replace(/\s+/g, '_')}.xlsx`);
-            showToast('Laporan berhasil di-export ke Excel', 'success');
+            XLSX.utils.book_append_sheet(wb, ws, "Report"); XLSX.writeFile(wb, `report_${currentProjectName.toLowerCase().replace(/\s+/g, '_')}.xlsx`);
+            window.showToast("Laporan berhasil diexport ke Excel!", 'success');
         }
-
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); if(id==='settingsModal') updateSettingsUI(); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
     </script>
 </body>
 </html>
