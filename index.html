@@ -476,7 +476,7 @@
                     await saveCloudData();
                 }
             } catch(e) {
-                console.error(e);
+                console.error("Cloud read warning:", e);
             }
             const defaultProj = localStorage.getItem('sm_default_project') || Object.keys(projectsStore)[0];
             if(projectsStore[defaultProj]) currentProjectName = defaultProj;
@@ -489,11 +489,11 @@
             try {
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data');
                 await setDoc(docRef, { projectsStore }, { merge: true });
-            } catch(e) { console.error(e); }
+            } catch(e) { console.error("Cloud write warning:", e); }
         }
 
         function loadLocalStorageFallback() {
-            const saved = localStorage.getItem('sm_report_projects_v4');
+            const saved = localStorage.getItem('sm_report_projects_v5');
             if (saved) { try { projectsStore = JSON.parse(saved); } catch(e) {} }
             else {
                 projectsStore = { "Cerita Lila": [
@@ -507,7 +507,7 @@
         }
 
         function saveProjectsToStorage() {
-            localStorage.setItem('sm_report_projects_v4', JSON.stringify(projectsStore));
+            localStorage.setItem('sm_report_projects_v5', JSON.stringify(projectsStore));
             saveCloudData();
         }
 
@@ -952,7 +952,7 @@
             if (filteredPosts.length === 0) return window.showToast("Tidak ada data untuk diexport!", 'error');
             const data = filteredPosts.map((p, idx) => ({ "No": idx + 1, "Periode": p.period, "Tgl Upload": p.tgl_upload, "Account": p.account, "Platform": p.platform, "Category": p.category, "Caption": p.caption, "Views": p.views, "Likes": p.likes, "Comment": p.cmt, "Save": p.save, "Share": p.share, "Link Post": p.url }));
             const ws = XLSX.utils.json_to_sheet(data), wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Report"); XLSX.writeFile(wb, `report_${currentProjectName.toLowerCase().replace(/\s+/g, '_')}.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, "Report"); XLSX.writeFile(wb, `report_${currentProjectName.toLowerCase().status ? currentProjectName.toLowerCase() : 'project'}.xlsx`);
             window.showToast("Laporan berhasil diexport ke Excel!", 'success');
         }
     </script>
