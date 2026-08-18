@@ -415,10 +415,16 @@
             messagingSenderId: "1234567890",
             appId: "1:1234567890:web:abcdef"
         };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-social-media-app';
+        // Menggunakan shared App ID statis agar seluruh browser & akun membaca database yang sama persis
+        const appId = 'shared-social-media-client-report-v5';
 
         let db = null, auth = null, currentUser = null;
-        let projectsStore = { "Cerita Lila": [] };
+        let projectsStore = { 
+            "Cerita Lila": [
+                { id: 1, period: 'Periode 1', account: '@twins.lila', platform: 'TikTok', category: 'Niche Media', caption: 'Terjebak di Rumah Sendiri! Barang Terror yang Gak Kasat Mata...', tgl_upload: '2026-06-12', views: 5700000, likes: 230000, cmt: 4500, save: 18200, share: 8900, url: 'https://tiktok.com' }
+            ],
+            "Campaign Samsung": [] 
+        };
         let currentProjectName = "Cerita Lila", postsData = [], filteredPosts = [], isAdmin = false;
         let pieChartInstance = null, dailyChartInstance = null, topAccountChartInstance = null;
         let activeConfirmCallback = null;
@@ -444,6 +450,9 @@
         window.executeConfirmAction = function() { if (activeConfirmCallback) activeConfirmCallback(); window.closeConfirmModal(); }
 
         window.addEventListener('DOMContentLoaded', async () => {
+            const savedAdmin = sessionStorage.getItem('sm_admin_active');
+            if(savedAdmin === 'true') enableAdminMode(); else disableAdminMode();
+
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
@@ -470,9 +479,6 @@
                 if (snap.exists() && snap.data().projectsStore) {
                     projectsStore = snap.data().projectsStore;
                 } else {
-                    projectsStore = { "Cerita Lila": [
-                        { id: 1, period: 'Periode 1', account: '@twins.lila', platform: 'TikTok', category: 'Niche Media', caption: 'Terjebak di Rumah Sendiri! Barang Terror yang Gak Kasat Mata...', tgl_upload: '2026-06-12', views: 5700000, likes: 230000, cmt: 4500, save: 18200, share: 8900, url: 'https://tiktok.com' }
-                    ]};
                     await saveCloudData();
                 }
             } catch(e) {
@@ -493,13 +499,8 @@
         }
 
         function loadLocalStorageFallback() {
-            const saved = localStorage.getItem('sm_report_projects_v5');
+            const saved = localStorage.getItem('sm_report_projects_shared_v5');
             if (saved) { try { projectsStore = JSON.parse(saved); } catch(e) {} }
-            else {
-                projectsStore = { "Cerita Lila": [
-                    { id: 1, period: 'Periode 1', account: '@twins.lila', platform: 'TikTok', category: 'Niche Media', caption: 'Terjebak di Rumah Sendiri! Barang Terror yang Gak Kasat Mata...', tgl_upload: '2026-06-12', views: 5700000, likes: 230000, cmt: 4500, save: 18200, share: 8900, url: 'https://tiktok.com' }
-                ]};
-            }
             const defaultProj = localStorage.getItem('sm_default_project') || Object.keys(projectsStore)[0];
             if(projectsStore[defaultProj]) currentProjectName = defaultProj;
             renderProjectDropdown();
@@ -507,7 +508,7 @@
         }
 
         function saveProjectsToStorage() {
-            localStorage.setItem('sm_report_projects_v5', JSON.stringify(projectsStore));
+            localStorage.setItem('sm_report_projects_shared_v5', JSON.stringify(projectsStore));
             saveCloudData();
         }
 
@@ -542,9 +543,6 @@
             }
             if (urlParams.get('admin') === 'true') {
                 enableAdminMode();
-            } else {
-                const savedAdmin = sessionStorage.getItem('sm_admin_active');
-                if(savedAdmin === 'true') enableAdminMode(); else disableAdminMode();
             }
         }
 
@@ -952,7 +950,7 @@
             if (filteredPosts.length === 0) return window.showToast("Tidak ada data untuk diexport!", 'error');
             const data = filteredPosts.map((p, idx) => ({ "No": idx + 1, "Periode": p.period, "Tgl Upload": p.tgl_upload, "Account": p.account, "Platform": p.platform, "Category": p.category, "Caption": p.caption, "Views": p.views, "Likes": p.likes, "Comment": p.cmt, "Save": p.save, "Share": p.share, "Link Post": p.url }));
             const ws = XLSX.utils.json_to_sheet(data), wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Report"); XLSX.writeFile(wb, `report_${currentProjectName.toLowerCase().status ? currentProjectName.toLowerCase() : 'project'}.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, "Report"); XLSX.writeFile(wb, `report_${currentProjectName.toLowerCase().replace(/\s+/g, '_')}.xlsx`);
             window.showToast("Laporan berhasil diexport ke Excel!", 'success');
         }
     </script>
