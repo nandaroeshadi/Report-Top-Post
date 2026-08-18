@@ -75,7 +75,14 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 mb-1">Periode</label>
-                    <select id="filterPeriod" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500"><option value="ALL">Semua Periode</option><option value="Periode 1">Periode 1</option><option value="Periode 2">Periode 2</option><option value="Periode 3">Periode 3</option><option value="Periode 4">Periode 4</option><option value="Periode 5">Periode 5</option></select>
+                    <select id="filterPeriod" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
+                        <option value="ALL">Semua Periode</option>
+                        <option value="Periode 1">Periode 1</option>
+                        <option value="Periode 2">Periode 2</option>
+                        <option value="Periode 3">Periode 3</option>
+                        <option value="Periode 4">Periode 4</option>
+                        <option value="Periode 5">Periode 5</option>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 mb-1">Platform</label>
@@ -87,7 +94,12 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 mb-1">Kategori Content</label>
-                    <select id="filterCategory" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500"><option value="ALL">Semua Kategori</option></select>
+                    <select id="filterCategory" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
+                        <option value="ALL">Semua Kategori</option>
+                        <option value="Niche Media">Niche Media</option>
+                        <option value="Homeless Media">Homeless Media</option>
+                        <option value="UGC Media">UGC Media</option>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 mb-1">Range Tanggal (Upload)</label>
@@ -264,12 +276,28 @@
             <h3 class="text-lg font-bold text-slate-800">Tambah Post Baru</h3>
             <form onsubmit="handleAddPostSubmit(event)" class="space-y-3 text-xs">
                 <div class="grid grid-cols-3 gap-2">
-                    <div><label class="font-semibold text-slate-600 block mb-1">Periode</label><select id="newPeriod" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"><option value="Periode 1">Periode 1</option><option value="Periode 2">Periode 2</option><option value="Periode 3">Periode 3</option><option value="Periode 4">Periode 4</option><option value="Periode 5">Periode 5</option></select></div>
+                    <div>
+                        <label class="font-semibold text-slate-600 block mb-1">Periode</label>
+                        <select id="newPeriod" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                            <option value="Periode 1">Periode 1</option>
+                            <option value="Periode 2">Periode 2</option>
+                            <option value="Periode 3">Periode 3</option>
+                            <option value="Periode 4">Periode 4</option>
+                            <option value="Periode 5">Periode 5</option>
+                        </select>
+                    </div>
                     <div><label class="font-semibold text-slate-600 block mb-1">Account Handle</label><input type="text" id="newAccount" required placeholder="@username" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
                     <div><label class="font-semibold text-slate-600 block mb-1">Platform</label><select id="newPlatform" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"><option value="TikTok">TikTok</option><option value="Instagram">Instagram</option><option value="Threads">Threads</option></select></div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div><label class="font-semibold text-slate-600 block mb-1">Kategori</label><input type="text" id="newCategory" required placeholder="misal: Niche Media" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
+                    <div>
+                        <label class="font-semibold text-slate-600 block mb-1">Kategori</label>
+                        <select id="newCategory" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                            <option value="Niche Media">Niche Media</option>
+                            <option value="Homeless Media">Homeless Media</option>
+                            <option value="UGC Media">UGC Media</option>
+                        </select>
+                    </div>
                     <div><label class="font-semibold text-slate-600 block mb-1">Tanggal Upload</label><input type="date" id="newDate" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
                 </div>
                 <div><label class="font-semibold text-slate-600 block mb-1">Caption / Title</label><input type="text" id="newCaption" required placeholder="Isi caption ringkas..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
@@ -331,7 +359,7 @@
                     <div id="settingsLoginForm" class="pt-1">
                         <p class="text-[11px] text-slate-500 mb-2">Masuk sebagai Admin untuk membuka opsi edit, hubungkan sheets, dan manajemen project.</p>
                         <div class="flex gap-2">
-                            <input type="password" id="settingsPinInput" placeholder="PIN Admin (0000)" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500">
+                            <input type="password" id="settingsPinInput" placeholder="Masukkan PIN Admin" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500">
                             <button type="button" onclick="submitSettingsPin()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded-xl transition whitespace-nowrap">Login</button>
                         </div>
                     </div>
@@ -443,8 +471,7 @@
                     projectsStore = snap.data().projectsStore;
                 } else {
                     projectsStore = { "Cerita Lila": [
-                        { id: 1, period: 'Periode 1', account: '@twins.lila', platform: 'TikTok', category: 'Niche Media', caption: 'Terjebak di Rumah Sendiri! Barang Terror yang Gak Kasat Mata...', tgl_upload: '2026-06-12', views: 5700000, likes: 230000, cmt: 4500, save: 18200, share: 8900, url: 'https://tiktok.com' },
-                        { id: 2, period: 'Periode 1', account: '@horrorlila', platform: 'TikTok', category: 'Niche Media', caption: 'Sempat dikira kejadian nyata atau ODGJ yang lepas, lokasi ini...', tgl_upload: '2026-06-11', views: 4855386, likes: 198000, cmt: 3200, save: 14100, share: 6200, url: 'https://tiktok.com' }
+                        { id: 1, period: 'Periode 1', account: '@twins.lila', platform: 'TikTok', category: 'Niche Media', caption: 'Terjebak di Rumah Sendiri! Barang Terror yang Gak Kasat Mata...', tgl_upload: '2026-06-12', views: 5700000, likes: 230000, cmt: 4500, save: 18200, share: 8900, url: 'https://tiktok.com' }
                     ]};
                     await saveCloudData();
                 }
@@ -466,7 +493,7 @@
         }
 
         function loadLocalStorageFallback() {
-            const saved = localStorage.getItem('sm_report_projects_v3');
+            const saved = localStorage.getItem('sm_report_projects_v4');
             if (saved) { try { projectsStore = JSON.parse(saved); } catch(e) {} }
             else {
                 projectsStore = { "Cerita Lila": [
@@ -480,7 +507,7 @@
         }
 
         function saveProjectsToStorage() {
-            localStorage.setItem('sm_report_projects_v3', JSON.stringify(projectsStore));
+            localStorage.setItem('sm_report_projects_v4', JSON.stringify(projectsStore));
             saveCloudData();
         }
 
@@ -513,17 +540,23 @@
                 renderProjectDropdown();
                 setCurrentProject(projParam);
             }
-            if (urlParams.get('admin') === 'true') enableAdminMode(); else disableAdminMode();
+            if (urlParams.get('admin') === 'true') {
+                enableAdminMode();
+            } else {
+                const savedAdmin = sessionStorage.getItem('sm_admin_active');
+                if(savedAdmin === 'true') enableAdminMode(); else disableAdminMode();
+            }
         }
 
         window.submitSettingsPin = function() {
-            if (document.getElementById('settingsPinInput').value.trim() === '0000') {
+            if (document.getElementById('settingsPinInput').value.trim() === '080101') {
                 enableAdminMode(); document.getElementById('settingsPinInput').value = ''; window.showToast('Berhasil Login Modus Admin!', 'success'); window.closeModal('settingsModal');
             } else { window.showToast('PIN Admin salah!', 'error'); }
         }
 
         function enableAdminMode() {
             isAdmin = true;
+            sessionStorage.setItem('sm_admin_active', 'true');
             document.getElementById('accessModeBadge').innerHTML = `<span class="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-xl border border-emerald-300 shadow-xs"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Modus Admin Aktif</span>`;
             document.getElementById('adminActionGroup').classList.remove('hidden');
             const ctrlGrp = document.getElementById('adminProjectControlGroup');
@@ -536,8 +569,9 @@
             setTimeout(() => { renderDailyTrendChart(); renderTopAccountsChart(); }, 50);
         }
 
-        function disableAdminMode() {
+        window.disableAdminMode = function() {
             isAdmin = false;
+            sessionStorage.removeItem('sm_admin_active');
             document.getElementById('accessModeBadge').innerHTML = '';
             document.getElementById('adminActionGroup').classList.add('hidden');
             const ctrlGrp = document.getElementById('adminProjectControlGroup');
@@ -626,12 +660,12 @@
         }
 
         function populateFilterDropdowns() {
-            const periods = new Set(), accounts = new Set(), categories = new Set();
+            const periods = new Set(['Periode 1', 'Periode 2', 'Periode 3', 'Periode 4', 'Periode 5']), accounts = new Set(), categories = new Set(['Niche Media', 'Homeless Media', 'UGC Media']);
             postsData.forEach(p => { if(p.period) periods.add(p.period); if(p.account) accounts.add(p.account); if(p.category) categories.add(p.category); });
             
             const pSelect = document.getElementById('filterPeriod');
             pSelect.innerHTML = '<option value="ALL">Semua Periode</option>';
-            periods.forEach(per => pSelect.innerHTML += `<option value="${per}">${per}</option>`);
+            Array.from(periods).sort().forEach(per => pSelect.innerHTML += `<option value="${per}">${per}</option>`);
 
             const accSelect = document.getElementById('filterAccount');
             accSelect.innerHTML = '<option value="ALL">Semua Akun</option>';
@@ -779,7 +813,7 @@
         window.downloadExcelTemplate = function() {
             const templateData = [
                 { "Periode": "Periode 1", "Account": "@twins.lila", "Platform": "TikTok", "Category": "Niche Media", "Tanggal Upload": "2026-06-12", "Caption": "Terjebak di Rumah Sendiri! Barang Terror yang Gak Kasat Mata...", "Views": 5700000, "Likes": 230000, "Comment": 4500, "Save": 18200, "Share": 8900, "Link": "https://tiktok.com/@twins.lila/video/1" },
-                { "Periode": "Periode 1", "Account": "@horrorlila", "Platform": "TikTok", "Category": "Niche Media", "Tanggal Upload": "2026-06-11", "Caption": "Sempat dikira kejadian nyata atau ODGJ yang lepas, lokasi ini...", "Views": 4855386, "Likes": 198000, "Comment": 3200, "Save": 14100, "Share": 6200, "Link": "https://tiktok.com/@horrorlila/video/2" }
+                { "Periode": "Periode 1", "Account": "@horrorlila", "Platform": "TikTok", "Category": "Homeless Media", "Tanggal Upload": "2026-06-11", "Caption": "Sempat dikira kejadian nyata atau ODGJ yang lepas, lokasi ini...", "Views": 4855386, "Likes": 198000, "Comment": 3200, "Save": 14100, "Share": 6200, "Link": "https://tiktok.com/@horrorlila/video/2" }
             ];
             const ws = XLSX.utils.json_to_sheet(templateData), wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Template");
