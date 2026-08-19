@@ -396,7 +396,6 @@
     </div>
 
     <script>
-        // Konfigurasi JSONBin.io Anda yang tersinkron global
         const JSONBIN_BIN_ID = "6a854b7ada38895dfef5cca1";
         const JSONBIN_API_KEY = "$2a$10$.Yyt32m3UwBB57d2BHJ7t.58K4fMYVnixlc3652hhbOa4ZvNCJ7nm";
 
@@ -466,6 +465,7 @@
             const savedAdmin = sessionStorage.getItem('sm_admin_active');
             if(savedAdmin === 'true') enableAdminMode(); else disableAdminMode();
 
+            // WAJIB TUNGGU AMBIL DARI CLOUD SELESAI BARU INISIALISASI PROJECT
             await loadStoreFromServer();
             initProjectSelection();
         });
