@@ -11,7 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
-        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }, colors: { emerald: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' } } } } }
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] } } } }
     </script>
     <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
@@ -43,7 +43,7 @@
                     <div id="adminDropdownMenu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 z-40 p-2 space-y-1">
                         <button type="button" onclick="openModal('uploadModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-file-excel text-emerald-600"></i> Import Excel / Sheets</button>
                         <button type="button" onclick="openModal('addPostModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-plus text-slate-600"></i> Tambah Post</button>
-                        <button type="button" onclick="exportExcel(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-file-excel text-emerald-600"></i> Export Excel (.xlsx)</button>
+                        <button type="button" onclick="exportExcel(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-file-excel text-emerald-600"></i> Export Excel (.xlsx)</button>
                         <button type="button" onclick="copyShareLink(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-share-nodes"></i> Salin Link Client Mode</button>
                         <div class="border-t border-slate-100 my-1"></div>
                         <button type="button" onclick="confirmResetCurrentProjectData(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-rotate-left"></i> Reset Data Project</button>
@@ -140,7 +140,7 @@
                     </div>
                     <div class="mt-4 space-y-2">
                         <div id="top1Account" class="text-sm font-bold text-emerald-200">@account</div>
-                        <p id="top1Caption" class="text-xs text-emerald-50 line-clamp-2 italic">"Loading top post content..."</p>
+                        <p id="top1Caption" class="text-xs text-emerald-50 line-clamp-2 italic">"Belum ada data konten..."</p>
                     </div>
                     <div class="grid grid-cols-3 gap-2 mt-6 pt-4 border-t border-emerald-500/50 text-center">
                         <div><span class="text-[10px] uppercase font-semibold text-emerald-200 block">Views</span><span id="top1Views" class="text-sm font-extrabold text-white">0</span></div>
@@ -239,6 +239,7 @@
         </div>
     </main>
 
+    <!-- Modals -->
     <div id="uploadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
             <button type="button" onclick="closeModal('uploadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -254,13 +255,6 @@
                 <div>
                     <label class="block font-semibold text-slate-600 mb-1">Atau URL Google Sheets Publik</label>
                     <input type="url" id="sheetsUrlInput" placeholder="https://docs.google.com/spreadsheets/d/.../edit" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500">
-                </div>
-                <div class="flex items-center justify-between bg-emerald-50 p-3 rounded-2xl border border-emerald-200">
-                    <div>
-                        <p class="font-bold text-emerald-900">Butuh Template Excel?</p>
-                        <p class="text-[11px] text-emerald-700">Unduh contoh format file Excel agar data langsung cocok.</p>
-                    </div>
-                    <button type="button" onclick="downloadExcelTemplate()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition shadow-xs">Unduh Template</button>
                 </div>
             </div>
             <div class="pt-2 flex justify-end gap-2">
@@ -403,7 +397,7 @@
     </div>
 
     <script>
-        let projectsStore = {
+        let masterProjectsStore = {
             "Campaign Preview": [],
             "Campaign Samsung": [
                 {
@@ -435,11 +429,27 @@
                     save: 45,
                     share: 12,
                     url: "https://tiktok.com"
+                },
+                {
+                    id: 1718000000003,
+                    period: "Periode 2",
+                    account: "Ruang.Bercerita",
+                    platform: "TikTok",
+                    category: "Homeless Media",
+                    caption: "KEMBARAN SAMA J-HOPE? PANTESAN KEREN BANGET, MEMBER B...",
+                    tgl_upload: "2026-06-10",
+                    views: 167400,
+                    likes: 1132,
+                    cmt: 12,
+                    save: 50,
+                    share: 19,
+                    url: "https://tiktok.com"
                 }
             ]
         };
 
-        let currentProjectName = "Campaign Preview", postsData = [], filteredPosts = [], isAdmin = false;
+        let projectsStore = JSON.parse(JSON.stringify(masterProjectsStore));
+        let currentProjectName = "Campaign Samsung", postsData = [], filteredPosts = [], isAdmin = false;
         let pieChartInstance = null, dailyChartInstance = null, topAccountChartInstance = null;
         let activeConfirmCallback = null;
 
@@ -467,8 +477,8 @@
             const savedAdmin = sessionStorage.getItem('sm_admin_active');
             if(savedAdmin === 'true') enableAdminMode(); else disableAdminMode();
 
-            // Load data from universal storage (localStorage shared across sessions)
-            const localSaved = localStorage.getItem('sm_report_universal_store_v8');
+            // Load universal storage / master fallback
+            const localSaved = localStorage.getItem('sm_static_universal_store_v11');
             if (localSaved) {
                 try {
                     const parsed = JSON.parse(localSaved);
@@ -477,35 +487,51 @@
                     }
                 } catch(e) {}
             } else {
-                localStorage.setItem('sm_report_universal_store_v8', JSON.stringify(projectsStore));
+                localStorage.setItem('sm_static_universal_store_v11', JSON.stringify(projectsStore));
             }
 
             initProjectSelection();
         });
 
+        window.addEventListener('hashchange', () => {
+            initProjectSelection();
+        });
+
         function saveUniversalStore() {
-            localStorage.setItem('sm_report_universal_store_v8', JSON.stringify(projectsStore));
+            localStorage.setItem('sm_static_universal_store_v11', JSON.stringify(projectsStore));
         }
 
         function initProjectSelection() {
-            const urlParams = new URLSearchParams(window.location.search);
-            let projParam = urlParams.get('project');
-            
-            if (projParam) {
-                const cleanParam = projParam.toLowerCase().replace(/[^a-z0-9]/g, '');
+            // Support hash-based selection (#project=...) for 100% reliability on GitHub Pages
+            let targetProj = "";
+            const hash = window.location.hash;
+            if (hash && hash.includes('project=')) {
+                const parts = hash.split('project=');
+                if (parts[1]) {
+                    targetProj = decodeURIComponent(parts[1].split('&')[0].replace(/\+/g, ' '));
+                }
+            } else {
+                const urlParams = new URLSearchParams(window.location.search);
+                const queryProj = urlParams.get('project');
+                if (queryProj) {
+                    targetProj = queryProj;
+                }
+            }
+
+            if (targetProj) {
+                const cleanParam = targetProj.toLowerCase().replace(/[^a-z0-9]/g, '');
                 const foundKey = Object.keys(projectsStore).find(k => k.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanParam);
                 if (foundKey) {
                     currentProjectName = foundKey;
                 } else {
                     currentProjectName = "Campaign Preview";
-                    if(!projectsStore["Campaign Preview"]) projectsStore["Campaign Preview"] = [];
                 }
             } else {
-                const defaultProj = localStorage.getItem('sm_default_project');
+                const defaultProj = localStorage.getItem('sm_default_project') || "Campaign Samsung";
                 if (defaultProj && projectsStore[defaultProj]) {
                     currentProjectName = defaultProj;
                 } else {
-                    currentProjectName = "Campaign Preview";
+                    currentProjectName = "Campaign Samsung";
                 }
             }
             if(!projectsStore[currentProjectName]) projectsStore[currentProjectName] = [];
@@ -565,6 +591,7 @@
             document.getElementById('projectSelect').disabled = true;
             document.getElementById('projectSelectChevron').classList.add('hidden');
             document.getElementById('adminOnlySecondaryCharts').classList.add('hidden');
+            document.getElementById('allPostsTableSection').classList.add('hidden');
             updateSettingsUI(); renderTable();
         }
 
@@ -627,8 +654,8 @@
         }
 
         window.copyShareLink = function() {
-            const currentUrl = window.location.href.split('?')[0];
-            const shareUrl = `${currentUrl}?project=${encodeURIComponent(currentProjectName)}`;
+            const baseUrl = window.location.href.split('#')[0].split('?')[0];
+            const shareUrl = `${baseUrl}#project=${encodeURIComponent(currentProjectName)}`;
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(shareUrl).then(() => {
                     window.showToast(`Link client "${currentProjectName}" berhasil disalin!`, 'success');
@@ -804,16 +831,6 @@
 
         window.toggleAllPostsTable = function() { const ts = document.getElementById('allPostsTableSection'); ts.classList.toggle('hidden'); ts.scrollIntoView({ behavior: 'smooth' }); }
 
-        window.downloadExcelTemplate = function() {
-            const templateData = [
-                { "Periode": "Periode 1", "Account": "@twins.lila", "Platform": "TikTok", "Category": "Niche Media", "Tanggal Upload": "2026-06-12", "Caption": "Terjebak di Rumah Sendiri! Barang Terror yang Gak Kasat Mata...", "Views": 5700000, "Likes": 230000, "Comment": 4500, "Save": 18200, "Share": 8900, "Link": "https://tiktok.com/@twins.lila/video/1" }
-            ];
-            const ws = XLSX.utils.json_to_sheet(templateData), wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Template");
-            XLSX.writeFile(wb, `template_laporan_social_media.xlsx`);
-            window.showToast("Template Excel berhasil diunduh!", 'success');
-        }
-
         window.handleImportExcelOrSheets = function() {
             const fileInput = document.getElementById('excelFileInput');
             const rawUrl = document.getElementById('sheetsUrlInput').value.trim();
@@ -833,7 +850,6 @@
                             window.showToast("File Excel kosong atau format tidak sesuai.", 'error');
                         }
                     } catch(err) {
-                        console.error(err);
                         window.showToast("Gagal membaca file Excel.", 'error');
                     }
                 };
