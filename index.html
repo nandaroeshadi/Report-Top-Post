@@ -402,25 +402,43 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const firebaseConfig = typeof __FIREBASE_CONFIG__ !== 'undefined' ? JSON.parse(__FIREBASE_CONFIG__) : {
-            apiKey: "AIzaSyDummyKeyForLocalEnvironmentOnly99",
-            authDomain: "dummy-project.firebaseapp.com",
-            projectId: "dummy-project",
-            storageBucket: "dummy-project.appspot.com",
-            messagingSenderId: "1234567890",
-            appId: "1:1234567890:web:abcdef"
+    <script>
+        let projectsStore = {
+            "Campaign Preview": [],
+            "Campaign Samsung": [
+                {
+                    id: 1718000000001,
+                    period: "Periode 1",
+                    account: "Scene Podcast",
+                    platform: "TikTok",
+                    category: "Niche Media",
+                    caption: "Sengaja disembunyikan dari Medy Renaldy, ternyata fitur e-reader di Samsung Galaxy Z Fold8 ini yang bikin Raditya Dik...",
+                    tgl_upload: "2026-06-12",
+                    views: 435500,
+                    likes: 5400,
+                    cmt: 16,
+                    save: 120,
+                    share: 45,
+                    url: "https://tiktok.com"
+                },
+                {
+                    id: 1718000000002,
+                    period: "Periode 1",
+                    account: "selintasklip",
+                    platform: "TikTok",
+                    category: "Niche Media",
+                    caption: "Lah kok bisa? Beli HP foldable tapi gak peduli bisa dibuka atau eng...",
+                    tgl_upload: "2026-06-11",
+                    views: 193300,
+                    likes: 387,
+                    cmt: 8,
+                    save: 45,
+                    share: 12,
+                    url: "https://tiktok.com"
+                }
+            ]
         };
-        const appId = 'shared-social-media-client-report-v7';
 
-        let db = null, auth = null, currentUser = null;
-        let projectsStore = { 
-            "Campaign Preview": [] 
-        };
         let currentProjectName = "Campaign Preview", postsData = [], filteredPosts = [], isAdmin = false;
         let pieChartInstance = null, dailyChartInstance = null, topAccountChartInstance = null;
         let activeConfirmCallback = null;
@@ -445,60 +463,28 @@
         window.closeConfirmModal = function() { window.closeModal('confirmModal'); activeConfirmCallback = null; }
         window.executeConfirmAction = function() { if (activeConfirmCallback) activeConfirmCallback(); window.closeConfirmModal(); }
 
-        window.addEventListener('DOMContentLoaded', async () => {
+        window.addEventListener('DOMContentLoaded', () => {
             const savedAdmin = sessionStorage.getItem('sm_admin_active');
             if(savedAdmin === 'true') enableAdminMode(); else disableAdminMode();
 
-            try {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                await signInAnonymously(auth);
-                currentUser = auth.currentUser;
-                await loadCloudData();
-            } catch (err) {
-                console.warn("Cloud connection fallback to local:", err);
-                loadLocalFallback();
+            // Load data from universal storage (localStorage shared across sessions)
+            const localSaved = localStorage.getItem('sm_report_universal_store_v8');
+            if (localSaved) {
+                try {
+                    const parsed = JSON.parse(localSaved);
+                    if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+                        projectsStore = parsed;
+                    }
+                } catch(e) {}
+            } else {
+                localStorage.setItem('sm_report_universal_store_v8', JSON.stringify(projectsStore));
             }
+
+            initProjectSelection();
         });
 
-        async function loadCloudData() {
-            if (!db || !currentUser) return loadLocalFallback();
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data');
-                const snap = await getDoc(docRef);
-                if (snap.exists() && snap.data().projectsStore && Object.keys(snap.data().projectsStore).length > 0) {
-                    projectsStore = snap.data().projectsStore;
-                    localStorage.setItem('sm_report_projects_shared_v7', JSON.stringify(projectsStore));
-                } else {
-                    const localSaved = localStorage.getItem('sm_report_projects_shared_v7');
-                    if (localSaved) {
-                        try { projectsStore = JSON.parse(localSaved); } catch(e) {}
-                    }
-                    await saveCloudData();
-                }
-            } catch(e) {
-                console.error("Cloud read warning:", e);
-                loadLocalFallback();
-            }
-            initProjectSelection();
-        }
-
-        function loadLocalFallback() {
-            const localSaved = localStorage.getItem('sm_report_projects_shared_v7');
-            if (localSaved) {
-                try { projectsStore = JSON.parse(localSaved); } catch(e) {}
-            }
-            initProjectSelection();
-        }
-
-        async function saveCloudData() {
-            localStorage.setItem('sm_report_projects_shared_v7', JSON.stringify(projectsStore));
-            if (!db || !currentUser) return;
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data');
-                await setDoc(docRef, { projectsStore }, { merge: true });
-            } catch(e) { console.error("Cloud write warning:", e); }
+        function saveUniversalStore() {
+            localStorage.setItem('sm_report_universal_store_v8', JSON.stringify(projectsStore));
         }
 
         function initProjectSelection() {
@@ -519,8 +505,7 @@
                 if (defaultProj && projectsStore[defaultProj]) {
                     currentProjectName = defaultProj;
                 } else {
-                    const keys = Object.keys(projectsStore);
-                    currentProjectName = keys.length > 0 ? keys[0] : "Campaign Preview";
+                    currentProjectName = "Campaign Preview";
                 }
             }
             if(!projectsStore[currentProjectName]) projectsStore[currentProjectName] = [];
@@ -607,7 +592,7 @@
             const input = document.getElementById('newProjectNameInput'), name = input.value.trim();
             if(!name) return window.showToast("Masukkan nama project!", 'error');
             if(projectsStore[name]) return window.showToast("Nama project sudah ada!", 'error');
-            projectsStore[name] = []; saveCloudData(); renderProjectDropdown(); setCurrentProject(name); input.value = ''; window.closeModal('addProjectModal');
+            projectsStore[name] = []; saveUniversalStore(); renderProjectDropdown(); setCurrentProject(name); input.value = ''; window.closeModal('addProjectModal');
             window.showToast(`Project "${name}" berhasil dibuat!`, 'success');
         }
 
@@ -616,7 +601,7 @@
             const input = document.getElementById('editProjectNameInput'), newName = input.value.trim();
             if(!newName || newName === currentProjectName) return window.closeModal('editProjectModal');
             projectsStore[newName] = projectsStore[currentProjectName]; delete projectsStore[currentProjectName]; currentProjectName = newName;
-            saveCloudData(); renderProjectDropdown(); setCurrentProject(newName); window.closeModal('editProjectModal');
+            saveUniversalStore(); renderProjectDropdown(); setCurrentProject(newName); window.closeModal('editProjectModal');
             window.showToast("Nama project berhasil diubah!", 'success');
         }
 
@@ -629,14 +614,14 @@
             if(Object.keys(projectsStore).length <= 1) return window.showToast("Minimal ada 1 project aktif!", 'error');
             window.openConfirmModal("Hapus Project", `Apakah Anda yakin ingin menghapus project "${currentProjectName}"?`, () => {
                 delete projectsStore[currentProjectName];
-                saveCloudData(); renderProjectDropdown(); setCurrentProject(Object.keys(projectsStore)[0]);
+                saveUniversalStore(); renderProjectDropdown(); setCurrentProject(Object.keys(projectsStore)[0]);
                 window.showToast("Project berhasil dihapus.", 'success');
             }, 'Ya, Hapus Project');
         }
 
         window.confirmResetCurrentProjectData = function() {
             window.openConfirmModal("Reset Data", `Reset semua data post untuk project "${currentProjectName}"?`, () => {
-                projectsStore[currentProjectName] = []; saveCloudData(); setCurrentProject(currentProjectName);
+                projectsStore[currentProjectName] = []; saveUniversalStore(); setCurrentProject(currentProjectName);
                 window.showToast("Data project berhasil di-reset.", 'success');
             }, 'Ya, Reset Data');
         }
@@ -811,7 +796,7 @@
             window.openConfirmModal("Hapus Post", "Apakah Anda yakin ingin menghapus post ini dari laporan?", () => {
                 postsData = postsData.filter(p => p.id !== id);
                 projectsStore[currentProjectName] = postsData;
-                saveCloudData();
+                saveUniversalStore();
                 setCurrentProject(currentProjectName);
                 window.showToast("Post berhasil dihapus.", 'success');
             }, 'Ya, Hapus');
@@ -934,7 +919,7 @@
 
             postsData = [...postsData, ...parsed]; 
             projectsStore[currentProjectName] = postsData;
-            saveCloudData(); 
+            saveUniversalStore(); 
             setCurrentProject(currentProjectName); 
             window.closeModal('uploadModal');
             document.getElementById('sheetsUrlInput').value = '';
@@ -952,7 +937,7 @@
                 likes: Number(document.getElementById('newLikes').value), cmt: Number(document.getElementById('newComments').value),
                 save: Number(document.getElementById('newSaves').value), share: Number(document.getElementById('newShares').value), url: document.getElementById('newUrl').value.trim() || '#'
             });
-            projectsStore[currentProjectName] = postsData; saveCloudData(); setCurrentProject(currentProjectName); window.closeModal('addPostModal');
+            projectsStore[currentProjectName] = postsData; saveUniversalStore(); setCurrentProject(currentProjectName); window.closeModal('addPostModal');
             window.showToast("Post baru berhasil disimpan!", 'success');
         }
 
