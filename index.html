@@ -5,261 +5,936 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Social Media Client Report Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] } } } }
+    </script>
+    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
-<body class="min-h-screen text-slate-800">
-    <!-- Top Header Bar -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <div class="bg-emerald-600 text-white p-2 rounded-xl">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                </div>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl font-bold"><i class="fa-solid fa-chart-line text-xl"></i></div>
                 <div>
-                    <p class="text-xs text-slate-400 font-medium">PROJECT REPORT</p>
-                    <h1 id="currentProjectTitle" class="text-lg font-bold text-slate-800 flex items-center gap-2">Campaign Samsung</h1>
+                    <span class="text-xs uppercase tracking-wider font-semibold text-slate-400">PROJECT REPORT</span>
+                    <div class="flex items-center gap-1 relative">
+                        <select id="projectSelect" onchange="handleProjectChange()" disabled class="appearance-none bg-transparent font-bold text-xl text-slate-800 focus:outline-none cursor-pointer hover:text-emerald-600 transition pr-5 disabled:cursor-default disabled:hover:text-slate-800 disabled:opacity-100">
+                            <option value="Campaign Preview">Campaign Preview</option>
+                        </select>
+                        <i id="projectSelectChevron" class="fa-solid fa-chevron-down text-xs text-slate-400 pointer-events-none -ml-3 hidden"></i>
+                    </div>
+                </div>
+                <div id="adminProjectControlGroup" class="hidden items-center gap-1.5 border-l border-slate-200 pl-3 my-1">
+                    <button type="button" onclick="openModal('addProjectModal')" class="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs"><i class="fa-solid fa-plus text-[10px]"></i> + Project Baru</button>
+                    <button type="button" onclick="openEditProjectModal()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs"><i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit</button>
+                    <button type="button" onclick="confirmDeleteCurrentProject()" class="bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-xs"><i class="fa-solid fa-trash text-[10px]"></i> Hapus</button>
                 </div>
             </div>
-            <div class="flex items-center space-x-2">
-                <button onclick="openSettings()" class="bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg text-sm font-semibold transition">⚙️ Pengaturan</button>
-                <div class="relative">
-                    <button onclick="toggleAdminMenu()" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1 hover:bg-slate-800 transition">
-                        Admin Tools ▾
-                    </button>
-                    <div id="adminDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50">
-                        <label class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer">
-                            📁 Import Excel / Sheets
-                            <input type="file" id="excelFile" accept=".xlsx, .xls" class="hidden" onchange="handleExcelImport(event)">
-                        </label>
-                        <button onclick="copyClientLink()" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">🔗 Salin Link Client Mode</button>
-                        <button onclick="resetData()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-slate-50">🔄 Reset Data Project</button>
+            <div class="flex flex-wrap items-center gap-2">
+                <div id="accessModeBadge" class="hidden"></div>
+                <button type="button" onclick="openModal('settingsModal')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 transition shadow-xs border border-slate-200"><i class="fa-solid fa-gear text-slate-500"></i><span>Pengaturan</span></button>
+                <div id="adminActionGroup" class="hidden relative">
+                    <button type="button" onclick="toggleAdminMenu()" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-medium px-3.5 py-2 rounded-xl text-xs transition shadow-sm"><i class="fa-solid fa-sliders"></i><span>Admin Tools</span><i class="fa-solid fa-chevron-down text-[10px]"></i></button>
+                    <div id="adminDropdownMenu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 z-40 p-2 space-y-1">
+                        <button type="button" onclick="openModal('uploadModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-file-excel text-emerald-600"></i> Import Excel / Sheets</button>
+                        <button type="button" onclick="openModal('addPostModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-plus text-slate-600"></i> Tambah Post</button>
+                        <button type="button" onclick="exportExcel(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-file-excel text-emerald-600"></i> Export Excel (.xlsx)</button>
+                        <button type="button" onclick="copyShareLink(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-share-nodes"></i> Salin Link Client Mode</button>
+                        <div class="border-t border-slate-100 my-1"></div>
+                        <button type="button" onclick="confirmResetCurrentProjectData(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-rotate-left"></i> Reset Data Project</button>
+                        <button type="button" onclick="disableAdminMode(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-right-from-bracket"></i> Keluar Admin</button>
                     </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        <!-- Banner -->
-        <div class="bg-gradient-to-r from-emerald-800 to-emerald-600 text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
-            <div>
-                <span class="bg-emerald-700/60 text-emerald-100 text-xs px-3 py-1 rounded-full font-medium">Social Media Performance Hub</span>
-                <h2 class="text-2xl font-bold mt-2">SOCIAL MEDIA REPORT</h2>
-                <p class="text-emerald-100 text-sm mt-1">Rekapitulasi performa konten & engagement akun sosial media secara real-time.</p>
-            </div>
-            <div class="text-right hidden md:block">
-                <span class="bg-emerald-700/60 text-emerald-100 text-xs px-3 py-1.5 rounded-lg font-medium">🟢 Updated: Today</span>
-            </div>
-        </div>
-
-        <!-- Metric Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
-            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm col-span-2">
-                <p class="text-xs text-slate-400 font-semibold uppercase">Total Views</p>
-                <h3 id="statViews" class="text-3xl font-bold text-slate-900 mt-1">0</h3>
-            </div>
-            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm col-span-2">
-                <p class="text-xs text-slate-400 font-semibold uppercase">Total Likes</p>
-                <h3 id="statLikes" class="text-3xl font-bold text-slate-900 mt-1">0</h3>
-            </div>
-            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm col-span-2">
-                <p class="text-xs text-slate-400 font-semibold uppercase">Total Comments</p>
-                <h3 id="statComments" class="text-3xl font-bold text-slate-900 mt-1">0</h3>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+        <div class="bg-emerald-800 text-white rounded-3xl p-6 sm:p-8 shadow-lg relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl font-black pointer-events-none">REPORT</div>
+            <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-700/80 rounded-full text-xs font-semibold text-emerald-100 mb-2"><i class="fa-solid fa-circle-check text-emerald-300"></i><span>Social Media Performance Hub</span></div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">SOCIAL MEDIA REPORT</h1>
+                    <p class="text-emerald-100 text-sm mt-1">Rekapitulasi performa konten & engagement akun sosial media secara real-time</p>
+                </div>
+                <div class="bg-emerald-900/60 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-emerald-700/50 text-xs flex items-center gap-2 self-start md:self-auto"><i class="fa-regular fa-clock text-emerald-300"></i><span>Updated in: <strong id="lastUpdatedDate" class="text-white font-bold">Today</strong></span></div>
             </div>
         </div>
 
-        <!-- Content Table Section -->
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-            <h3 class="font-bold text-lg mb-4">Daftar Konten Performa</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-filter text-emerald-600"></i> Filter Data Laporan</h3>
+                <button type="button" onclick="resetFilters()" class="text-xs text-emerald-600 font-semibold hover:underline">Reset Filter</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Periode</label>
+                    <select id="filterPeriod" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
+                        <option value="ALL">Semua Periode</option>
+                        <option value="Periode 1">Periode 1</option>
+                        <option value="Periode 2">Periode 2</option>
+                        <option value="Periode 3">Periode 3</option>
+                        <option value="Periode 4">Periode 4</option>
+                        <option value="Periode 5">Periode 5</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Platform</label>
+                    <select id="filterPlatform" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500"><option value="ALL">Semua Platform</option><option value="TikTok">TikTok</option><option value="Instagram">Instagram</option><option value="Threads">Threads</option></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Account Handle</label>
+                    <select id="filterAccount" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500"><option value="ALL">Semua Akun</option></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Kategori Content</label>
+                    <select id="filterCategory" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
+                        <option value="ALL">Semua Kategori</option>
+                        <option value="Niche Media">Niche Media</option>
+                        <option value="Homeless Media">Homeless Media</option>
+                        <option value="UGC Media">UGC Media</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Range Tanggal (Upload)</label>
+                    <div class="flex items-center gap-1.5">
+                        <input type="date" id="filterStartDate" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-[11px] font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
+                        <span class="text-xs text-slate-400">-</span>
+                        <input type="date" id="filterEndDate" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-[11px] font-semibold text-slate-700 focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="md:col-span-2 bg-emerald-50 border border-emerald-200 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-extrabold uppercase tracking-widest text-emerald-800 bg-emerald-200/60 px-3 py-1 rounded-full">TOTAL PERFORMANCE</span>
+                        <span class="text-xs text-emerald-700 font-medium" id="postCountBadge">0 Posts Loaded</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div><span class="text-xs text-emerald-700 font-semibold block">Views</span><span id="metricTotalViews" class="text-2xl sm:text-3xl font-extrabold text-emerald-950">0</span></div>
+                        <div><span class="text-xs text-emerald-700 font-semibold block">Likes</span><span id="metricTotalLikes" class="text-2xl sm:text-3xl font-extrabold text-emerald-950">0</span></div>
+                        <div><span class="text-xs text-emerald-700 font-semibold block">Comments</span><span id="metricTotalComments" class="text-2xl sm:text-3xl font-extrabold text-emerald-950">0</span></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div><span class="text-xs text-emerald-700 font-semibold block">Saves</span><span id="metricTotalSaves" class="text-xl sm:text-2xl font-bold text-emerald-900">0</span></div>
+                        <div><span class="text-xs text-emerald-700 font-semibold block">Shares</span><span id="metricTotalShares" class="text-xl sm:text-2xl font-bold text-emerald-900">0</span></div>
+                        <div><span class="text-xs text-emerald-700 font-semibold block">Avg. Engagement</span><span id="metricAvgEngagement" class="text-xl sm:text-2xl font-bold text-emerald-900">0%</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white rounded-3xl p-6 shadow-md flex flex-col justify-between relative overflow-hidden">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="bg-amber-400 text-slate-900 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-xs"><i class="fa-solid fa-trophy"></i> #1 TOP CONTENT</span>
+                        <span id="top1Platform" class="text-xs font-bold bg-white/20 px-2.5 py-0.5 rounded-full">-</span>
+                    </div>
+                    <div class="mt-4 space-y-2">
+                        <div id="top1Account" class="text-sm font-bold text-emerald-200">@account</div>
+                        <p id="top1Caption" class="text-xs text-emerald-50 line-clamp-2 italic">"Belum ada data konten..."</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mt-6 pt-4 border-t border-emerald-500/50 text-center">
+                        <div><span class="text-[10px] uppercase font-semibold text-emerald-200 block">Views</span><span id="top1Views" class="text-sm font-extrabold text-white">0</span></div>
+                        <div><span class="text-[10px] uppercase font-semibold text-emerald-200 block">Likes</span><span id="top1Likes" class="text-sm font-extrabold text-white">0</span></div>
+                        <div><span class="text-[10px] uppercase font-semibold text-emerald-200 block">Comments</span><span id="top1Comments" class="text-sm font-extrabold text-white">0</span></div>
+                    </div>
+                </div>
+                <a id="top1Link" href="#" target="_blank" class="mt-4 w-full bg-white text-emerald-800 hover:bg-emerald-100 font-bold py-2 px-4 rounded-xl text-xs text-center transition block">Buka Link Konten <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-1"></i></a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-amber-50/80 border border-amber-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-extrabold uppercase tracking-wider text-amber-900 flex items-center gap-2"><i class="fa-solid fa-ranking-star text-amber-600"></i> #10 Top Performance Konten</h3>
+                        <span class="text-xs text-amber-700 font-medium">Sorted by Views</span>
+                    </div>
+                    <div class="overflow-x-auto rounded-2xl border border-amber-200 bg-white">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-amber-100/70 text-amber-900 text-xs font-bold border-b border-amber-200">
+                                    <th class="py-2.5 px-3 text-center">Rank</th>
+                                    <th class="py-2.5 px-3">Account / Caption</th>
+                                    <th class="py-2.5 px-3">Periode</th>
+                                    <th class="py-2.5 px-3 text-right">Views</th>
+                                    <th class="py-2.5 px-3 text-right">Likes</th>
+                                    <th class="py-2.5 px-3 text-center">Link</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top10TableBody" class="divide-y divide-amber-100 text-xs"></tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button type="button" onclick="toggleAllPostsTable()" class="text-xs font-bold text-amber-600 hover:text-amber-800 flex items-center gap-1.5 transition">Lihat Semua Post <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-emerald-600"></i> Platform Views Share</h3>
+                    <p class="text-xs text-slate-400 mb-4">Proporsi tayangan berdasarkan platform</p>
+                    <div class="relative h-48 w-full flex items-center justify-center"><canvas id="platformPieChart"></canvas></div>
+                </div>
+                <div id="pieLegend" class="mt-4 pt-3 border-t border-slate-100 flex justify-around text-xs font-semibold text-slate-600"></div>
+            </div>
+        </div>
+
+        <div id="adminOnlySecondaryCharts" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs">
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1 flex items-center gap-2"><i class="fa-solid fa-chart-column text-emerald-600"></i> Tren Penambahan Views Per Hari</h3>
+                <p class="text-xs text-slate-400 mb-4">Performa tayangan harian secara menyeluruh</p>
+                <div class="h-60 w-full"><canvas id="dailyTrendChart"></canvas></div>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs">
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1 flex items-center gap-2"><i class="fa-solid fa-users text-emerald-600"></i> Top Akun Menurut Total Views</h3>
+                <p class="text-xs text-slate-400 mb-4">Akun yang memiliki kontribusi views terbesar</p>
+                <div class="h-60 w-full"><canvas id="topAccountsBarChart"></canvas></div>
+            </div>
+        </div>
+
+        <div id="allPostsTableSection" class="hidden bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden mt-6">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2"><span>Rincian Posts Data</span><span id="tableCountBadge" class="bg-slate-100 text-slate-600 text-xs font-semibold px-2.5 py-0.5 rounded-full">0</span></h3>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i><input type="text" id="tableSearch" onkeyup="renderTable()" placeholder="Cari account atau caption..." class="bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500 w-48 sm:w-64"></div>
+                </div>
+            </div>
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse text-xs">
                     <thead>
-                        <tr class="border-b border-slate-100 text-xs text-slate-400 uppercase">
-                            <th class="py-3 px-4">Rank</th>
-                            <th class="py-3 px-4">Account / Caption</th>
-                            <th class="py-3 px-4">Periode</th>
-                            <th class="py-3 px-4">Views</th>
-                            <th class="py-3 px-4">Likes</th>
-                            <th class="py-3 px-4">Link</th>
+                        <tr class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase tracking-wider">
+                            <th class="py-3 px-4 text-center">No</th>
+                            <th class="py-3 px-4">Tgl Upload</th>
+                            <th class="py-3 px-4">Account</th>
+                            <th class="py-3 px-4 max-w-xs">Caption</th>
+                            <th class="py-3 px-4 text-center">Link Post</th>
+                            <th class="py-3 px-4 text-right cursor-pointer hover:text-emerald-600" onclick="sortTable('views')">Views <i class="fa-solid fa-sort text-[10px]"></i></th>
+                            <th class="py-3 px-4 text-right">Likes</th>
+                            <th class="py-3 px-4 text-right">Comment</th>
+                            <th class="py-3 px-4 text-right">Save</th>
+                            <th class="py-3 px-4 text-right">Share</th>
+                            <th class="py-3 px-4 text-center">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="contentTableBody" class="text-sm divide-y divide-slate-50">
-                        <tr><td colspan="6" class="text-center py-4 text-slate-400">Memuat data dari cloud...</td></tr>
-                    </tbody>
+                    <tbody id="postsTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
                 </table>
+            </div>
+            <div class="p-4 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2">
+                <div id="tablePaginationInfo">Showing 1 to 10 entries</div>
+                <div class="flex items-center gap-1" id="paginationButtons"></div>
             </div>
         </div>
     </main>
 
+    <div id="uploadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
+            <button type="button" onclick="closeModal('uploadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-2xl"><i class="fa-solid fa-file-excel text-xl"></i></div>
+                <div><h3 class="text-lg font-bold text-slate-800">Import Excel / Sheets</h3><p class="text-xs text-slate-500">Upload file Excel lokal (.xlsx, .csv) atau hubungkan Google Sheets</p></div>
+            </div>
+            <div class="space-y-3 text-xs pt-2">
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Upload File Excel / CSV dari Komputer</label>
+                    <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs file:mr-4 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 cursor-pointer">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Atau URL Google Sheets Publik</label>
+                    <input type="url" id="sheetsUrlInput" placeholder="https://docs.google.com/spreadsheets/d/.../edit" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" onclick="closeModal('uploadModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-600 text-xs">Batal</button>
+                <button type="button" onclick="handleImportExcelOrSheets()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-upload"></i> Proses Data Excel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addPostModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
+            <button type="button" onclick="closeModal('addPostModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-bold text-slate-800">Tambah Post Baru</h3>
+            <form onsubmit="handleAddPostSubmit(event)" class="space-y-3 text-xs">
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="font-semibold text-slate-600 block mb-1">Periode</label>
+                        <select id="newPeriod" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                            <option value="Periode 1">Periode 1</option>
+                            <option value="Periode 2">Periode 2</option>
+                            <option value="Periode 3">Periode 3</option>
+                            <option value="Periode 4">Periode 4</option>
+                            <option value="Periode 5">Periode 5</option>
+                        </select>
+                    </div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Account Handle</label><input type="text" id="newAccount" required placeholder="@username" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Platform</label><select id="newPlatform" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"><option value="TikTok">TikTok</option><option value="Instagram">Instagram</option><option value="Threads">Threads</option></select></div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="font-semibold text-slate-600 block mb-1">Kategori</label>
+                        <select id="newCategory" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                            <option value="Niche Media">Niche Media</option>
+                            <option value="Homeless Media">Homeless Media</option>
+                            <option value="UGC Media">UGC Media</option>
+                        </select>
+                    </div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Tanggal Upload</label><input type="date" id="newDate" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
+                </div>
+                <div><label class="font-semibold text-slate-600 block mb-1">Caption / Title</label><input type="text" id="newCaption" required placeholder="Isi caption ringkas..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div><label class="font-semibold text-slate-600 block mb-1">Views</label><input type="number" id="newViews" required value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2"></div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Likes</label><input type="number" id="newLikes" required value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2"></div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Comment</label><input type="number" id="newComments" required value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="font-semibold text-slate-600 block mb-1">Save</label><input type="number" id="newSaves" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
+                    <div><label class="font-semibold text-slate-600 block mb-1">Share</label><input type="number" id="newShares" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
+                </div>
+                <div><label class="font-semibold text-slate-600 block mb-1">Link Post (URL)</label><input type="url" id="newUrl" placeholder="https://..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('addPostModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-600">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold">Simpan Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="addProjectModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative space-y-4">
+            <button type="button" onclick="closeModal('addProjectModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-base font-bold text-slate-800">Tambah Project Baru</h3>
+            <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nama Project</label><input type="text" id="newProjectNameInput" placeholder="Contoh: Campaign Q4 2026" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"></div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeModal('addProjectModal')" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl">Batal</button>
+                <button type="button" onclick="handleAddNewProject()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl">Buat Project</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editProjectModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative space-y-4">
+            <button type="button" onclick="closeModal('editProjectModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-base font-bold text-slate-800">Ubah Nama Project</h3>
+            <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nama Project Baru</label><input type="text" id="editProjectNameInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"></div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeModal('editProjectModal')" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl">Batal</button>
+                <button type="button" onclick="handleRenameProject()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl">Simpan Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative space-y-5">
+            <button type="button" onclick="closeModal('settingsModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-2xl"><i class="fa-solid fa-gear text-xl"></i></div>
+                <div><h3 class="text-lg font-bold text-slate-800">Pengaturan Dashboard</h3><p class="text-xs text-slate-500">Kelola akses admin, hubungkan data, dan ekspor laporan</p></div>
+            </div>
+            <div class="space-y-4 text-xs">
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-user-shield text-emerald-600"></i> Status Akses Admin</span>
+                        <span id="settingsAdminStatus" class="px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-slate-200 text-slate-700">Client Mode</span>
+                    </div>
+                    <div id="settingsLoginForm" class="pt-1">
+                        <p class="text-[11px] text-slate-500 mb-2">Masuk sebagai Admin untuk membuka opsi edit, hubungkan sheets, dan manajemen project.</p>
+                        <div class="flex gap-2">
+                            <input type="password" id="settingsPinInput" placeholder="Masukkan PIN Admin" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500">
+                            <button type="button" onclick="submitSettingsPin()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded-xl transition whitespace-nowrap">Login</button>
+                        </div>
+                    </div>
+                    <div id="settingsLogoutForm" class="hidden pt-1 flex items-center justify-between">
+                        <span class="text-[11px] text-emerald-700 font-semibold">✓ Anda sedang berada dalam Modus Admin</span>
+                        <button type="button" onclick="disableAdminMode(); updateSettingsUI();" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold px-3 py-1.5 rounded-xl transition">Logout Admin</button>
+                    </div>
+                </div>
+
+                <div id="settingsProjectSection" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                    <span class="font-bold text-slate-700 block flex items-center gap-2"><i class="fa-solid fa-folder-plus text-emerald-600"></i> Kelola Project Laporan</span>
+                    <p class="text-[11px] text-slate-500">Tambah project baru, jadikan project utama untuk klien, atau hapus project.</p>
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        <button type="button" onclick="closeModal('settingsModal'); openModal('addProjectModal');" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-plus text-[10px]"></i> Project Baru</button>
+                        <button type="button" onclick="closeModal('settingsModal'); openEditProjectModal();" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-pen-to-square text-[10px]"></i> Ubah Nama</button>
+                        <button type="button" onclick="closeModal('settingsModal'); setDefaultProject();" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-star text-[10px]"></i> Set Project Utama Client</button>
+                    </div>
+                </div>
+
+                <div id="settingsShareSection" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                    <span class="font-bold text-slate-700 block flex items-center gap-2"><i class="fa-solid fa-share-nodes text-emerald-600"></i> Link Client Mode</span>
+                    <p class="text-[11px] text-slate-500">Salin link khusus project ini untuk dibagikan ke klien agar langsung terbuka di mode client.</p>
+                    <button type="button" onclick="copyShareLink()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl transition flex items-center justify-center gap-2"><i class="fa-solid fa-link"></i> Salin Link Client Project Ini</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative space-y-4 text-center">
+            <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mx-auto text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div>
+                <h3 id="confirmModalTitle" class="text-base font-bold text-slate-800">Konfirmasi Hapus</h3>
+                <p id="confirmModalMessage" class="text-xs text-slate-500 mt-1">Apakah Anda yakin ingin melanjutkan tindakan ini?</p>
+            </div>
+            <div class="flex items-center gap-2 pt-2">
+                <button type="button" onclick="closeConfirmModal()" class="w-1/2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition">Batal</button>
+                <button type="button" id="confirmModalActionBtn" onclick="executeConfirmAction()" class="w-1/2 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition">Ya, Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Konfigurasi JSONBin Anda
-        const CONFIG = {
-            BIN_ID: "6a854b7ada38895dfef5cca1",
-            API_KEY: "$2a$10$.Yyt32m3UwBB57d2BHJ7t.58K4fMYVnixlc3652hhbOa4ZvNCJ7nm"
+        // Konfigurasi JSONBin.io Anda yang tersinkron global
+        const JSONBIN_BIN_ID = "6a854b7ada38895dfef5cca1";
+        const JSONBIN_API_KEY = "$2a$10$.Yyt32m3UwBB57d2BHJ7t.58K4fMYVnixlc3652hhbOa4ZvNCJ7nm";
+
+        let projectsStore = {
+            "Campaign Preview": []
         };
 
-        let appData = {
-            projects: {
-                "Campaign Samsung": {
-                    posts: [
-                        { rank: 1, account: "@scene.podcast", caption: "Scene Podcast Samsung", periode: "Periode 1", views: 435500, likes: 5400, link: "#" },
-                        { rank: 2, account: "@selintasklip", caption: "Review Z Fold8", periode: "Periode 1", views: 193300, likes: 387, link: "#" }
-                    ]
-                },
-                "Campaign Preview": { posts: [] }
-            }
-        };
+        let currentProjectName = "Campaign Preview", postsData = [], filteredPosts = [], isAdmin = false;
+        let pieChartInstance = null, dailyChartInstance = null, topAccountChartInstance = null;
+        let activeConfirmCallback = null;
 
-        let currentProjectName = "Campaign Samsung";
-
-        // Cek parameter URL atau Hash
-        function getActiveProjectFromURL() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const hash = window.location.hash.replace('#project=', '').replace(/%20/g, ' ');
-            if (urlParams.has('project')) return urlParams.get('project');
-            if (hash) return hash;
-            return "Campaign Samsung";
+        window.openModal = function(id) { const el = document.getElementById(id); if(el) el.classList.remove('hidden'); if(id === 'settingsModal') updateSettingsUI(); }
+        window.closeModal = function(id) { const el = document.getElementById(id); if(el) el.classList.add('hidden'); }
+        window.showToast = function(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white flex items-center gap-2 transition-all transform translate-y-10 opacity-0 ${type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'}`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i><span>${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-10', 'opacity-0'), 50);
+            setTimeout(() => { toast.classList.add('translate-y-10', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3500);
         }
+        window.openConfirmModal = function(title, message, callback, btnText = 'Ya, Hapus') {
+            document.getElementById('confirmModalTitle').innerText = title;
+            document.getElementById('confirmModalMessage').innerText = message;
+            document.getElementById('confirmModalActionBtn').innerText = btnText;
+            activeConfirmCallback = callback;
+            window.openModal('confirmModal');
+        }
+        window.closeConfirmModal = function() { window.closeModal('confirmModal'); activeConfirmCallback = null; }
+        window.executeConfirmAction = function() { if (activeConfirmCallback) activeConfirmCallback(); window.closeConfirmModal(); }
 
-        async function loadCloudData() {
+        async function loadStoreFromServer() {
             try {
-                const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, {
-                    headers: { 'X-Master-Key': CONFIG.API_KEY }
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': JSONBIN_API_KEY }
                 });
-                const json = await res.json();
-                if (json.record && json.record.projects) {
-                    appData = json.record;
+                const result = await response.json();
+                if (result && result.record && result.record.store && typeof result.record.store === 'object' && Object.keys(result.record.store).length > 0) {
+                    projectsStore = result.record.store;
                 }
-            } catch (e) {
-                console.error("Gagal ambil cloud, pakai data lokal/default", e);
+            } catch(e) {
+                console.log("Using local storage fallback");
+                const localSaved = localStorage.getItem('jsonbin_sm_store_v2026');
+                if (localSaved) {
+                    try { const parsed = JSON.parse(localSaved); if(parsed) projectsStore = parsed; } catch(err) {}
+                }
             }
-            renderApp();
         }
 
-        async function saveCloudData() {
+        async function saveUniversalStore() {
+            localStorage.setItem('jsonbin_sm_store_v2026', JSON.stringify(projectsStore));
             try {
-                await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}`, {
+                await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Master-Key': CONFIG.API_KEY
+                        'X-Master-Key': JSONBIN_API_KEY
                     },
-                    body: JSON.stringify(appData)
+                    body: JSON.stringify({ store: projectsStore })
                 });
-            } catch (e) {
-                console.error("Gagal simpan ke cloud", e);
+            } catch(e) {
+                console.log("Cloud sync error:", e);
             }
         }
 
-        function renderApp() {
-            currentProjectName = getActiveProjectFromURL();
-            if (!appData.projects[currentProjectName]) {
-                currentProjectName = "Campaign Preview";
-            }
+        window.addEventListener('DOMContentLoaded', async () => {
+            const savedAdmin = sessionStorage.getItem('sm_admin_active');
+            if(savedAdmin === 'true') enableAdminMode(); else disableAdminMode();
 
-            document.getElementById('currentProjectTitle').innerText = currentProjectName;
-            
-            const projectData = appData.projects[currentProjectName] || { posts: [] };
-            let totalV = 0, totalL = 0, totalC = 0;
+            await loadStoreFromServer();
+            initProjectSelection();
+        });
 
-            let tbody = document.getElementById('contentTableBody');
-            tbody.innerHTML = "";
+        window.addEventListener('hashchange', () => {
+            initProjectSelection();
+        });
 
-            if (projectData.posts.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Tidak ada data.</td></tr>`;
+        function initProjectSelection() {
+            let targetProj = "";
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('project')) {
+                targetProj = urlParams.get('project');
             } else {
-                projectData.posts.forEach((p, idx) => {
-                    totalV += Number(p.views || 0);
-                    totalL += Number(p.likes || 0);
-                    totalC += Number(p.comments || 0);
-
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50/50">
-                            <td class="py-3 px-4 font-bold">#${idx + 1}</td>
-                            <td class="py-3 px-4"><div class="font-medium text-slate-800">${p.account}</div><div class="text-xs text-slate-400 truncate max-w-xs">${p.caption}</div></td>
-                            <td class="py-3 px-4"><span class="bg-amber-50 text-amber-700 px-2 py-1 rounded text-xs">${p.periode}</span></td>
-                            <td class="py-3 px-4 font-semibold">${Number(p.views).toLocaleString()}</td>
-                            <td class="py-3 px-4">${Number(p.likes).toLocaleString()}</td>
-                            <td class="py-3 px-4"><a href="${p.link}" target="_blank" class="text-emerald-600 hover:underline text-xs font-semibold">Link Post</a></td>
-                        </tr>
-                    `;
-                });
+                const hash = window.location.hash;
+                if (hash && hash.includes('project=')) {
+                    const parts = hash.split('project=');
+                    if (parts[1]) targetProj = decodeURIComponent(parts[1].split('&')[0].replace(/\+/g, ' '));
+                }
             }
 
-            document.getElementById('statViews').innerText = totalV.toLocaleString();
-            document.getElementById('statLikes').innerText = totalL.toLocaleString();
-            document.getElementById('statComments').innerText = totalC.toLocaleString();
+            if (targetProj) {
+                const cleanParam = targetProj.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const foundKey = Object.keys(projectsStore).find(k => k.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanParam);
+                if (foundKey) {
+                    currentProjectName = foundKey;
+                } else {
+                    currentProjectName = "Campaign Preview";
+                    if(!projectsStore["Campaign Preview"]) projectsStore["Campaign Preview"] = [];
+                }
+            } else {
+                const defaultProj = localStorage.getItem('sm_default_project');
+                if (defaultProj && projectsStore[defaultProj]) {
+                    currentProjectName = defaultProj;
+                } else {
+                    const keys = Object.keys(projectsStore).filter(k => k !== "Campaign Preview");
+                    currentProjectName = keys.length > 0 ? keys[0] : "Campaign Preview";
+                }
+            }
+            if(!projectsStore[currentProjectName]) projectsStore[currentProjectName] = [];
+            renderProjectDropdown();
+            setCurrentProject(currentProjectName);
         }
 
-        function toggleAdminMenu() {
-            const menu = document.getElementById('adminDropdown');
-            menu.classList.toggle('hidden');
+        function renderProjectDropdown() {
+            const select = document.getElementById('projectSelect');
+            select.innerHTML = '';
+            Object.keys(projectsStore).forEach(projName => {
+                const opt = document.createElement('option');
+                opt.value = projName; opt.textContent = projName;
+                if(projName === currentProjectName) opt.selected = true;
+                select.appendChild(opt);
+            });
         }
 
-        function copyClientLink() {
-            const cleanUrl = window.location.href.split('?')[0].split('#')[0];
-            const clientLink = `${cleanUrl}?project=${encodeURIComponent(currentProjectName)}`;
-            navigator.clipboard.writeText(clientLink);
-            alert("Link Client Mode berhasil disalin!\n" + clientLink);
-            toggleAdminMenu();
+        window.handleProjectChange = function() {
+            setCurrentProject(document.getElementById('projectSelect').value);
         }
 
-        async function handleExcelImport(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const rows = XLSX.utils.sheet_to_json(firstSheet);
+        function setCurrentProject(name) {
+            if(!projectsStore[name]) projectsStore[name] = [];
+            currentProjectName = name; postsData = projectsStore[name];
+            populateFilterDropdowns(); applyFilters();
+        }
 
-                appData.projects[currentProjectName] = {
-                    posts: rows.map((r, i) => ({
-                        rank: i + 1,
-                        account: r.Account || r.account || "@account",
-                        caption: r.Caption || r.caption || "No caption",
-                        periode: r.Periode || r.periode || "Periode 1",
-                        views: r.Views || r.views || 0,
-                        likes: r.Likes || r.likes || 0,
-                        comments: r.Comments || r.comments || 0,
-                        link: r.Link || r.link || "#"
-                    }))
+        window.submitSettingsPin = function() {
+            if (document.getElementById('settingsPinInput').value.trim() === '080101') {
+                enableAdminMode(); document.getElementById('settingsPinInput').value = ''; window.showToast('Berhasil Login Modus Admin!', 'success'); window.closeModal('settingsModal');
+            } else { window.showToast('PIN Admin salah!', 'error'); }
+        }
+
+        window.enableAdminMode = function() {
+            isAdmin = true;
+            sessionStorage.setItem('sm_admin_active', 'true');
+            document.getElementById('accessModeBadge').innerHTML = `<span class="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-xl border border-emerald-300 shadow-xs"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Modus Admin Aktif</span>`;
+            document.getElementById('adminActionGroup').classList.remove('hidden');
+            const ctrlGrp = document.getElementById('adminProjectControlGroup');
+            ctrlGrp.classList.remove('hidden'); ctrlGrp.classList.add('flex');
+            document.getElementById('projectSelect').disabled = false;
+            document.getElementById('projectSelectChevron').classList.remove('hidden');
+            document.getElementById('adminOnlySecondaryCharts').classList.remove('hidden');
+            document.getElementById('allPostsTableSection').classList.remove('hidden');
+            updateSettingsUI(); renderTable();
+            setTimeout(() => { renderDailyTrendChart(); renderTopAccountsChart(); }, 50);
+        }
+
+        window.disableAdminMode = function() {
+            isAdmin = false;
+            sessionStorage.removeItem('sm_admin_active');
+            document.getElementById('accessModeBadge').innerHTML = '';
+            document.getElementById('adminActionGroup').classList.add('hidden');
+            const ctrlGrp = document.getElementById('adminProjectControlGroup');
+            ctrlGrp.classList.add('hidden'); ctrlGrp.classList.remove('flex');
+            document.getElementById('projectSelect').disabled = true;
+            document.getElementById('projectSelectChevron').classList.add('hidden');
+            document.getElementById('adminOnlySecondaryCharts').classList.add('hidden');
+            document.getElementById('allPostsTableSection').classList.add('hidden');
+            updateSettingsUI(); renderTable();
+        }
+
+        function updateSettingsUI() {
+            const badge = document.getElementById('settingsAdminStatus');
+            if (!badge) return;
+            if (isAdmin) {
+                badge.innerText = 'Admin Active'; badge.className = 'px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300';
+                document.getElementById('settingsLoginForm').classList.add('hidden');
+                document.getElementById('settingsLogoutForm').classList.remove('hidden');
+                document.getElementById('settingsProjectSection').classList.remove('hidden');
+                document.getElementById('settingsShareSection').classList.remove('hidden');
+            } else {
+                badge.innerText = 'Client Mode'; badge.className = 'px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-slate-200 text-slate-700';
+                document.getElementById('settingsLoginForm').classList.remove('hidden');
+                document.getElementById('settingsLogoutForm').classList.add('hidden');
+                document.getElementById('settingsProjectSection').classList.add('hidden');
+                document.getElementById('settingsShareSection').classList.add('hidden');
+            }
+        }
+
+        window.toggleAdminMenu = function() { document.getElementById('adminDropdownMenu').classList.toggle('hidden'); }
+
+        window.handleAddNewProject = async function() {
+            const input = document.getElementById('newProjectNameInput'), name = input.value.trim();
+            if(!name) return window.showToast("Masukkan nama project!", 'error');
+            if(projectsStore[name]) return window.showToast("Nama project sudah ada!", 'error');
+            projectsStore[name] = []; await saveUniversalStore(); renderProjectDropdown(); setCurrentProject(name); input.value = ''; window.closeModal('addProjectModal');
+            window.showToast(`Project "${name}" berhasil dibuat!`, 'success');
+        }
+
+        window.openEditProjectModal = function() { document.getElementById('editProjectNameInput').value = currentProjectName; window.openModal('editProjectModal'); }
+        window.handleRenameProject = async function() {
+            const input = document.getElementById('editProjectNameInput'), newName = input.value.trim();
+            if(!newName || newName === currentProjectName) return window.closeModal('editProjectModal');
+            projectsStore[newName] = projectsStore[currentProjectName]; delete projectsStore[currentProjectName]; currentProjectName = newName;
+            await saveUniversalStore(); renderProjectDropdown(); setCurrentProject(newName); window.closeModal('editProjectModal');
+            window.showToast("Nama project berhasil diubah!", 'success');
+        }
+
+        window.setDefaultProject = function() {
+            localStorage.setItem('sm_default_project', currentProjectName);
+            window.showToast(`Project "${currentProjectName}" kini diset sebagai default utama untuk client!`, 'success');
+        }
+
+        window.confirmDeleteCurrentProject = function() {
+            if(Object.keys(projectsStore).length <= 1) return window.showToast("Minimal ada 1 project aktif!", 'error');
+            window.openConfirmModal("Hapus Project", `Apakah Anda yakin ingin menghapus project "${currentProjectName}"?`, async () => {
+                delete projectsStore[currentProjectName];
+                await saveUniversalStore(); renderProjectDropdown(); setCurrentProject(Object.keys(projectsStore)[0]);
+                window.showToast("Project berhasil dihapus.", 'success');
+            }, 'Ya, Hapus Project');
+        }
+
+        window.confirmResetCurrentProjectData = function() {
+            window.openConfirmModal("Reset Data", `Reset semua data post untuk project "${currentProjectName}"?`, async () => {
+                projectsStore[currentProjectName] = []; await saveUniversalStore(); setCurrentProject(currentProjectName);
+                window.showToast("Data project berhasil di-reset.", 'success');
+            }, 'Ya, Reset Data');
+        }
+
+        window.copyShareLink = function() {
+            const baseUrl = window.location.href.split('#')[0].split('?')[0];
+            const shareUrl = `${baseUrl}?project=${encodeURIComponent(currentProjectName)}`;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    window.showToast(`Link client "${currentProjectName}" berhasil disalin!`, 'success');
+                }).catch(() => fallbackCopyText(shareUrl));
+            } else { fallbackCopyText(shareUrl); }
+        }
+
+        function fallbackCopyText(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text; textArea.style.position = "fixed"; document.body.appendChild(textArea);
+            textArea.focus(); textArea.select();
+            try { document.execCommand('copy'); window.showToast("Link client berhasil disalin!", 'success'); }
+            catch (err) { window.showToast("Gagal menyalin link.", 'error'); }
+            document.body.removeChild(textArea);
+        }
+
+        function populateFilterDropdowns() {
+            const periods = new Set(['Periode 1', 'Periode 2', 'Periode 3', 'Periode 4', 'Periode 5']), accounts = new Set(), categories = new Set(['Niche Media', 'Homeless Media', 'UGC Media']);
+            postsData.forEach(p => { if(p.period) periods.add(p.period); if(p.account) accounts.add(p.account); if(p.category) categories.add(p.category); });
+            
+            const pSelect = document.getElementById('filterPeriod');
+            pSelect.innerHTML = '<option value="ALL">Semua Periode</option>';
+            Array.from(periods).sort().forEach(per => pSelect.innerHTML += `<option value="${per}">${per}</option>`);
+
+            const accSelect = document.getElementById('filterAccount');
+            accSelect.innerHTML = '<option value="ALL">Semua Akun</option>';
+            accounts.forEach(acc => accSelect.innerHTML += `<option value="${acc}">${acc}</option>`);
+
+            const catSelect = document.getElementById('filterCategory');
+            catSelect.innerHTML = '<option value="ALL">Semua Kategori</option>';
+            categories.forEach(cat => catSelect.innerHTML += `<option value="${cat}">${cat}</option>`);
+        }
+
+        window.resetFilters = function() {
+            ['filterPeriod', 'filterPlatform', 'filterAccount', 'filterCategory'].forEach(id => document.getElementById(id).value = 'ALL');
+            ['filterStartDate', 'filterEndDate', 'tableSearch'].forEach(id => document.getElementById(id).value = '');
+            applyFilters();
+        }
+
+        window.applyFilters = function() {
+            const peF = document.getElementById('filterPeriod').value, pF = document.getElementById('filterPlatform').value, aF = document.getElementById('filterAccount').value;
+            const cF = document.getElementById('filterCategory').value, sD = document.getElementById('filterStartDate').value, eD = document.getElementById('filterEndDate').value;
+
+            filteredPosts = postsData.filter(p => {
+                if (peF !== 'ALL' && p.period !== peF) return false;
+                if (pF !== 'ALL' && p.platform !== pF) return false;
+                if (aF !== 'ALL' && p.account !== aF) return false;
+                if (cF !== 'ALL' && p.category !== cF) return false;
+                if (sD && p.tgl_upload < sD) return false;
+                if (eD && p.tgl_upload > eD) return false;
+                return true;
+            });
+            updateMetricsAndCharts(); renderTable();
+        }
+
+        function updateMetricsAndCharts() {
+            let tViews = 0, tLikes = 0, tComments = 0, tSaves = 0, tShares = 0;
+            filteredPosts.forEach(p => {
+                tViews += Number(p.views || 0); tLikes += Number(p.likes || 0);
+                tComments += Number(p.cmt || p.comments || 0); tSaves += Number(p.save || p.saves || 0); tShares += Number(p.share || p.shares || 0);
+            });
+
+            const tEng = tLikes + tComments + tSaves + tShares;
+            document.getElementById('metricTotalViews').innerText = tViews.toLocaleString('id-ID');
+            document.getElementById('metricTotalLikes').innerText = tLikes.toLocaleString('id-ID');
+            document.getElementById('metricTotalComments').innerText = tComments.toLocaleString('id-ID');
+            document.getElementById('metricTotalSaves').innerText = tSaves.toLocaleString('id-ID');
+            document.getElementById('metricTotalShares').innerText = tShares.toLocaleString('id-ID');
+            document.getElementById('metricAvgEngagement').innerText = (tViews > 0 ? ((tEng / tViews) * 100).toFixed(2) : 0) + '%';
+            document.getElementById('postCountBadge').innerText = filteredPosts.length + ' Posts Loaded';
+
+            const sorted = [...filteredPosts].sort((a, b) => Number(b.views || 0) - Number(a.views || 0));
+            if (sorted.length > 0) {
+                const top1 = sorted[0];
+                document.getElementById('top1Account').innerText = top1.account || '-';
+                document.getElementById('top1Caption').innerText = top1.caption ? `"${top1.caption}"` : '-';
+                document.getElementById('top1Platform').innerText = top1.platform || 'General';
+                document.getElementById('top1Views').innerText = Number(top1.views || 0).toLocaleString('id-ID');
+                document.getElementById('top1Likes').innerText = Number(top1.likes || 0).toLocaleString('id-ID');
+                document.getElementById('top1Comments').innerText = Number(top1.cmt || top1.comments || 0).toLocaleString('id-ID');
+                document.getElementById('top1Link').href = top1.url || '#';
+            } else {
+                document.getElementById('top1Account').innerText = '@account';
+                document.getElementById('top1Caption').innerText = '"Belum ada data konten..."';
+                document.getElementById('top1Platform').innerText = '-';
+                document.getElementById('top1Views').innerText = '0';
+                document.getElementById('top1Likes').innerText = '0';
+                document.getElementById('top1Comments').innerText = '0';
+                document.getElementById('top1Link').href = '#';
+            }
+            renderTop10Table(sorted.slice(0, 10));
+            renderPieChart(); renderDailyTrendChart(); renderTopAccountsChart();
+        }
+
+        function renderTop10Table(list) {
+            const tbody = document.getElementById('top10TableBody'); tbody.innerHTML = '';
+            if (list.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-amber-700">Tidak ada data.</td></tr>`; return; }
+            list.forEach((item, idx) => {
+                tbody.innerHTML += `<tr class="${idx % 2 === 0 ? 'bg-amber-50/40' : 'bg-white'} hover:bg-amber-100/50">
+                    <td class="py-2.5 px-3 text-center font-extrabold text-amber-900">#${idx + 1}</td>
+                    <td class="py-2.5 px-3"><div class="font-bold text-amber-950">${item.account || '@user'}</div><div class="text-[10px] text-amber-800/80 truncate max-w-xs">${item.caption || '-'}</div></td>
+                    <td class="py-2.5 px-3"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-200 text-amber-900">${item.period || 'Periode 1'}</span></td>
+                    <td class="py-2.5 px-3 text-right font-extrabold text-amber-950">${Number(item.views || 0).toLocaleString('id-ID')}</td>
+                    <td class="py-2.5 px-3 text-right font-medium text-amber-900">${Number(item.likes || 0).toLocaleString('id-ID')}</td>
+                    <td class="py-2.5 px-3 text-center"><a href="${item.url || '#'}" target="_blank" class="text-amber-700 hover:text-amber-900 font-bold underline text-[10px]">Link Post</a></td></tr>`;
+            });
+        }
+
+        function renderPieChart() {
+            const ctx = document.getElementById('platformPieChart').getContext('2d'), pViews = {};
+            filteredPosts.forEach(p => pViews[p.platform || 'Other'] = (pViews[p.platform || 'Other'] || 0) + Number(p.views || 0));
+            const labels = Object.keys(pViews), data = Object.values(pViews);
+
+            if (pieChartInstance) pieChartInstance.destroy();
+            pieChartInstance = new Chart(ctx, { type: 'pie', data: { labels, datasets: [{ data, backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'], borderWidth: 2, borderColor: '#fff' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+
+            const colors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'], total = data.reduce((a, b) => a + b, 0);
+            document.getElementById('pieLegend').innerHTML = labels.length > 0 ? labels.map((l, i) => `<div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full inline-block" style="background:${colors[i]}"></span><span>${l}: <strong>${total > 0 ? ((data[i]/total)*100).toFixed(1) : 0}%</strong></span></div>`).join('') : '<span class="text-slate-400 text-xs">Belum ada data proporsi</span>';
+        }
+
+        function renderDailyTrendChart() {
+            const ctx = document.getElementById('dailyTrendChart').getContext('2d'), dMap = {};
+            filteredPosts.forEach(p => { if(p.tgl_upload) dMap[p.tgl_upload] = (dMap[p.tgl_upload] || 0) + Number(p.views || 0); });
+            const dates = Object.keys(dMap).sort();
+            if (dailyChartInstance) dailyChartInstance.destroy();
+            dailyChartInstance = new Chart(ctx, { type: 'bar', data: { labels: dates.map(d => d.slice(5)), datasets: [{ data: dates.map(d => dMap[d]), backgroundColor: '#10b981', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+        }
+
+        function renderTopAccountsChart() {
+            const ctx = document.getElementById('topAccountsBarChart').getContext('2d'), aViews = {};
+            filteredPosts.forEach(p => aViews[p.account || '@unknown'] = (aViews[p.account || '@unknown'] || 0) + Number(p.views || 0));
+            const accs = Object.keys(aViews).sort((a,b) => aViews[b]-aViews[a]).slice(0, 6);
+            if (topAccountChartInstance) topAccountChartInstance.destroy();
+            topAccountChartInstance = new Chart(ctx, { type: 'bar', data: { labels: accs, datasets: [{ data: accs.map(a => aViews[a]), backgroundColor: '#064e3b', borderRadius: 6 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+        }
+
+        window.renderTable = function() {
+            const tbody = document.getElementById('postsTableBody'), sVal = document.getElementById('tableSearch').value.toLowerCase();
+            const display = filteredPosts.filter(p => (p.account || '').toLowerCase().includes(sVal) || (p.caption || '').toLowerCase().includes(sVal));
+            
+            document.getElementById('tableCountBadge').innerText = display.length;
+            document.getElementById('tablePaginationInfo').innerText = `Showing ${display.length} entries`;
+            tbody.innerHTML = display.length === 0 ? `<tr><td colspan="11" class="py-8 text-center text-slate-400">Tidak ada data.</td></tr>` : '';
+
+            display.forEach((post, idx) => {
+                const v = Number(post.views || 0), l = Number(post.likes || 0), c = Number(post.cmt || post.comments || 0), s = Number(post.save || post.saves || 0), sh = Number(post.share || post.shares || 0);
+                tbody.innerHTML += `<tr class="hover:bg-slate-50 transition">
+                    <td class="py-3 px-4 text-center font-bold text-slate-500">${idx + 1}</td>
+                    <td class="py-3 px-4 text-slate-600">${post.tgl_upload || '-'}</td>
+                    <td class="py-3 px-4 font-bold text-slate-800">${post.account || '-'}</td>
+                    <td class="py-3 px-4 max-w-xs truncate" title="${post.caption || ''}">${post.caption || '-'}</td>
+                    <td class="py-3 px-4 text-center"><a href="${post.url || '#'}" target="_blank" class="text-emerald-600 hover:text-emerald-800 font-bold underline">Link Post</a></td>
+                    <td class="py-3 px-4 text-right font-extrabold text-slate-900">${v.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right font-semibold">${l.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right">${c.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right">${s.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-right">${sh.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 text-center">${isAdmin ? `<button type="button" onclick="confirmDeletePost(${post.id})" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg"><i class="fa-solid fa-trash text-xs"></i></button>` : '<span class="text-slate-300">-</span>'}</td></tr>`;
+            });
+        }
+
+        window.sortTable = function(key) { if (key === 'views') { filteredPosts.sort((a, b) => Number(b.views || 0) - Number(a.views || 0)); renderTable(); } }
+        
+        window.confirmDeletePost = function(id) {
+            window.openConfirmModal("Hapus Post", "Apakah Anda yakin ingin menghapus post ini dari laporan?", async () => {
+                postsData = postsData.filter(p => p.id !== id);
+                projectsStore[currentProjectName] = postsData;
+                await saveUniversalStore();
+                setCurrentProject(currentProjectName);
+                window.showToast("Post berhasil dihapus.", 'success');
+            }, 'Ya, Hapus');
+        }
+
+        window.toggleAllPostsTable = function() { const ts = document.getElementById('allPostsTableSection'); ts.classList.toggle('hidden'); ts.scrollIntoView({ behavior: 'smooth' }); }
+
+        window.handleImportExcelOrSheets = function() {
+            const fileInput = document.getElementById('excelFileInput');
+            const rawUrl = document.getElementById('sheetsUrlInput').value.trim();
+
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json(firstSheet);
+                        if (rows && rows.length > 0) {
+                            processSmartAIIntelligence(rows);
+                        } else {
+                            window.showToast("File Excel kosong atau format tidak sesuai.", 'error');
+                        }
+                    } catch(err) {
+                        window.showToast("Gagal membaca file Excel.", 'error');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+                return;
+            }
+
+            if (rawUrl) {
+                const match = rawUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (!match) return window.showToast("URL Google Sheets tidak valid!", 'error');
+                const exportCsvUrl = `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`;
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(exportCsvUrl)}`;
+
+                Papa.parse(proxyUrl, {
+                    download: true, header: true, skipEmptyLines: true,
+                    complete: function(results) {
+                        if (results.data && results.data.length > 0) {
+                            processSmartAIIntelligence(results.data);
+                        } else {
+                            window.showToast("Spreadsheet kosong atau tidak dapat diakses.", 'error');
+                        }
+                    },
+                    error: () => {
+                        window.showToast("Gagal membaca Google Sheets. Pastikan akses link sudah publik.", 'error');
+                    }
+                });
+                return;
+            }
+
+            window.showToast("Pilih file Excel atau masukkan URL Google Sheets terlebih dahulu!", 'error');
+        }
+
+        async function processSmartAIIntelligence(rows) {
+            const parsed = rows.map((row, idx) => {
+                const getVal = (possibleKeys, fallback = '') => {
+                    const rowKeys = Object.keys(row);
+                    for (let rKey of rowKeys) {
+                        const cleanRKey = rKey.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+                        for (let pKey of possibleKeys) {
+                            const cleanPKey = pKey.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+                            if (cleanRKey.includes(cleanPKey)) {
+                                const val = row[rKey];
+                                if (val !== undefined && val !== null && val !== '') return val;
+                            }
+                        }
+                    }
+                    return fallback;
                 };
 
-                await saveCloudData();
-                renderApp();
-                alert("Berhasil import Excel dan tersimpan ke Cloud!");
-            };
-            reader.readAsArrayBuffer(file);
+                const rawPer = String(getVal(['periode', 'period', 'batch', 'wave', 'gelombang', 'tahap'], 'Periode 1'));
+                const period = rawPer.toLowerCase().includes('periode') || rawPer.toLowerCase().includes('batch') || rawPer.toLowerCase().includes('wave') ? rawPer : `Periode ${rawPer.replace(/[^0-9]/g, '') || '1'}`;
+                const account = getVal(['account', 'akun', 'username', 'handle', 'creator', 'profil'], '@user');
+                const platform = getVal(['platform', 'sosmed', 'channel', 'media', 'aplikasi'], 'TikTok');
+                const category = getVal(['category', 'kategori', 'niche', 'genre', 'topik'], 'General');
+                const caption = getVal(['caption', 'title', 'judul', 'deskripsi', 'content', 'teks', 'pesan'], '-');
+                const tgl_upload = getVal(['date', 'tanggal', 'tgl', 'upload', 'waktu', 'time', 'hari'], new Date().toISOString().split('T')[0]);
+                
+                const extractNumber = (keys) => {
+                    const raw = getVal(keys, '0');
+                    const cleanStr = String(raw).replace(/\./g, '').replace(/,/g, '.').replace(/[^0-9]/g, '');
+                    return Number(cleanStr) || 0;
+                };
+
+                const views = extractNumber(['view', 'tayangan', 'plays', 'penonton', 'dilihat', 'jmlview']);
+                const likes = extractNumber(['like', 'suka', 'love', 'jempol']);
+                const cmt = extractNumber(['comment', 'komen', 'komentar', 'cmt', 'tanggapan']);
+                const save = extractNumber(['save', 'simpan', 'bookmark', 'favorit']);
+                const share = extractNumber(['share', 'bagikan', 'retweet', 'kirim']);
+                const url = getVal(['url', 'link', 'tautan', 'address', 'http'], '#');
+
+                return {
+                    id: Date.now() + idx,
+                    period: String(period),
+                    account: String(account),
+                    platform: String(platform),
+                    category: String(category),
+                    caption: String(caption),
+                    tgl_upload: String(tgl_upload),
+                    views, likes, cmt, save, share,
+                    url: String(url)
+                };
+            });
+
+            postsData = [...postsData, ...parsed]; 
+            projectsStore[currentProjectName] = postsData;
+            await saveUniversalStore(); 
+            setCurrentProject(currentProjectName); 
+            window.closeModal('uploadModal');
+            document.getElementById('sheetsUrlInput').value = '';
+            document.getElementById('excelFileInput').value = '';
+            window.showToast(`Berhasil mengimpor ${parsed.length} data post!`, 'success');
         }
 
-        function resetData() {
-            if (confirm("Reset data pada project ini?")) {
-                appData.projects[currentProjectName] = { posts: [] };
-                saveCloudData();
-                renderApp();
-            }
+        window.handleAddPostSubmit = async function(e) {
+            e.preventDefault();
+            postsData.unshift({
+                id: Date.now(), period: document.getElementById('newPeriod').value,
+                account: document.getElementById('newAccount').value.trim(), platform: document.getElementById('newPlatform').value,
+                category: document.getElementById('newCategory').value.trim(), caption: document.getElementById('newCaption').value.trim(),
+                tgl_upload: document.getElementById('newDate').value, views: Number(document.getElementById('newViews').value),
+                likes: Number(document.getElementById('newLikes').value), cmt: Number(document.getElementById('newComments').value),
+                save: Number(document.getElementById('newSaves').value), share: Number(document.getElementById('newShares').value), url: document.getElementById('newUrl').value.trim() || '#'
+            });
+            projectsStore[currentProjectName] = postsData; await saveUniversalStore(); setCurrentProject(currentProjectName); window.closeModal('addPostModal');
+            window.showToast("Post baru berhasil disimpan ke Cloud!", 'success');
         }
 
-        function openSettings() {
-            const newName = prompt("Ubah Nama Project:", currentProjectName);
-            if (newName && newName !== currentProjectName) {
-                appData.projects[newName] = appData.projects[currentProjectName];
-                delete appData.projects[currentProjectName];
-                saveCloudData();
-                window.location.search = `?project=${encodeURIComponent(newName)}`;
-            }
+        window.exportExcel = function() {
+            if (filteredPosts.length === 0) return window.showToast("Tidak ada data untuk diexport!", 'error');
+            const data = filteredPosts.map((p, idx) => ({ "No": idx + 1, "Periode": p.period, "Tgl Upload": p.tgl_upload, "Account": p.account, "Platform": p.platform, "Category": p.category, "Caption": p.caption, "Views": p.views, "Likes": p.likes, "Comment": p.cmt, "Save": p.save, "Share": p.share, "Link Post": p.url }));
+            const ws = XLSX.utils.json_to_sheet(data), wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Report"); XLSX.writeFile(wb, `report_${currentProjectName.toLowerCase().replace(/\s+/g, '_')}.xlsx`);
+            window.showToast("Laporan berhasil diexport ke Excel!", 'success');
         }
-
-        // Load saat halaman dibuka
-        window.onload = loadCloudData;
     </script>
 </body>
 </html>
