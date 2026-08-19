@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
@@ -36,14 +35,13 @@
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <button type="button" onclick="openModal('settingsModal')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 transition shadow-xs border border-slate-200"><i class="fa-solid fa-gear text-slate-500"></i><span>Pengaturan</span></button>
                 <div class="relative">
                     <button type="button" onclick="toggleAdminMenu()" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-medium px-3.5 py-2 rounded-xl text-xs transition shadow-sm"><i class="fa-solid fa-sliders"></i><span>Admin Tools</span><i class="fa-solid fa-chevron-down text-[10px]"></i></button>
                     <div id="adminDropdownMenu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 z-40 p-2 space-y-1">
                         <button type="button" onclick="openModal('uploadModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-file-excel text-emerald-600"></i> Import Excel / Sheets</button>
                         <button type="button" onclick="openModal('addPostModal'); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-plus text-slate-600"></i> Tambah Post</button>
                         <button type="button" onclick="exportExcel(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-100 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-file-excel text-emerald-600"></i> Export Excel (.xlsx)</button>
-                        <button type="button" onclick="copyShareLink(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-share-nodes"></i> Salin Link Client Mode</button>
+                        <button type="button" onclick="exportJSONBackup(); toggleAdminMenu();" class="w-full text-left px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-xl transition flex items-center gap-2"><i class="fa-solid fa-download"></i> Backup Data (.json)</button>
                     </div>
                 </div>
             </div>
@@ -59,7 +57,7 @@
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">SOCIAL MEDIA REPORT</h1>
                     <p class="text-emerald-100 text-sm mt-1">Rekapitulasi performa konten & engagement akun sosial media secara real-time</p>
                 </div>
-                <div class="bg-emerald-900/60 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-emerald-700/50 text-xs flex items-center gap-2 self-start md:self-auto"><i class="fa-regular fa-clock text-emerald-300"><span>Updated in: <strong id="lastUpdatedDate" class="text-white font-bold">Today</strong></span></div>
+                <div class="bg-emerald-900/60 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-emerald-700/50 text-xs flex items-center gap-2 self-start md:self-auto"><i class="fa-regular fa-clock text-emerald-300"></i><span>Updated: <strong id="lastUpdatedDate" class="text-white font-bold">Today</strong></span></div>
             </div>
         </div>
 
@@ -223,13 +221,10 @@
                     <tbody id="postsTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
                 </table>
             </div>
-            <div class="p-4 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2">
-                <div id="tablePaginationInfo">Showing 1 to 10 entries</div>
-                <div class="flex items-center gap-1" id="paginationButtons"></div>
-            </div>
         </div>
     </main>
 
+    <!-- Modals -->
     <div id="uploadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
             <button type="button" onclick="closeModal('uploadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -321,9 +316,7 @@
     </div>
 
     <script>
-        const NPOINT_URL = "https://api.npoint.io/69c05fa84d34926e9431";
-
-        // DATA CADANGAN LENGKAP (FALLBACK) AGAR TIDAK PERNAH 0
+        // STORAGE LOKAL & FALLBACK AMAN (Tidak Akan Pernah 0)
         let fallbackDefaultStore = {
             "Samsung": [
                 { id: 1, period: "Periode 1", account: "@scene.podcast", platform: "TikTok", category: "Niche Media", caption: "Review Eksklusif Samsung Z Fold", tgl_upload: "2026-06-12", views: 435500, likes: 5400, cmt: 320, save: 150, share: 210, url: "https://tiktok.com" },
@@ -357,35 +350,29 @@
         window.closeConfirmModal = function() { window.closeModal('confirmModal'); activeConfirmCallback = null; }
         window.executeConfirmAction = function() { if (activeConfirmCallback) activeConfirmCallback(); window.closeConfirmModal(); }
 
-        async function loadStoreFromServer() {
+        // SINKRONISASI LOKAL & BROWSER STORAGE UTAMA
+        function loadStore() {
             try {
-                const response = await fetch(NPOINT_URL, { cache: 'no-store' });
-                const result = await response.json();
-                if (result && result.projects && typeof result.projects === 'object' && Object.keys(result.projects).length > 0) {
-                    projectsStore = result.projects;
-                } else {
-                    projectsStore = fallbackDefaultStore;
+                const local = localStorage.getItem('social_media_report_store_v2');
+                if (local) {
+                    const parsed = JSON.parse(local);
+                    if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+                        projectsStore = parsed;
+                        return;
+                    }
                 }
-            } catch(e) {
-                console.log("Fallback ke data default lokal karena network:", e);
-                projectsStore = fallbackDefaultStore;
-            }
+            } catch(e) { console.log(e); }
+            projectsStore = fallbackDefaultStore;
         }
 
-        async function saveUniversalStore() {
+        function saveStore() {
             try {
-                await fetch(NPOINT_URL, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ projects: projectsStore })
-                });
-            } catch(e) {
-                console.log("Npoint sync error:", e);
-            }
+                localStorage.setItem('social_media_report_store_v2', JSON.stringify(projectsStore));
+            } catch(e) { console.log(e); }
         }
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            await loadStoreFromServer();
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStore();
             initProjectSelection();
         });
 
@@ -420,35 +407,39 @@
 
         window.toggleAdminMenu = function() { document.getElementById('adminDropdownMenu').classList.toggle('hidden'); }
 
-        window.handleAddNewProject = async function() {
+        window.handleAddNewProject = function() {
             const input = document.getElementById('newProjectNameInput'), name = input.value.trim();
             if(!name) return window.showToast("Masukkan nama project!", 'error');
             if(projectsStore[name]) return window.showToast("Nama sudah ada!", 'error');
-            projectsStore[name] = []; await saveUniversalStore(); renderProjectDropdown(); setCurrentProject(name); input.value = ''; window.closeModal('addProjectModal');
+            projectsStore[name] = []; saveStore(); renderProjectDropdown(); setCurrentProject(name); input.value = ''; window.closeModal('addProjectModal');
             window.showToast(`Project "${name}" dibuat!`, 'success');
         }
 
         window.openEditProjectModal = function() { document.getElementById('editProjectNameInput').value = currentProjectName; window.openModal('editProjectModal'); }
-        window.handleRenameProject = async function() {
+        window.handleRenameProject = function() {
             const input = document.getElementById('editProjectNameInput'), newName = input.value.trim();
             if(!newName || newName === currentProjectName) return window.closeModal('editProjectModal');
             projectsStore[newName] = projectsStore[currentProjectName]; delete projectsStore[currentProjectName]; currentProjectName = newName;
-            await saveUniversalStore(); renderProjectDropdown(); setCurrentProject(newName); window.closeModal('editProjectModal');
+            saveStore(); renderProjectDropdown(); setCurrentProject(newName); window.closeModal('editProjectModal');
             window.showToast("Nama project diubah!", 'success');
         }
 
         window.confirmDeleteCurrentProject = function() {
             if(Object.keys(projectsStore).length <= 1) return window.showToast("Minimal ada 1 project aktif!", 'error');
-            window.openConfirmModal("Hapus Project", `Hapus project "${currentProjectName}"?`, async () => {
+            window.openConfirmModal("Hapus Project", `Hapus project "${currentProjectName}"?`, () => {
                 delete projectsStore[currentProjectName];
-                await saveUniversalStore(); renderProjectDropdown(); setCurrentProject(Object.keys(projectsStore)[0]);
+                saveStore(); renderProjectDropdown(); setCurrentProject(Object.keys(projectsStore)[0]);
                 window.showToast("Project dihapus.", 'success');
             }, 'Hapus');
         }
 
-        window.copyShareLink = function() {
-            navigator.clipboard.writeText(window.location.href);
-            window.showToast("Link berhasil disalin!", 'success');
+        window.exportJSONBackup = function() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectsStore));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "backup_report_sosmed.json");
+            dlAnchorElem.click();
+            window.showToast("File backup JSON berhasil diunduh!", 'success');
         }
 
         function populateFilterDropdowns() {
@@ -571,7 +562,6 @@
             const display = filteredPosts.filter(p => (p.account || '').toLowerCase().includes(sVal) || (p.caption || '').toLowerCase().includes(sVal));
             
             document.getElementById('tableCountBadge').innerText = display.length;
-            document.getElementById('tablePaginationInfo').innerText = `Showing ${display.length} entries`;
             tbody.innerHTML = display.length === 0 ? `<tr><td colspan="11" class="py-8 text-center text-slate-400">Tidak ada data.</td></tr>` : '';
 
             display.forEach((post, idx) => {
@@ -594,10 +584,10 @@
         window.sortTable = function(key) { if (key === 'views') { filteredPosts.sort((a, b) => Number(b.views || 0) - Number(a.views || 0)); renderTable(); } }
         
         window.confirmDeletePost = function(id) {
-            window.openConfirmModal("Hapus Post", "Hapus post ini?", async () => {
+            window.openConfirmModal("Hapus Post", "Hapus post ini?", () => {
                 postsData = postsData.filter(p => p.id !== id);
                 projectsStore[currentProjectName] = postsData;
-                await saveUniversalStore();
+                saveStore();
                 setCurrentProject(currentProjectName);
                 window.showToast("Post dihapus.", 'success');
             }, 'Hapus');
@@ -626,7 +616,7 @@
             window.showToast("Pilih file Excel dulu!", 'error');
         }
 
-        async function processSmartAIIntelligence(rows) {
+        function processSmartAIIntelligence(rows) {
             const parsed = rows.map((row, idx) => {
                 const getVal = (possibleKeys, fallback = '') => {
                     const rowKeys = Object.keys(row);
@@ -666,13 +656,13 @@
 
             postsData = [...postsData, ...parsed]; 
             projectsStore[currentProjectName] = postsData;
-            await saveUniversalStore(); 
+            saveStore(); 
             setCurrentProject(currentProjectName); 
             window.closeModal('uploadModal');
             window.showToast(`Berhasil import ${parsed.length} data!`, 'success');
         }
 
-        window.handleAddPostSubmit = async function(e) {
+        window.handleAddPostSubmit = function(e) {
             e.preventDefault();
             postsData.unshift({
                 id: Date.now(), period: document.getElementById('newPeriod').value,
@@ -682,7 +672,7 @@
                 likes: Number(document.getElementById('newLikes').value), cmt: Number(document.getElementById('newComments').value),
                 save: 0, share: 0, url: '#'
             });
-            projectsStore[currentProjectName] = postsData; await saveUniversalStore(); setCurrentProject(currentProjectName); window.closeModal('addPostModal');
+            projectsStore[currentProjectName] = postsData; saveStore(); setCurrentProject(currentProjectName); window.closeModal('addPostModal');
             window.showToast("Post berhasil disimpan!", 'success');
         }
 
