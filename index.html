@@ -415,8 +415,7 @@
             messagingSenderId: "1234567890",
             appId: "1:1234567890:web:abcdef"
         };
-        // Menggunakan Shared App ID statis agar seluruh browser & akun membaca database bersama yang sama persis
-        const appId = 'shared-social-media-client-report-v6';
+        const appId = 'shared-social-media-client-report-v7';
 
         let db = null, auth = null, currentUser = null;
         let projectsStore = { 
@@ -450,12 +449,6 @@
             const savedAdmin = sessionStorage.getItem('sm_admin_active');
             if(savedAdmin === 'true') enableAdminMode(); else disableAdminMode();
 
-            // Load data awal dari localStorage sebagai cadangan instan
-            const localSaved = localStorage.getItem('sm_report_projects_shared_v6');
-            if (localSaved) {
-                try { projectsStore = JSON.parse(localSaved); } catch(e) {}
-            }
-
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
@@ -465,29 +458,42 @@
                 await loadCloudData();
             } catch (err) {
                 console.warn("Cloud connection fallback to local:", err);
-                initProjectSelection();
+                loadLocalFallback();
             }
         });
 
         async function loadCloudData() {
-            if (!db || !currentUser) return initProjectSelection();
+            if (!db || !currentUser) return loadLocalFallback();
             try {
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data');
                 const snap = await getDoc(docRef);
-                if (snap.exists() && snap.data().projectsStore) {
+                if (snap.exists() && snap.data().projectsStore && Object.keys(snap.data().projectsStore).length > 0) {
                     projectsStore = snap.data().projectsStore;
-                    localStorage.setItem('sm_report_projects_shared_v6', JSON.stringify(projectsStore));
+                    localStorage.setItem('sm_report_projects_shared_v7', JSON.stringify(projectsStore));
                 } else {
+                    const localSaved = localStorage.getItem('sm_report_projects_shared_v7');
+                    if (localSaved) {
+                        try { projectsStore = JSON.parse(localSaved); } catch(e) {}
+                    }
                     await saveCloudData();
                 }
             } catch(e) {
                 console.error("Cloud read warning:", e);
+                loadLocalFallback();
+            }
+            initProjectSelection();
+        }
+
+        function loadLocalFallback() {
+            const localSaved = localStorage.getItem('sm_report_projects_shared_v7');
+            if (localSaved) {
+                try { projectsStore = JSON.parse(localSaved); } catch(e) {}
             }
             initProjectSelection();
         }
 
         async function saveCloudData() {
-            localStorage.setItem('sm_report_projects_shared_v6', JSON.stringify(projectsStore));
+            localStorage.setItem('sm_report_projects_shared_v7', JSON.stringify(projectsStore));
             if (!db || !currentUser) return;
             try {
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data');
@@ -500,7 +506,8 @@
             let projParam = urlParams.get('project');
             
             if (projParam) {
-                const foundKey = Object.keys(projectsStore).find(k => k.toLowerCase().replace(/[^a-z0-9]/g, '') === projParam.toLowerCase().replace(/[^a-z0-9]/g, ''));
+                const cleanParam = projParam.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const foundKey = Object.keys(projectsStore).find(k => k.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanParam);
                 if (foundKey) {
                     currentProjectName = foundKey;
                 } else {
