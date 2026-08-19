@@ -396,8 +396,7 @@
     </div>
 
     <script>
-        const JSONBIN_BIN_ID = "6a854b7ada38895dfef5cca1";
-        const JSONBIN_API_KEY = "$2a$10$.Yyt32m3UwBB57d2BHJ7t.58K4fMYVnixlc3652hhbOa4ZvNCJ7nm";
+        const NPOINT_URL = "https://api.npoint.io/69c05fa84d34926e9431";
 
         let projectsStore = {
             "Samsung": []
@@ -429,31 +428,25 @@
 
         async function loadStoreFromServer() {
             try {
-                const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-                    headers: { 'X-Master-Key': JSONBIN_API_KEY },
-                    cache: 'no-store'
-                });
+                const response = await fetch(NPOINT_URL, { cache: 'no-store' });
                 const result = await response.json();
-                if (result && result.record && result.record.store && typeof result.record.store === 'object' && Object.keys(result.record.store).length > 0) {
-                    projectsStore = result.record.store;
+                if (result && result.projects && typeof result.projects === 'object' && Object.keys(result.projects).length > 0) {
+                    projectsStore = result.projects;
                 }
             } catch(e) {
-                console.log("Cloud fetch fallback error");
+                console.log("Npoint fetch fallback error:", e);
             }
         }
 
         async function saveUniversalStore() {
             try {
-                await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                await fetch(NPOINT_URL, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_API_KEY
-                    },
-                    body: JSON.stringify({ store: projectsStore })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ projects: projectsStore })
                 });
             } catch(e) {
-                console.log("Cloud sync error:", e);
+                console.log("Npoint sync error:", e);
             }
         }
 
@@ -461,7 +454,7 @@
             const savedAdmin = sessionStorage.getItem('sm_admin_active');
             if(savedAdmin === 'true') enableAdminMode(); else disableAdminMode();
 
-            // WAJIB TUNGGU CLOUD SELESAI DOWNLOAD SEBELUM RENDER
+            // WAJIB TUNGGU NPOINT SELESAI DOWNLOAD SEBELUM RENDER
             await loadStoreFromServer();
             initProjectSelection();
         });
