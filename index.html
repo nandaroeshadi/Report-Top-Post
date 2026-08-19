@@ -396,7 +396,9 @@
     </div>
 
     <script>
-        // Full pre-populated database to ensure GitHub Pages and other browsers always load complete data
+        // Gunakan npoint.io sebagai public cloud JSON bin gratis tanpa bayar & tanpa konfigurasi server
+        const NPOINT_API_URL = "https://api.npoint.io/c0683a6697cf64b84aa2";
+
         let masterProjectsStore = {
             "Campaign Preview": [],
             "Campaign Samsung": [
@@ -404,12 +406,7 @@
                 { id: 1718000000002, period: "Periode 1", account: "selintasklip", platform: "TikTok", category: "Niche Media", caption: "Lah kok bisa? Beli HP foldable tapi gak peduli bisa dibuka atau eng...", tgl_upload: "2026-06-11", views: 193300, likes: 387, cmt: 8, save: 45, share: 12, url: "https://tiktok.com" },
                 { id: 1718000000003, period: "Periode 2", account: "Ruang.Bercerita", platform: "TikTok", category: "Homeless Media", caption: "KEMBARAN SAMA J-HOPE? PANTESAN KEREN BANGET, MEMBER B...", tgl_upload: "2026-06-10", views: 167400, likes: 1132, cmt: 12, save: 50, share: 19, url: "https://tiktok.com" },
                 { id: 1718000000004, period: "Periode 2", account: "podcastinaja", platform: "TikTok", category: "UGC Media", caption: "Anissa Aziza ngaku lebih puas nonton drakor kalau layarnya lega. Se...", tgl_upload: "2026-06-09", views: 112400, likes: 129, cmt: 4, save: 20, share: 8, url: "https://tiktok.com" },
-                { id: 1718000000005, period: "Periode 3", account: "Cerita Malam", platform: "Instagram", category: "Niche Media", caption: "Eksplorasi fitur multitasking paling gokil di seri Galaxy terbaru.", tgl_upload: "2026-06-08", views: 98500, likes: 1420, cmt: 31, save: 210, share: 65, url: "https://instagram.com" },
-                { id: 1718000000006, period: "Periode 3", account: "Klip Seru", platform: "TikTok", category: "Niche Media", caption: "Reaksi pertama kali pegang HP lipat tipis begini, dijamin ketagihan!", tgl_upload: "2026-06-07", views: 88200, likes: 950, cmt: 19, save: 88, share: 30, url: "https://tiktok.com" },
-                { id: 1718000000007, period: "Periode 4", account: "Tekno Daily", platform: "Threads", category: "Homeless Media", caption: "Review jujur daya tahan baterai seharian buat content creation.", tgl_upload: "2026-06-06", views: 76400, likes: 810, cmt: 14, save: 95, share: 22, url: "https://threads.net" },
-                { id: 1718000000008, period: "Periode 4", account: "Ngobrol Santai", platform: "TikTok", category: "UGC Media", caption: "Bikin konten sinematik tanpa ribet bawa kamera mirrorless.", tgl_upload: "2026-06-05", views: 65100, likes: 620, cmt: 10, save: 60, share: 15, url: "https://tiktok.com" },
-                { id: 1718000000009, period: "Periode 5", account: "Insight Kreatif", platform: "Instagram", category: "Niche Media", caption: "Tips editing video langsung di handphone tanpa patah-patah.", tgl_upload: "2026-06-04", views: 54300, likes: 490, cmt: 7, save: 42, share: 11, url: "https://instagram.com" },
-                { id: 1718000000010, period: "Periode 5", account: "Update Harian", platform: "TikTok", category: "Homeless Media", caption: "Alasan kenapa banyak creator beralih ke perangkat lipat.", tgl_upload: "2026-06-03", views: 43200, likes: 380, cmt: 5, save: 30, share: 9, url: "https://tiktok.com" }
+                { id: 1718000000005, period: "Periode 3", account: "Cerita Malam", platform: "Instagram", category: "Niche Media", caption: "Eksplorasi fitur multitasking paling gokil di seri Galaxy terbaru.", tgl_upload: "2026-06-08", views: 98500, likes: 1420, cmt: 31, save: 210, share: 65, url: "https://instagram.com" }
             ]
         };
 
@@ -438,33 +435,47 @@
         window.closeConfirmModal = function() { window.closeModal('confirmModal'); activeConfirmCallback = null; }
         window.executeConfirmAction = function() { if (activeConfirmCallback) activeConfirmCallback(); window.closeConfirmModal(); }
 
-        window.addEventListener('DOMContentLoaded', () => {
+        // Load data dari public cloud (npoint.io) agar sinkron global untuk semua client
+        async function loadStoreFromServer() {
+            try {
+                const response = await fetch(NPOINT_API_URL + "?t=" + Date.now());
+                const result = await response.json();
+                if (result && result.store && typeof result.store === 'object' && Object.keys(result.store).length > 0) {
+                    projectsStore = result.store;
+                }
+            } catch(e) {
+                console.log("Using local storage fallback");
+                const localSaved = localStorage.getItem('hostinger_sm_store_v2026');
+                if (localSaved) {
+                    try { const parsed = JSON.parse(localSaved); if(parsed) projectsStore = parsed; } catch(err) {}
+                }
+            }
+        }
+
+        async function saveUniversalStore() {
+            localStorage.setItem('hostinger_sm_store_v2026', JSON.stringify(projectsStore));
+            try {
+                await fetch(NPOINT_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ store: projectsStore })
+                });
+            } catch(e) {
+                console.log("Cloud sync error:", e);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
             const savedAdmin = sessionStorage.getItem('sm_admin_active');
             if(savedAdmin === 'true') enableAdminMode(); else disableAdminMode();
 
-            // Load from universal storage, or fallback to master pre-populated store
-            const localSaved = localStorage.getItem('sm_static_universal_store_v13');
-            if (localSaved) {
-                try {
-                    const parsed = JSON.parse(localSaved);
-                    if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
-                        projectsStore = parsed;
-                    }
-                } catch(e) {}
-            } else {
-                localStorage.setItem('sm_static_universal_store_v13', JSON.stringify(projectsStore));
-            }
-
+            await loadStoreFromServer();
             initProjectSelection();
         });
 
         window.addEventListener('hashchange', () => {
             initProjectSelection();
         });
-
-        function saveUniversalStore() {
-            localStorage.setItem('sm_static_universal_store_v13', JSON.stringify(projectsStore));
-        }
 
         function initProjectSelection() {
             let targetProj = "";
@@ -477,9 +488,7 @@
             } else {
                 const urlParams = new URLSearchParams(window.location.search);
                 const queryProj = urlParams.get('project');
-                if (queryProj) {
-                    targetProj = queryProj;
-                }
+                if (queryProj) targetProj = queryProj;
             }
 
             if (targetProj) {
@@ -489,13 +498,14 @@
                     currentProjectName = foundKey;
                 } else {
                     currentProjectName = "Campaign Preview";
+                    if(!projectsStore["Campaign Preview"]) projectsStore["Campaign Preview"] = [];
                 }
             } else {
                 const defaultProj = localStorage.getItem('sm_default_project') || "Campaign Samsung";
                 if (defaultProj && projectsStore[defaultProj]) {
                     currentProjectName = defaultProj;
                 } else {
-                    currentProjectName = "Campaign Samsung";
+                    currentProjectName = Object.keys(projectsStore)[0] || "Campaign Samsung";
                 }
             }
             if(!projectsStore[currentProjectName]) projectsStore[currentProjectName] = [];
@@ -579,20 +589,20 @@
 
         window.toggleAdminMenu = function() { document.getElementById('adminDropdownMenu').classList.toggle('hidden'); }
 
-        window.handleAddNewProject = function() {
+        window.handleAddNewProject = async function() {
             const input = document.getElementById('newProjectNameInput'), name = input.value.trim();
             if(!name) return window.showToast("Masukkan nama project!", 'error');
             if(projectsStore[name]) return window.showToast("Nama project sudah ada!", 'error');
-            projectsStore[name] = []; saveUniversalStore(); renderProjectDropdown(); setCurrentProject(name); input.value = ''; window.closeModal('addProjectModal');
+            projectsStore[name] = []; await saveUniversalStore(); renderProjectDropdown(); setCurrentProject(name); input.value = ''; window.closeModal('addProjectModal');
             window.showToast(`Project "${name}" berhasil dibuat!`, 'success');
         }
 
         window.openEditProjectModal = function() { document.getElementById('editProjectNameInput').value = currentProjectName; window.openModal('editProjectModal'); }
-        window.handleRenameProject = function() {
+        window.handleRenameProject = async function() {
             const input = document.getElementById('editProjectNameInput'), newName = input.value.trim();
             if(!newName || newName === currentProjectName) return window.closeModal('editProjectModal');
             projectsStore[newName] = projectsStore[currentProjectName]; delete projectsStore[currentProjectName]; currentProjectName = newName;
-            saveUniversalStore(); renderProjectDropdown(); setCurrentProject(newName); window.closeModal('editProjectModal');
+            await saveUniversalStore(); renderProjectDropdown(); setCurrentProject(newName); window.closeModal('editProjectModal');
             window.showToast("Nama project berhasil diubah!", 'success');
         }
 
@@ -603,16 +613,16 @@
 
         window.confirmDeleteCurrentProject = function() {
             if(Object.keys(projectsStore).length <= 1) return window.showToast("Minimal ada 1 project aktif!", 'error');
-            window.openConfirmModal("Hapus Project", `Apakah Anda yakin ingin menghapus project "${currentProjectName}"?`, () => {
+            window.openConfirmModal("Hapus Project", `Apakah Anda yakin ingin menghapus project "${currentProjectName}"?`, async () => {
                 delete projectsStore[currentProjectName];
-                saveUniversalStore(); renderProjectDropdown(); setCurrentProject(Object.keys(projectsStore)[0]);
+                await saveUniversalStore(); renderProjectDropdown(); setCurrentProject(Object.keys(projectsStore)[0]);
                 window.showToast("Project berhasil dihapus.", 'success');
             }, 'Ya, Hapus Project');
         }
 
         window.confirmResetCurrentProjectData = function() {
-            window.openConfirmModal("Reset Data", `Reset semua data post untuk project "${currentProjectName}"?`, () => {
-                projectsStore[currentProjectName] = []; saveUniversalStore(); setCurrentProject(currentProjectName);
+            window.openConfirmModal("Reset Data", `Reset semua data post untuk project "${currentProjectName}"?`, async () => {
+                projectsStore[currentProjectName] = []; await saveUniversalStore(); setCurrentProject(currentProjectName);
                 window.showToast("Data project berhasil di-reset.", 'success');
             }, 'Ya, Reset Data');
         }
@@ -784,10 +794,10 @@
         window.sortTable = function(key) { if (key === 'views') { filteredPosts.sort((a, b) => Number(b.views || 0) - Number(a.views || 0)); renderTable(); } }
         
         window.confirmDeletePost = function(id) {
-            window.openConfirmModal("Hapus Post", "Apakah Anda yakin ingin menghapus post ini dari laporan?", () => {
+            window.openConfirmModal("Hapus Post", "Apakah Anda yakin ingin menghapus post ini dari laporan?", async () => {
                 postsData = postsData.filter(p => p.id !== id);
                 projectsStore[currentProjectName] = postsData;
-                saveUniversalStore();
+                await saveUniversalStore();
                 setCurrentProject(currentProjectName);
                 window.showToast("Post berhasil dihapus.", 'success');
             }, 'Ya, Hapus');
@@ -846,7 +856,7 @@
             window.showToast("Pilih file Excel atau masukkan URL Google Sheets terlebih dahulu!", 'error');
         }
 
-        function processSmartAIIntelligence(rows) {
+        async function processSmartAIIntelligence(rows) {
             const parsed = rows.map((row, idx) => {
                 const getVal = (possibleKeys, fallback = '') => {
                     const rowKeys = Object.keys(row);
@@ -899,7 +909,7 @@
 
             postsData = [...postsData, ...parsed]; 
             projectsStore[currentProjectName] = postsData;
-            saveUniversalStore(); 
+            await saveUniversalStore(); 
             setCurrentProject(currentProjectName); 
             window.closeModal('uploadModal');
             document.getElementById('sheetsUrlInput').value = '';
@@ -907,7 +917,7 @@
             window.showToast(`Berhasil mengimpor ${parsed.length} data post!`, 'success');
         }
 
-        window.handleAddPostSubmit = function(e) {
+        window.handleAddPostSubmit = async function(e) {
             e.preventDefault();
             postsData.unshift({
                 id: Date.now(), period: document.getElementById('newPeriod').value,
@@ -917,8 +927,8 @@
                 likes: Number(document.getElementById('newLikes').value), cmt: Number(document.getElementById('newComments').value),
                 save: Number(document.getElementById('newSaves').value), share: Number(document.getElementById('newShares').value), url: document.getElementById('newUrl').value.trim() || '#'
             });
-            projectsStore[currentProjectName] = postsData; saveUniversalStore(); setCurrentProject(currentProjectName); window.closeModal('addPostModal');
-            window.showToast("Post baru berhasil disimpan!", 'success');
+        projectsStore[currentProjectName] = postsData; await saveUniversalStore(); setCurrentProject(currentProjectName); window.closeModal('addPostModal');
+            window.showToast("Post baru berhasil disimpan ke Cloud!", 'success');
         }
 
         window.exportExcel = function() {
