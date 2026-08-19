@@ -321,7 +321,6 @@
     </div>
 
     <script>
-        // KONEKSI CLOUD REAL-TIME JSONBIN.IO OTOMATIS (MURNI SINKRON UTAMA & KLIEN)
         const JSONBIN_BIN_ID = "6a854b7ada38895dfef5cca1";
         const JSONBIN_API_KEY = "$2a$10$.Yyt32m3UwBB57d2BHJ7t.58K4fMYVnixlc3652hhbOa4ZvNCJ7nm";
 
@@ -359,7 +358,7 @@
         window.closeConfirmModal = function() { window.closeModal('confirmModal'); activeConfirmCallback = null; }
         window.executeConfirmAction = function() { if (activeConfirmCallback) activeConfirmCallback(); window.closeConfirmModal(); }
 
-        // FUNGSI LOAD & SAVE CLOUD JSONBIN REALTIME OTOMATIS
+        // SINKRONISASI AMAN (ANTI-RACE CONDITION)
         async function loadStoreFromCloud(isBackground = false) {
             try {
                 if(!isBackground) document.getElementById('cloudStatus').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyinkronkan data real-time dari Cloud...`;
@@ -367,17 +366,49 @@
                     headers: { 'X-Master-Key': JSONBIN_API_KEY }
                 });
                 const json = await res.json();
+                
+                // VALIDASI KETAT: Hanya timpa jika cloud benar-benar memiliki isi data
                 if (json && json.record && typeof json.record === 'object' && Object.keys(json.record).length > 0) {
-                    projectsStore = json.record;
-                    if(!isBackground) document.getElementById('cloudStatus').innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-emerald-200"></i> Cloud Real-time Connected (Sinkron)`;
-                    setTimeout(() => { document.getElementById('cloudStatus').classList.add('hidden'); }, 3000);
-                    renderProjectDropdown();
-                    setCurrentProject(currentProjectName);
+                    let hasValidData = false;
+                    for (let key in json.record) {
+                        if (Array.isArray(json.record[key]) && json.record[key].length > 0) {
+                            hasValidData = true;
+                            break;
+                        }
+                    }
+                    if (hasValidData) {
+                        projectsStore = json.record;
+                    } else {
+                        // Jika cloud kosong, paksa push data lokal ke cloud agar cloud terisi
+                        await saveStoreToCloudSilent();
+                    }
+                } else {
+                    await saveStoreToCloudSilent();
                 }
+
+                if(!isBackground) {
+                    document.getElementById('cloudStatus').innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-emerald-200"></i> Cloud Real-time Connected (Sinkron)`;
+                    setTimeout(() => { document.getElementById('cloudStatus').classList.add('hidden'); }, 3000);
+                }
+                renderProjectDropdown();
+                setCurrentProject(currentProjectName);
             } catch(e) {
                 console.log("Gagal sinkron cloud:", e);
                 if(!isBackground) document.getElementById('cloudStatus').innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Gagal terhubung ke Cloud, menggunakan cache lokal.`;
             }
+        }
+
+        async function saveStoreToCloudSilent() {
+            try {
+                await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_API_KEY
+                    },
+                    body: JSON.stringify(projectsStore)
+                });
+            } catch(e) { console.log(e); }
         }
 
         async function saveStoreToCloud() {
@@ -404,8 +435,8 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             await loadStoreFromCloud(false);
-            // Auto poll sync setiap 10 detik agar browser lain/client otomatis melihat data terbaru tanpa refresh
-            setInterval(() => loadStoreFromCloud(true), 10000);
+            // Polling interval aman setiap 15 detik tanpa menimpa data kosong
+            setInterval(() => loadStoreFromCloud(true), 15000);
         });
 
         function initProjectSelection() {
