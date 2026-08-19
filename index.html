@@ -26,13 +26,14 @@
                 </div>
             </div>
             <div class="flex items-center space-x-2">
-                <div id="adminControls" class="hidden flex items-center space-x-2">
+                <div id="adminControls" class="flex items-center space-x-2">
                     <button onclick="createNewProject()" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-2 rounded-lg text-xs font-bold transition">+ Project Baru</button>
                     <button onclick="editCurrentProject()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-2 rounded-lg text-xs font-bold transition">Edit</button>
                     <button onclick="deleteCurrentProject()" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-2 rounded-lg text-xs font-bold transition">Hapus</button>
                 </div>
+                <button onclick="copyClientLink()" class="bg-sky-50 text-sky-700 hover:bg-sky-100 px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1">🔗 Share Client</button>
                 <button id="authBtn" onclick="toggleAdminAuth()" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-800 transition">Login Admin</button>
-                <div class="relative">
+                <div id="adminToolsWrapper" class="relative">
                     <button onclick="toggleAdminMenu()" class="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1 hover:bg-emerald-800 transition">Admin Tools ▾</button>
                     <div id="adminDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50">
                         <label class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer">
@@ -62,7 +63,7 @@
             </div>
         </div>
 
-        <!-- Filter Bar Lengkap -->
+        <!-- Filter Bar -->
         <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-wrap gap-4 items-center justify-between">
             <div class="flex flex-wrap gap-3 items-center flex-1">
                 <span class="text-xs font-bold text-slate-400 uppercase">Filter:</span>
@@ -155,25 +156,29 @@
     </main>
 
     <script>
-        // Konfigurasi Supabase Anda (Sudah otomatis terpasang)
         const SUPABASE_URL = "https://keclyrrpgqdhsfjqhhgk.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlY2x5cnJwZ3FkaHNmanFoaGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxMjM1MjUsImV4cCI6MjEwMjY5OTUyNX0.hKE7L61CE7E5GB6zAEaI0C44EJLFtDBPyTchoCERRjA";
 
         let appData = {
             projects: {
-                "Samsung": {
-                    posts: [
-                        { account: "@scene.podcast", caption: "Review Eksklusif Samsung Z Fold", periode: "Periode 1", views: 435500, likes: 5400, comments: 320, saves: 150, shares: 210, link: "https://tiktok.com" },
-                        { account: "@selintasklip", caption: "Unboxing & First Impression", periode: "Periode 1", views: 193300, likes: 2100, comments: 140, saves: 80, shares: 95, link: "https://instagram.com" },
-                        { account: "@ruang.bercerita", caption: "Behind the scene shooting", periode: "Periode 2", views: 167400, likes: 1132, comments: 90, saves: 50, shares: 60, link: "https://tiktok.com" }
-                    ]
-                }
+                "Samsung": { posts: [] }
             }
         };
 
         let currentProject = "Samsung";
         let platformChartInstance = null;
         let isAdminLoggedIn = false;
+
+        // Cek apakah dibuka via Link Klien (?mode=client)
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('mode') === 'client') {
+                document.getElementById('adminControls').style.display = 'none';
+                document.getElementById('authBtn').style.display = 'none';
+                document.getElementById('adminToolsWrapper').style.display = 'none';
+            }
+            fetchFromSupabase();
+        });
 
         async function fetchFromSupabase() {
             try {
@@ -186,8 +191,6 @@
                 let json = await res.json();
                 if (json && json.length > 0 && json[0].payload) {
                     appData = json[0].payload;
-                } else {
-                    await saveToSupabase();
                 }
             } catch (e) {
                 console.error("Gagal ambil data Supabase:", e);
@@ -239,16 +242,25 @@
         function updateAuthUI() {
             const controls = document.getElementById('adminControls');
             const authBtn = document.getElementById('authBtn');
+            const tools = document.getElementById('adminToolsWrapper');
             if (isAdminLoggedIn) {
                 controls.classList.remove('hidden');
+                tools.classList.remove('hidden');
                 authBtn.innerText = "Keluar Admin";
                 authBtn.className = "bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition";
             } else {
                 controls.classList.add('hidden');
+                tools.classList.add('hidden');
                 authBtn.innerText = "Login Admin";
                 authBtn.className = "bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-800 transition";
                 document.getElementById('adminDropdown').classList.add('hidden');
             }
+        }
+
+        function copyClientLink() {
+            const clientUrl = window.location.href.split('?')[0] + "?mode=client";
+            navigator.clipboard.writeText(clientUrl);
+            alert("Link Khusus Klien berhasil disalin!\n\n" + clientUrl);
         }
 
         function populateFilters() {
@@ -426,23 +438,32 @@
                 const rows = XLSX.utils.sheet_to_json(firstSheet);
 
                 appData.projects[currentProject] = {
-                    posts: rows.map(r => ({
-                        account: r.Account || r.account || "@account",
-                        caption: r.Caption || r.caption || "No caption",
-                        periode: r.Periode || r.periode || "Periode 1",
-                        views: r.Views || r.views || 0,
-                        likes: r.Likes || r.likes || 0,
-                        comments: r.Comments || r.comments || 0,
-                        saves: r.Saves || r.saves || 0,
-                        shares: r.Shares || r.shares || 0,
-                        link: r.Link || r.link || "#"
-                    }))
+                    posts: rows.map(r => {
+                        let findVal = (keys) => {
+                            for (let k of keys) {
+                                let foundKey = Object.keys(r).find(x => x.toLowerCase().trim() === k);
+                                if (foundKey !== undefined) return r[foundKey];
+                            }
+                            return "";
+                        };
+                        return {
+                            account: findVal(['account', 'akun', 'username']) || "@account",
+                            caption: findVal(['caption', 'deskripsi', 'title', 'judul']) || "No caption",
+                            periode: findVal(['periode', 'period']) || "Periode 1",
+                            views: Number(findVal(['views', 'view', 'tayangan'])) || 0,
+                            likes: Number(findVal(['likes', 'like', 'suka'])) || 0,
+                            comments: Number(findVal(['comments', 'comment', 'komentar', 'komen'])) || 0,
+                            saves: Number(findVal(['saves', 'save', 'simpan'])) || 0,
+                            shares: Number(findVal(['shares', 'share', 'bagikan'])) || 0,
+                            link: findVal(['link', 'url', 'tautan']) || "#"
+                        };
+                    })
                 };
 
                 saveToSupabase();
                 populateFilters();
                 renderDashboard();
-                alert("Berhasil import Excel ke Cloud Supabase!");
+                alert("Berhasil import Excel ke Cloud Supabase secara lengkap!");
                 toggleAdminMenu();
             };
             reader.readAsArrayBuffer(file);
@@ -456,11 +477,13 @@
             let v = Number(prompt("Jumlah Views:", "0")) || 0;
             let l = Number(prompt("Jumlah Likes:", "0")) || 0;
             let c = Number(prompt("Jumlah Comments:", "0")) || 0;
+            let s = Number(prompt("Jumlah Saves:", "0")) || 0;
+            let sh = Number(prompt("Jumlah Shares:", "0")) || 0;
             let lnk = prompt("Link Konten:", "https://tiktok.com");
 
             if (!appData.projects[currentProject]) appData.projects[currentProject] = { posts: [] };
             appData.projects[currentProject].posts.unshift({
-                account: acc, caption: cap, periode: per, views: v, likes: l, comments: c, saves: 0, shares: 0, link: lnk
+                account: acc, caption: cap, periode: per, views: v, likes: l, comments: c, saves: s, shares: sh, link: lnk
             });
 
             saveToSupabase();
@@ -488,8 +511,6 @@
                 toggleAdminMenu();
             }
         }
-
-        window.onload = fetchFromSupabase;
     </script>
 </body>
 </html>
