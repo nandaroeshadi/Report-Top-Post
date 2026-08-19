@@ -15,6 +15,11 @@
     <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
+    <!-- Cloud Sync Status Indicator -->
+    <div id="cloudStatus" class="bg-emerald-600 text-white text-[11px] font-bold text-center py-1 px-4 transition-all">
+        <i class="fa-solid fa-cloud-arrow-up"></i> Menghubungkan ke Cloud Database Real-time...
+    </div>
+
     <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
             <div class="flex flex-wrap items-center gap-3">
@@ -316,7 +321,10 @@
     </div>
 
     <script>
-        // STORAGE LOKAL & FALLBACK AMAN (Tidak Akan Pernah 0)
+        // KONEKSI CLOUD REAL-TIME JSONBIN.IO OTOMATIS (MURNI SINKRON UTAMA & KLIEN)
+        const JSONBIN_BIN_ID = "6a854b7ada38895dfef5cca1";
+        const JSONBIN_API_KEY = "$2a$10$.Yyt32m3UwBB57d2BHJ7t.58K4fMYVnixlc3652hhbOa4ZvNCJ7nm";
+
         let fallbackDefaultStore = {
             "Samsung": [
                 { id: 1, period: "Periode 1", account: "@scene.podcast", platform: "TikTok", category: "Niche Media", caption: "Review Eksklusif Samsung Z Fold", tgl_upload: "2026-06-12", views: 435500, likes: 5400, cmt: 320, save: 150, share: 210, url: "https://tiktok.com" },
@@ -340,6 +348,7 @@
             setTimeout(() => toast.classList.remove('translate-y-10', 'opacity-0'), 50);
             setTimeout(() => { toast.classList.add('translate-y-10', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3500);
         }
+
         window.openConfirmModal = function(title, message, callback, btnText = 'Ya') {
             document.getElementById('confirmModalTitle').innerText = title;
             document.getElementById('confirmModalMessage').innerText = message;
@@ -350,30 +359,53 @@
         window.closeConfirmModal = function() { window.closeModal('confirmModal'); activeConfirmCallback = null; }
         window.executeConfirmAction = function() { if (activeConfirmCallback) activeConfirmCallback(); window.closeConfirmModal(); }
 
-        // SINKRONISASI LOKAL & BROWSER STORAGE UTAMA
-        function loadStore() {
+        // FUNGSI LOAD & SAVE CLOUD JSONBIN REALTIME OTOMATIS
+        async function loadStoreFromCloud(isBackground = false) {
             try {
-                const local = localStorage.getItem('social_media_report_store_v2');
-                if (local) {
-                    const parsed = JSON.parse(local);
-                    if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
-                        projectsStore = parsed;
-                        return;
-                    }
+                if(!isBackground) document.getElementById('cloudStatus').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyinkronkan data real-time dari Cloud...`;
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': JSONBIN_API_KEY }
+                });
+                const json = await res.json();
+                if (json && json.record && typeof json.record === 'object' && Object.keys(json.record).length > 0) {
+                    projectsStore = json.record;
+                    if(!isBackground) document.getElementById('cloudStatus').innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-emerald-200"></i> Cloud Real-time Connected (Sinkron)`;
+                    setTimeout(() => { document.getElementById('cloudStatus').classList.add('hidden'); }, 3000);
+                    renderProjectDropdown();
+                    setCurrentProject(currentProjectName);
                 }
-            } catch(e) { console.log(e); }
-            projectsStore = fallbackDefaultStore;
+            } catch(e) {
+                console.log("Gagal sinkron cloud:", e);
+                if(!isBackground) document.getElementById('cloudStatus').innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Gagal terhubung ke Cloud, menggunakan cache lokal.`;
+            }
         }
 
-        function saveStore() {
+        async function saveStoreToCloud() {
             try {
-                localStorage.setItem('social_media_report_store_v2', JSON.stringify(projectsStore));
-            } catch(e) { console.log(e); }
+                document.getElementById('cloudStatus').classList.remove('hidden');
+                document.getElementById('cloudStatus').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan perubahan ke Cloud...`;
+                
+                await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_API_KEY
+                    },
+                    body: JSON.stringify(projectsStore)
+                });
+
+                document.getElementById('cloudStatus').innerHTML = `<i class="fa-solid fa-circle-check"></i> Perubahan berhasil disimpan ke Cloud secara real-time!`;
+                setTimeout(() => { document.getElementById('cloudStatus').classList.add('hidden'); }, 3000);
+            } catch(e) {
+                console.log("Gagal simpan ke cloud:", e);
+                window.showToast("Gagal menyimpan ke Cloud!", 'error');
+            }
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            loadStore();
-            initProjectSelection();
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadStoreFromCloud(false);
+            // Auto poll sync setiap 10 detik agar browser lain/client otomatis melihat data terbaru tanpa refresh
+            setInterval(() => loadStoreFromCloud(true), 10000);
         });
 
         function initProjectSelection() {
@@ -407,28 +439,38 @@
 
         window.toggleAdminMenu = function() { document.getElementById('adminDropdownMenu').classList.toggle('hidden'); }
 
-        window.handleAddNewProject = function() {
+        window.handleAddNewProject = async function() {
             const input = document.getElementById('newProjectNameInput'), name = input.value.trim();
             if(!name) return window.showToast("Masukkan nama project!", 'error');
             if(projectsStore[name]) return window.showToast("Nama sudah ada!", 'error');
-            projectsStore[name] = []; saveStore(); renderProjectDropdown(); setCurrentProject(name); input.value = ''; window.closeModal('addProjectModal');
+            projectsStore[name] = []; 
+            await saveStoreToCloud(); 
+            renderProjectDropdown(); 
+            setCurrentProject(name); 
+            input.value = ''; 
+            window.closeModal('addProjectModal');
             window.showToast(`Project "${name}" dibuat!`, 'success');
         }
 
         window.openEditProjectModal = function() { document.getElementById('editProjectNameInput').value = currentProjectName; window.openModal('editProjectModal'); }
-        window.handleRenameProject = function() {
+        window.handleRenameProject = async function() {
             const input = document.getElementById('editProjectNameInput'), newName = input.value.trim();
             if(!newName || newName === currentProjectName) return window.closeModal('editProjectModal');
             projectsStore[newName] = projectsStore[currentProjectName]; delete projectsStore[currentProjectName]; currentProjectName = newName;
-            saveStore(); renderProjectDropdown(); setCurrentProject(newName); window.closeModal('editProjectModal');
+            await saveStoreToCloud(); 
+            renderProjectDropdown(); 
+            setCurrentProject(newName); 
+            window.closeModal('editProjectModal');
             window.showToast("Nama project diubah!", 'success');
         }
 
         window.confirmDeleteCurrentProject = function() {
             if(Object.keys(projectsStore).length <= 1) return window.showToast("Minimal ada 1 project aktif!", 'error');
-            window.openConfirmModal("Hapus Project", `Hapus project "${currentProjectName}"?`, () => {
+            window.openConfirmModal("Hapus Project", `Hapus project "${currentProjectName}"?`, async () => {
                 delete projectsStore[currentProjectName];
-                saveStore(); renderProjectDropdown(); setCurrentProject(Object.keys(projectsStore)[0]);
+                await saveStoreToCloud(); 
+                renderProjectDropdown(); 
+                setCurrentProject(Object.keys(projectsStore)[0]);
                 window.showToast("Project dihapus.", 'success');
             }, 'Hapus');
         }
@@ -584,12 +626,12 @@
         window.sortTable = function(key) { if (key === 'views') { filteredPosts.sort((a, b) => Number(b.views || 0) - Number(a.views || 0)); renderTable(); } }
         
         window.confirmDeletePost = function(id) {
-            window.openConfirmModal("Hapus Post", "Hapus post ini?", () => {
+            window.openConfirmModal("Hapus Post", "Hapus post ini?", async () => {
                 postsData = postsData.filter(p => p.id !== id);
                 projectsStore[currentProjectName] = postsData;
-                saveStore();
+                await saveStoreToCloud();
                 setCurrentProject(currentProjectName);
-                window.showToast("Post dihapus.", 'success');
+                window.showToast("Post dihapus dan disinkronkan ke cloud.", 'success');
             }, 'Hapus');
         }
 
@@ -600,13 +642,13 @@
             if (fileInput.files && fileInput.files[0]) {
                 const file = fileInput.files[0];
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = async function(e) {
                     try {
                         const data = new Uint8Array(e.target.result);
                         const workbook = XLSX.read(data, { type: 'array' });
                         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                         const rows = XLSX.utils.sheet_to_json(firstSheet);
-                        if (rows && rows.length > 0) processSmartAIIntelligence(rows);
+                        if (rows && rows.length > 0) await processSmartAIIntelligence(rows);
                         else window.showToast("File kosong.", 'error');
                     } catch(err) { window.showToast("Gagal baca file.", 'error'); }
                 };
@@ -616,7 +658,7 @@
             window.showToast("Pilih file Excel dulu!", 'error');
         }
 
-        function processSmartAIIntelligence(rows) {
+        async function processSmartAIIntelligence(rows) {
             const parsed = rows.map((row, idx) => {
                 const getVal = (possibleKeys, fallback = '') => {
                     const rowKeys = Object.keys(row);
@@ -656,13 +698,13 @@
 
             postsData = [...postsData, ...parsed]; 
             projectsStore[currentProjectName] = postsData;
-            saveStore(); 
+            await saveStoreToCloud(); 
             setCurrentProject(currentProjectName); 
             window.closeModal('uploadModal');
-            window.showToast(`Berhasil import ${parsed.length} data!`, 'success');
+            window.showToast(`Berhasil import ${parsed.length} data & tersinkron ke cloud!`, 'success');
         }
 
-        window.handleAddPostSubmit = function(e) {
+        window.handleAddPostSubmit = async function(e) {
             e.preventDefault();
             postsData.unshift({
                 id: Date.now(), period: document.getElementById('newPeriod').value,
@@ -672,8 +714,11 @@
                 likes: Number(document.getElementById('newLikes').value), cmt: Number(document.getElementById('newComments').value),
                 save: 0, share: 0, url: '#'
             });
-            projectsStore[currentProjectName] = postsData; saveStore(); setCurrentProject(currentProjectName); window.closeModal('addPostModal');
-            window.showToast("Post berhasil disimpan!", 'success');
+            projectsStore[currentProjectName] = postsData; 
+            await saveStoreToCloud(); 
+            setCurrentProject(currentProjectName); 
+            window.closeModal('addPostModal');
+            window.showToast("Post berhasil disimpan & disinkronkan ke cloud!", 'success');
         }
 
         window.exportExcel = function() {
