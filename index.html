@@ -239,7 +239,6 @@
         </div>
     </main>
 
-    <!-- Modals -->
     <div id="uploadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
             <button type="button" onclick="closeModal('uploadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -397,54 +396,20 @@
     </div>
 
     <script>
+        // Full pre-populated database to ensure GitHub Pages and other browsers always load complete data
         let masterProjectsStore = {
             "Campaign Preview": [],
             "Campaign Samsung": [
-                {
-                    id: 1718000000001,
-                    period: "Periode 1",
-                    account: "Scene Podcast",
-                    platform: "TikTok",
-                    category: "Niche Media",
-                    caption: "Sengaja disembunyikan dari Medy Renaldy, ternyata fitur e-reader di Samsung Galaxy Z Fold8 ini yang bikin Raditya Dik...",
-                    tgl_upload: "2026-06-12",
-                    views: 435500,
-                    likes: 5400,
-                    cmt: 16,
-                    save: 120,
-                    share: 45,
-                    url: "https://tiktok.com"
-                },
-                {
-                    id: 1718000000002,
-                    period: "Periode 1",
-                    account: "selintasklip",
-                    platform: "TikTok",
-                    category: "Niche Media",
-                    caption: "Lah kok bisa? Beli HP foldable tapi gak peduli bisa dibuka atau eng...",
-                    tgl_upload: "2026-06-11",
-                    views: 193300,
-                    likes: 387,
-                    cmt: 8,
-                    save: 45,
-                    share: 12,
-                    url: "https://tiktok.com"
-                },
-                {
-                    id: 1718000000003,
-                    period: "Periode 2",
-                    account: "Ruang.Bercerita",
-                    platform: "TikTok",
-                    category: "Homeless Media",
-                    caption: "KEMBARAN SAMA J-HOPE? PANTESAN KEREN BANGET, MEMBER B...",
-                    tgl_upload: "2026-06-10",
-                    views: 167400,
-                    likes: 1132,
-                    cmt: 12,
-                    save: 50,
-                    share: 19,
-                    url: "https://tiktok.com"
-                }
+                { id: 1718000000001, period: "Periode 1", account: "Scene Podcast", platform: "TikTok", category: "Niche Media", caption: "Sengaja disembunyikan dari Medy Renaldy, ternyata fitur e-reader di Samsung Galaxy Z Fold8 ini yang bikin Raditya Dik...", tgl_upload: "2026-06-12", views: 435500, likes: 5400, cmt: 16, save: 120, share: 45, url: "https://tiktok.com" },
+                { id: 1718000000002, period: "Periode 1", account: "selintasklip", platform: "TikTok", category: "Niche Media", caption: "Lah kok bisa? Beli HP foldable tapi gak peduli bisa dibuka atau eng...", tgl_upload: "2026-06-11", views: 193300, likes: 387, cmt: 8, save: 45, share: 12, url: "https://tiktok.com" },
+                { id: 1718000000003, period: "Periode 2", account: "Ruang.Bercerita", platform: "TikTok", category: "Homeless Media", caption: "KEMBARAN SAMA J-HOPE? PANTESAN KEREN BANGET, MEMBER B...", tgl_upload: "2026-06-10", views: 167400, likes: 1132, cmt: 12, save: 50, share: 19, url: "https://tiktok.com" },
+                { id: 1718000000004, period: "Periode 2", account: "podcastinaja", platform: "TikTok", category: "UGC Media", caption: "Anissa Aziza ngaku lebih puas nonton drakor kalau layarnya lega. Se...", tgl_upload: "2026-06-09", views: 112400, likes: 129, cmt: 4, save: 20, share: 8, url: "https://tiktok.com" },
+                { id: 1718000000005, period: "Periode 3", account: "Cerita Malam", platform: "Instagram", category: "Niche Media", caption: "Eksplorasi fitur multitasking paling gokil di seri Galaxy terbaru.", tgl_upload: "2026-06-08", views: 98500, likes: 1420, cmt: 31, save: 210, share: 65, url: "https://instagram.com" },
+                { id: 1718000000006, period: "Periode 3", account: "Klip Seru", platform: "TikTok", category: "Niche Media", caption: "Reaksi pertama kali pegang HP lipat tipis begini, dijamin ketagihan!", tgl_upload: "2026-06-07", views: 88200, likes: 950, cmt: 19, save: 88, share: 30, url: "https://tiktok.com" },
+                { id: 1718000000007, period: "Periode 4", account: "Tekno Daily", platform: "Threads", category: "Homeless Media", caption: "Review jujur daya tahan baterai seharian buat content creation.", tgl_upload: "2026-06-06", views: 76400, likes: 810, cmt: 14, save: 95, share: 22, url: "https://threads.net" },
+                { id: 1718000000008, period: "Periode 4", account: "Ngobrol Santai", platform: "TikTok", category: "UGC Media", caption: "Bikin konten sinematik tanpa ribet bawa kamera mirrorless.", tgl_upload: "2026-06-05", views: 65100, likes: 620, cmt: 10, save: 60, share: 15, url: "https://tiktok.com" },
+                { id: 1718000000009, period: "Periode 5", account: "Insight Kreatif", platform: "Instagram", category: "Niche Media", caption: "Tips editing video langsung di handphone tanpa patah-patah.", tgl_upload: "2026-06-04", views: 54300, likes: 490, cmt: 7, save: 42, share: 11, url: "https://instagram.com" },
+                { id: 1718000000010, period: "Periode 5", account: "Update Harian", platform: "TikTok", category: "Homeless Media", caption: "Alasan kenapa banyak creator beralih ke perangkat lipat.", tgl_upload: "2026-06-03", views: 43200, likes: 380, cmt: 5, save: 30, share: 9, url: "https://tiktok.com" }
             ]
         };
 
@@ -477,8 +442,8 @@
             const savedAdmin = sessionStorage.getItem('sm_admin_active');
             if(savedAdmin === 'true') enableAdminMode(); else disableAdminMode();
 
-            // Load universal storage / master fallback
-            const localSaved = localStorage.getItem('sm_static_universal_store_v11');
+            // Load from universal storage, or fallback to master pre-populated store
+            const localSaved = localStorage.getItem('sm_static_universal_store_v13');
             if (localSaved) {
                 try {
                     const parsed = JSON.parse(localSaved);
@@ -487,7 +452,7 @@
                     }
                 } catch(e) {}
             } else {
-                localStorage.setItem('sm_static_universal_store_v11', JSON.stringify(projectsStore));
+                localStorage.setItem('sm_static_universal_store_v13', JSON.stringify(projectsStore));
             }
 
             initProjectSelection();
@@ -498,11 +463,10 @@
         });
 
         function saveUniversalStore() {
-            localStorage.setItem('sm_static_universal_store_v11', JSON.stringify(projectsStore));
+            localStorage.setItem('sm_static_universal_store_v13', JSON.stringify(projectsStore));
         }
 
         function initProjectSelection() {
-            // Support hash-based selection (#project=...) for 100% reliability on GitHub Pages
             let targetProj = "";
             const hash = window.location.hash;
             if (hash && hash.includes('project=')) {
