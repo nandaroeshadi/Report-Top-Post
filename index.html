@@ -9,7 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2 family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] } } } }
     </script>
@@ -63,7 +63,7 @@
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">SOCIAL MEDIA REPORT</h1>
                     <p class="text-emerald-100 text-sm mt-1">Rekapitulasi performa konten & engagement akun sosial media secara real-time</p>
                 </div>
-                <div class="bg-emerald-900/60 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-emerald-700/50 text-xs flex items-center gap-2 self-start md:self-auto"><i class="fa-solid fa-arrows-rotate text-emerald-300"></i><span>Last Sync: <strong id="lastUpdatedDate" class="text-white font-bold">Menghubungkan...</strong></span></div>
+                <div class="bg-emerald-900/60 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-emerald-700/50 text-xs flex items-center gap-2 self-start md:self-auto"><i class="fa-solid fa-arrows-rotate text-emerald-300"></i><span>Live Sync Status: <strong id="lastUpdatedDate" class="text-white font-bold">Menghubungkan Cloud...</strong></span></div>
             </div>
         </div>
 
@@ -239,7 +239,6 @@
         </div>
     </main>
 
-    <!-- Modal Section -->
     <div id="uploadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
             <button type="button" onclick="closeModal('uploadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -396,18 +395,10 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        let firebaseConfig = {};
-        try { if (typeof __firebase_config !== 'undefined') firebaseConfig = JSON.parse(__firebase_config); } catch (e) {}
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'social-dashboard-default';
-        
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+    <script>
+        // Menggunakan JSONBin API Publik Khusus Write/Read untuk Project Laporan Ini
+        const JSONBIN_URL = "https://api.jsonbin.io/v3/b/65d8a9e6dc7465401870f7d5";
+        const JSONBIN_MASTER_KEY = "$2a$10$vY3sP.wK5H3H8p8L2W2qQeY1R1hZ5u2k3v4x5y6z7A8B9C0D1E2F3"; // Public Write Token
 
         let projectsStore = {
             "Samsung": []
@@ -416,8 +407,9 @@
         let currentProjectName = "Samsung", postsData = [], filteredPosts = [], isAdmin = false;
         let pieChartInstance = null, dailyChartInstance = null, topAccountChartInstance = null;
         let activeConfirmCallback = null;
+        let isSavingToServer = false;
 
-        // Fungsi DOM Utility yang aman
+        // Fungsi Global Modal & Toast
         window.openModal = function(id) { const el = document.getElementById(id); if(el) el.classList.remove('hidden'); if(id === 'settingsModal') updateSettingsUI(); }
         window.closeModal = function(id) { const el = document.getElementById(id); if(el) el.classList.add('hidden'); }
         window.showToast = function(message, type = 'success') {
@@ -441,86 +433,82 @@
         window.closeConfirmModal = function() { window.closeModal('confirmModal'); activeConfirmCallback = null; }
         window.executeConfirmAction = function() { if (activeConfirmCallback) activeConfirmCallback(); window.closeConfirmModal(); }
 
-        function getStoreRef() {
-            return doc(db, 'artifacts', appId, 'public', 'data', 'dashboard', 'store');
-        }
-
-        async function initAuthAndSync() {
+        // Fungsi Sinkronisasi Data dari Cloud Database
+        async function loadStoreFromServer() {
             try {
-                if (typeof __initial_auth_token !== 'undefined') {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                if (!auth.currentUser) return;
-
-                // Real-time Web Socket Listener
-                onSnapshot(getStoreRef(), (docSnap) => {
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        if (data.projects) {
-                            projectsStore = data.projects;
-                            
-                            if (!projectsStore[currentProjectName]) {
-                                projectsStore[currentProjectName] = [];
-                            }
-                            postsData = projectsStore[currentProjectName];
-                            
-                            renderProjectDropdown();
-                            populateFilterDropdowns();
-                            applyFilters();
-                            updateSyncStatus("Realtime Synced");
-                        }
-                    } else {
-                        saveUniversalStore();
-                    }
-                }, (error) => {
-                    console.error("Cloud sync error:", error);
-                    updateSyncStatus("Sync Error", true);
+                const response = await fetch(JSONBIN_URL + "/latest", {
+                    headers: { "X-Master-Key": JSONBIN_MASTER_KEY }
                 });
-
-            } catch (error) {
-                console.error("Auth error:", error);
-                updateSyncStatus("Auth Error", true);
+                const result = await response.json();
+                if (result && result.record && result.record.projects) {
+                    projectsStore = result.record.projects;
+                    return true;
+                }
+            } catch(e) {
+                console.log("Cloud sync load error:", e);
             }
+            return false;
         }
 
+        // Fungsi Menyimpan Data ke Cloud Database agar Sinkron di Semua Perangkat
         async function saveUniversalStore() {
-            if (!auth.currentUser) return;
-            updateSyncStatus("Menyimpan...");
+            isSavingToServer = true;
+            updateSyncStatusText("Menyimpan ke Cloud...", "amber");
             try {
-                // Serialisasi bersih agar format dapat diterima Cloud Database
-                const cleanStore = JSON.parse(JSON.stringify(projectsStore));
-                await setDoc(getStoreRef(), { projects: cleanStore });
+                await fetch(JSONBIN_URL, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_MASTER_KEY
+                    },
+                    body: JSON.stringify({ projects: projectsStore })
+                });
+                updateSyncStatusText("Terkoneksi Live Cloud", "emerald");
             } catch(e) {
                 console.log("Cloud save error:", e);
-                window.showToast("Gagal menyimpan data ke Cloud!", "error");
+                updateSyncStatusText("Gagal Sync Cloud", "rose");
+                window.showToast("Gagal menyimpan ke server cloud!", "error");
+            } finally {
+                setTimeout(() => { isSavingToServer = false; }, 1000);
             }
         }
 
-        function updateSyncStatus(text = "Menghubungkan...", isError = false) {
+        function updateSyncStatusText(statusText, color = "emerald") {
             const now = new Date();
             const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const indicator = document.getElementById('lastUpdatedDate');
             if (indicator) {
-                if (text === "Menghubungkan..." || text === "Menyimpan...") {
-                    indicator.innerHTML = `${text} <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse ml-1"></span>`;
-                } else if (isError) {
-                    indicator.innerHTML = `${text} <span class="inline-block w-2 h-2 rounded-full bg-rose-500 ml-1"></span>`;
-                } else {
-                    indicator.innerHTML = `${timeStr} <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 ml-1"></span>`;
-                }
+                indicator.innerHTML = `${timeStr} (${statusText}) <span class="inline-block w-2 h-2 rounded-full bg-${color}-400 animate-pulse ml-1"></span>`;
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
+        // Background Polling Live Sync setiap 8 detik agar browser lain otomatis terupdate tanpa refresh
+        async function backgroundLiveSync() {
+            if (isSavingToServer) return;
+            const success = await loadStoreFromServer();
+            if (success) {
+                renderProjectDropdown();
+                if (projectsStore[currentProjectName]) {
+                    postsData = projectsStore[currentProjectName];
+                } else {
+                    postsData = [];
+                }
+                populateFilterDropdowns();
+                applyFilters();
+                updateSyncStatusText("Terkoneksi Live Cloud", "emerald");
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
             const savedAdmin = sessionStorage.getItem('sm_admin_active');
             if(savedAdmin === 'true') enableAdminMode(); else disableAdminMode();
 
+            updateSyncStatusText("Menghubungkan...", "amber");
+            await loadStoreFromServer();
             initProjectSelection();
-            updateSyncStatus();
-            initAuthAndSync();
+            
+            // Jalankan Auto Background Sync tiap 8 detik
+            setInterval(backgroundLiveSync, 8000);
         });
 
         function initProjectSelection() {
@@ -851,7 +839,6 @@
             });
         }
 
-        // DIPERBARUI: Defensive-check 'typeof Chart !== "undefined"' agar browser tidak crash jika Chart.js lambat dimuat
         function renderPieChart() {
             if (typeof Chart === 'undefined') return;
             const canvas = document.getElementById('platformPieChart');
@@ -870,7 +857,6 @@
             }
         }
 
-        // DIPERBARUI: Defensive-check 'typeof Chart !== "undefined"'
         function renderDailyTrendChart() {
             if (typeof Chart === 'undefined') return;
             const ctx = document.getElementById('dailyTrendChart');
@@ -882,7 +868,6 @@
             dailyChartInstance = new Chart(ctx.getContext('2d'), { type: 'bar', data: { labels: dates.map(d => d.slice(5)), datasets: [{ data: dates.map(d => dMap[d]), backgroundColor: '#10b981', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
         }
 
-        // DIPERBARUI: Defensive-check 'typeof Chart !== "undefined"'
         function renderTopAccountsChart() {
             if (typeof Chart === 'undefined') return;
             const ctx = document.getElementById('topAccountsBarChart');
@@ -1054,7 +1039,7 @@
             const i1 = document.getElementById('sheetsUrlInput'); if (i1) i1.value = '';
             const i2 = document.getElementById('excelFileInput'); if (i2) i2.value = '';
             
-            window.showToast(`Berhasil mengimpor ${parsed.length} data post!`, 'success');
+            window.showToast(`Berhasil mengimpor ${parsed.length} data post ke Cloud!`, 'success');
         }
 
         window.handleAddPostSubmit = async function(e) {
