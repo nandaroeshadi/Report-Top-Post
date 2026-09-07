@@ -396,8 +396,18 @@
         </div>
     </div>
 
-    <script>
-        const NPOINT_URL = "https://api.npoint.io/69c05fa84d34926e9431";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let firebaseConfig = {};
+        try { if (typeof __firebase_config !== 'undefined') firebaseConfig = JSON.parse(__firebase_config); } catch (e) {}
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'social-dashboard-default';
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
 
         let projectsStore = {
             "Samsung": []
@@ -406,8 +416,6 @@
         let currentProjectName = "Samsung", postsData = [], filteredPosts = [], isAdmin = false;
         let pieChartInstance = null, dailyChartInstance = null, topAccountChartInstance = null;
         let activeConfirmCallback = null;
-        
-        let isSavingToServer = false;
 
         // Fungsi DOM Utility yang aman
         window.openModal = function(id) { const el = document.getElementById(id); if(el) el.classList.remove('hidden'); if(id === 'settingsModal') updateSettingsUI(); }
@@ -433,72 +441,86 @@
         window.closeConfirmModal = function() { window.closeModal('confirmModal'); activeConfirmCallback = null; }
         window.executeConfirmAction = function() { if (activeConfirmCallback) activeConfirmCallback(); window.closeConfirmModal(); }
 
-        // DIPERBARUI: Menghapus Custom Headers untuk menghindari CORS Preflight Block di peramban
-        async function loadStoreFromServer() {
+        function getStoreRef() {
+            return doc(db, 'artifacts', appId, 'public', 'data', 'dashboard', 'store');
+        }
+
+        async function initAuthAndSync() {
             try {
-                const response = await fetch(NPOINT_URL, { cache: 'no-store' });
-                const result = await response.json();
-                if (result && result.projects && typeof result.projects === 'object' && Object.keys(result.projects).length > 0) {
-                    projectsStore = result.projects;
-                    return true;
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
                 }
-            } catch(e) {
-                console.log("Npoint fetch fallback error:", e);
+
+                if (!auth.currentUser) return;
+
+                // Real-time Web Socket Listener
+                onSnapshot(getStoreRef(), (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        if (data.projects) {
+                            projectsStore = data.projects;
+                            
+                            if (!projectsStore[currentProjectName]) {
+                                projectsStore[currentProjectName] = [];
+                            }
+                            postsData = projectsStore[currentProjectName];
+                            
+                            renderProjectDropdown();
+                            populateFilterDropdowns();
+                            applyFilters();
+                            updateSyncStatus("Realtime Synced");
+                        }
+                    } else {
+                        saveUniversalStore();
+                    }
+                }, (error) => {
+                    console.error("Cloud sync error:", error);
+                    updateSyncStatus("Sync Error", true);
+                });
+
+            } catch (error) {
+                console.error("Auth error:", error);
+                updateSyncStatus("Auth Error", true);
             }
-            return false;
         }
 
         async function saveUniversalStore() {
-            isSavingToServer = true;
+            if (!auth.currentUser) return;
+            updateSyncStatus("Menyimpan...");
             try {
-                await fetch(NPOINT_URL, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ projects: projectsStore })
-                });
+                // Serialisasi bersih agar format dapat diterima Cloud Database
+                const cleanStore = JSON.parse(JSON.stringify(projectsStore));
+                await setDoc(getStoreRef(), { projects: cleanStore });
             } catch(e) {
-                console.log("Npoint sync error:", e);
-            } finally {
-                setTimeout(() => {
-                    isSavingToServer = false;
-                }, 2000);
+                console.log("Cloud save error:", e);
+                window.showToast("Gagal menyimpan data ke Cloud!", "error");
             }
         }
 
-        function updateSyncStatus() {
+        function updateSyncStatus(text = "Menghubungkan...", isError = false) {
             const now = new Date();
             const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const indicator = document.getElementById('lastUpdatedDate');
             if (indicator) {
-                indicator.innerHTML = `${timeStr} <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1"></span>`;
-            }
-        }
-
-        async function syncDataPeriodically() {
-            if (isSavingToServer) return;
-            const success = await loadStoreFromServer();
-            if (success) {
-                renderProjectDropdown();
-                if (projectsStore[currentProjectName]) {
-                    postsData = projectsStore[currentProjectName];
+                if (text === "Menghubungkan..." || text === "Menyimpan...") {
+                    indicator.innerHTML = `${text} <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse ml-1"></span>`;
+                } else if (isError) {
+                    indicator.innerHTML = `${text} <span class="inline-block w-2 h-2 rounded-full bg-rose-500 ml-1"></span>`;
                 } else {
-                    postsData = [];
+                    indicator.innerHTML = `${timeStr} <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 ml-1"></span>`;
                 }
-                populateFilterDropdowns();
-                applyFilters();
-                updateSyncStatus();
             }
         }
 
-        window.addEventListener('DOMContentLoaded', async () => {
+        window.addEventListener('DOMContentLoaded', () => {
             const savedAdmin = sessionStorage.getItem('sm_admin_active');
             if(savedAdmin === 'true') enableAdminMode(); else disableAdminMode();
 
-            await loadStoreFromServer();
             initProjectSelection();
             updateSyncStatus();
-
-            setInterval(syncDataPeriodically, 15000);
+            initAuthAndSync();
         });
 
         function initProjectSelection() {
